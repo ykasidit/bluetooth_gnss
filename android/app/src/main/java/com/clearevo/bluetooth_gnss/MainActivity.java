@@ -26,6 +26,9 @@ public class MainActivity extends FlutterActivity implements nmea_parser.nmea_pa
     private static final String ENGINE_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/engine_events";
     static final String TAG = "btgnss_mainactvty";
     EventChannel.EventSink m_events_sink;
+    bluetooth_gnss_service m_service;
+    boolean mBound = false;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,6 +47,12 @@ public class MainActivity extends FlutterActivity implements nmea_parser.nmea_pa
                             result.success(rfcomm_conn_mgr.get_bd_map());
                         } else if (call.method.equals("is_bluetooth_on")) {
                             result.success(rfcomm_conn_mgr.is_bluetooth_on());
+                        } else if (call.method.equals("is_bt_connected")) {
+                            if (mBound && m_service != null && m_service.is_bt_connected()) {
+                                result.success(true);
+                            } else {
+                                result.success(false);
+                            }
                         } else {
                             result.notImplemented();
                         }
@@ -115,10 +124,6 @@ public class MainActivity extends FlutterActivity implements nmea_parser.nmea_pa
 
     }
 
-    bluetooth_gnss_service mService;
-    boolean mBound = false;
-
-
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection connection = new ServiceConnection() {
 
@@ -130,9 +135,9 @@ public class MainActivity extends FlutterActivity implements nmea_parser.nmea_pa
 
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             bluetooth_gnss_service.LocalBinder binder = (bluetooth_gnss_service.LocalBinder) service;
-            mService = binder.getService();
+            m_service = binder.getService();
             mBound = true;
-            mService.m_nmea_parser.set_callbacks(MainActivity.this);
+            m_service.m_nmea_parser.set_callbacks(MainActivity.this);
         }
 
         @Override

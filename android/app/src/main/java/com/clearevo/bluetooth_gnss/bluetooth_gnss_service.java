@@ -24,6 +24,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public nmea_parser m_nmea_parser = new nmea_parser();
 
     final String EDG_DEVICE_PREFIX = "EcoDroidGPS";
+    public static final String BROADCAST_ACTION_NMEA = "com.clearevo.bluetooth_gnss.NMEA";
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -52,6 +54,14 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
     Thread m_connecting_thread = null;
+
+    public boolean is_bt_connected()
+    {
+        if (g_rfcomm_mgr != null && g_rfcomm_mgr.is_bt_connected()) {
+            return true;
+        }
+        return false;
+    }
 
     int connect(String bdaddr)
     {
@@ -129,7 +139,15 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public void on_readline(String readline)
     {
         Log.d(TAG, "on_readline()");
-        m_nmea_parser.parse(readline);
+        boolean valid_nmea_parsed = m_nmea_parser.parse(readline);
+
+        if (valid_nmea_parsed) {
+            Intent intent = new Intent();
+            intent.setAction(BROADCAST_ACTION_NMEA);
+            intent.putExtra("NMEA", nmea);
+            m_context.sendBroadcast(intent);
+        }
+
     }
 
     public void on_readline_stream_connected()

@@ -116,7 +116,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
   Icon _main_icon = ICON_LOADING;
   String _main_state = "Loading...";
-  bool _is_connected = false;
+  bool _is_bt_connected = false;
 
   TabController _controller;
   TabsDemoStyle _demoStyle = TabsDemoStyle.iconsAndText;
@@ -299,18 +299,17 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
             case "Connect":
               List<Widget> rows = null;
-              if (_is_connected) {
+              if (_is_bt_connected) {
 
                 rows = <Widget>[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children:
                     [
-                      _main_icon,
+                      ICON_CONNECTED,
                       Text(
-                        "$_main_state",
+                        "Connected",
                         style: Theme.of(context).textTheme.headline,
-
                       ),
                     ]
                   ),
@@ -415,6 +414,13 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
   //return settings_widget that can be used to get selected bdaddr
   Future<settings_widget_state> check_and_update_selected_device([bool return_sw_if_has_paired_dev=false]) async {
+
+    _is_bt_connected = false;
+    try {
+      _is_bt_connected = await method_channel.invokeMethod('is_bt_connected');
+    } on PlatformException catch (e) {
+      toast("WARNING: check _is_bt_connected failed: $e");
+    }
 
     _check_state_map_icon.clear();
     _main_icon = ICON_FAIL;
