@@ -1,4 +1,4 @@
-include ':app', ':libecodroidbluetooth'
+include ':app', ':libecodroidbluetooth', ':libecodroidgnss_parse', ':libbluetooth_gnss_service'
 
 def flutterProjectRoot = rootProject.projectDir.parentFile.toPath()
 

@@ -1,1 +1,33 @@
--- moved to ecodroidgps/todo
+- get galileo showing using f9
+- accuracy modes: hdop * cep
+- note on HDOP
+- (lat, lon too - can press show me or copy or share...)
+
+- fill about:
+  - flutter app
+  - java engine
+
+- show radio button 'location source'
+  - "Phone's internal GPS" default can work with
+  - "External Bluetooth GPS/GNSS"
+  - "External USB GPS/GNSS"
+
+- location source etc with icon and its own boxes
+ - multiple if avail in nmea last 5 seconds
+
+
+
+- n sats used for each gnss
+- accuracy
+
+- auto reconnect
+  - periodic task mode
+- disconnect option impl
+- one page no tab
+- nmea in lowest part
+- remove floating button when connected
+
+- other pages in joel screenshots, in bluetooth gps app
+
+- about menu impl
+

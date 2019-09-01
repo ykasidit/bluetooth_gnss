@@ -83,12 +83,13 @@ class settings_widget_state extends State<settings_widget> {
           title: Text('Settings'),
         ),
         body: PreferencePage([
-          PreferenceTitle('Selected Bluetooth Device:'),
+          PreferenceTitle('Selected Target Bluetooth device:'),
           PreferenceText(
-            "$_selected_dev"
+            "$_selected_dev",
+            style: Theme.of(context).textTheme.caption,
           ),
           PreferenceDialogLink(
-            "Change...",
+            "Select...",
             dialog: PreferenceDialog(
               _bd_dev_pref_list,
               title: 'Select Bluetooth Device',
@@ -98,6 +99,9 @@ class settings_widget_state extends State<settings_widget> {
             ),
             onPop: () => setState(() {_selected_dev = get_selected_bd_summary();}),
           ),
+            PreferenceTitle('Bluetooth Connection settings'),
+            CheckboxPreference("Secure RFCOMM connection", 'secure'),
+            CheckboxPreference("Try re-connect once on disconnection", 'reconnect'),
         ]),
       ),
     );

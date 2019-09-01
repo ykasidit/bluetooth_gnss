@@ -10,13 +10,18 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" />
+
+
 
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="bluetooth_gnss"
+        android:label="Bluetooth GNSS"
         android:icon="@mipmap/ic_launcher">
 
-        <service android:name=".bluetooth_gnss_service" />
+        <service android:name="com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service" />
 
         <activity
             android:name=".MainActivity"

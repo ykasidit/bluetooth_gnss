@@ -1,2 +1,2 @@
 configurations.maybeCreate("default")
-artifacts.add("libecodroidgnss_parse", file('libecodroidgnss_parse-release.aar'))
+artifacts.add("default", file('libecodroidgnss_parse-release.aar'))

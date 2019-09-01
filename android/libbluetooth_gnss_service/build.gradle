@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('libbluetooth_gnss_service-release.aar'))
