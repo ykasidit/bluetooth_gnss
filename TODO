@@ -1,8 +1,40 @@
-- get galileo showing using f9
-- accuracy modes: hdop * cep
-- note on HDOP
-- (lat, lon too - can press show me or copy or share...)
+- if no fix dont show you can now use other apps like maps
+- show bigger you can now use other apps like maps
+- should be no nmea parse exceptions
+- bt logcat showing repeated vals vs wifi socat
+- check threads after stop
+  - print threads
 
+ROM CORE 3.01 (107888)
+00080000
+FWVER=SPG 3.01
+PROTVER=18.00
+GPS;GLO;GAL;BDS
+SBAS;IMES;QZSS
+
+- check CPU usage
+  - system_server
+  - gms_persistent
+
+- device model parse
+- what sats are enabled per gnss parse
+- sats in view
+- separate locaiton data to other screen: Sats
+
+- rtk
+
+
+- dart func to show only if age < 10 secs - has age if > 3 secs
+
+- uuid use well known first, then fetch, then cache
+
+- show note about mock location disable even when not connected
+- note on HDOP vs ublox accuracy
+- test well from non-fixed mode m8030, f9, holux
+- bluetooth icon
+
+
+- (lat, lon too - can press show me or copy or share...)
 - fill about:
   - flutter app
   - java engine

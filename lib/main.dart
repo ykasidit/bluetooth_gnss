@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:bluetooth_gnss/about.dart';
 import 'package:flutter/material.dart';
 import 'package:preferences/preferences.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/services.dart';
 
 import 'settings.dart';
@@ -15,6 +15,7 @@ const Color _kFlutterBlue = Color(0xFF003D75);
 
 
 main() async {
+  WidgetsFlutterBinding.ensureInitialized(); //https://stackoverflow.com/questions/57689492/flutter-unhandled-exception-servicesbinding-defaultbinarymessenger-was-accesse
   await PrefService.init(prefix: 'pref_');
   PrefService.setDefaultValues(
           {
@@ -81,7 +82,7 @@ class MyApp extends StatelessWidget {
     m_widget = ScrollableTabsDemo();
 
     return MaterialApp(
-      title: 'Settings',
+      title: 'Bluetooth GNSS',
       theme: kLightGalleryTheme,
       home: m_widget,
     );
@@ -103,11 +104,11 @@ class _Page {
 
 const List<_Page> _allPages = <_Page>[
   _Page(icon: Icons.bluetooth, text: 'Connect'),
-  _Page(icon: Icons.cloud_download, text: 'RTK'),
-  _Page(icon: Icons.location_on, text: 'Location'),
-  _Page(icon: Icons.satellite, text: 'Satellites'),
+  _Page(icon: Icons.cloud_download, text: 'RTK/NTRIP'),
+  /*_Page(icon: Icons.location_on, text: 'Location'),
   _Page(icon: Icons.landscape, text: 'Map'),
-  _Page(icon: Icons.view_list, text: 'NMEA'),
+  _Page(icon: Icons.view_list, text: 'Raw Data'),
+  */
 ];
 
 class ScrollableTabsDemo extends StatefulWidget {
@@ -190,40 +191,26 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   static String WAITING_DEV = "No data";
   bool _is_bt_connected = false;
   bool _is_bt_conn_thread_alive_likely_connecting = false;
-  String _dev_time = WAITING_DEV;
-  String _dev_lat = WAITING_DEV;
-  String _dev_lon = WAITING_DEV;
-  String _dev_alt = WAITING_DEV;
-  String _dev_hdop = WAITING_DEV;
-  String _gga_count = "0";
-  String _rmc_count = "0";
   String _location_from_talker = WAITING_DEV;
-
-  String _gn_n_sats_used = WAITING_DEV;
-  String _gp_n_sats_used = WAITING_DEV;
-  String _gl_n_sats_used = WAITING_DEV;
-  String _gb_n_sats_used = WAITING_DEV;
-  String _ga_n_sats_used = WAITING_DEV;
-  String _gn_sat_ids = WAITING_DEV;
 
   int _mock_location_set_ts;
   String _mock_location_set_status = WAITING_DEV;
-
-  List<String> users = ["ff"];
+  List<String> talker_ids = ["GP", "GL", "GA", "GB"];
 
   TabController _controller;
   TabsDemoStyle _demoStyle = TabsDemoStyle.iconsAndText;
   bool _customIndicator = false;
 
   Timer timer;
-
   static String note_how_to_disable_mock_location = "NOTE: To use internal phone GPS again:\nGo to phone 'Settings' > 'Developer Options'\n > 'Mock location app'\nSet to 'No apps' and restart phone.";
+  Map<dynamic, dynamic> _param_map = Map<dynamic, dynamic>();
+
 
   @override
   void initState() {
     super.initState();
 
-    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => check_and_update_selected_device());
+    timer = Timer.periodic(Duration(seconds: 2), (Timer t) => check_and_update_selected_device());
 
     _controller = TabController(vsync: this, length: _allPages.length);
 
@@ -236,156 +223,19 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
               //print("got event -----------");
               Map<dynamic, dynamic> param_map = event;
 
-              //update params mapped to UI
-              if (param_map.containsKey("GN_time")) {
-                setState(() {
-                  _dev_time = param_map["GN_time"];
-                });
-              }
+              setState(() {
+                _param_map = param_map;
+              });
 
-              if (param_map.containsKey("GN_GGA_count")) {
-                setState(() {
-                  _gga_count = param_map["GN_GGA_count"].toString();
-                });
-              }
-
-              if (param_map.containsKey("GN_RMC_count")) {
-                setState(() {
-                  _rmc_count = param_map["GN_RMC_count"].toString();
-                });
-              }
-
-
-              if (param_map.containsKey("lat") && param_map.containsKey("lon") && param_map.containsKey("alt")) {
-                setState(() {
-                  try {
-                    double tmp;
-
-                    tmp = param_map["lat"];
-                    _dev_lat = tmp.toStringAsFixed(7);
-
-                    tmp = param_map["lon"];
-                    _dev_lon = tmp.toStringAsFixed(7);
-
-                    tmp = param_map["alt"];
-                    _dev_alt = tmp.toStringAsFixed(2);
-
-                    tmp = param_map["hdop"];
-                    _dev_hdop = tmp.toStringAsFixed(2);
-
-                  } on Exception catch (e) {
-                    print('get parsed param exception: $e');
-                  }
-                });
-              }
-
-              if (param_map.containsKey('location_from_talker')) {
-                try {
-                  _location_from_talker = param_map['location_from_talker'];
-                  switch (_location_from_talker) {
-                    case 'GN':
-                      _location_from_talker = 'Multi GNSS (\$$_location_from_talker)';
-                      break;
-                    case 'GA':
-                      _location_from_talker = 'Galileo (\$$_location_from_talker)';
-                      break;
-                    case 'BE':
-                      _location_from_talker = 'BeiDou (\$$_location_from_talker)';
-                      break;
-                    case 'GL':
-                      _location_from_talker = 'GLONASS (\$$_location_from_talker)';
-                      break;
-                    case 'GP':
-                      _location_from_talker = 'GPS (\$$_location_from_talker)';
-                      break;
-                  }
-                } on Exception catch (e) {
-                  print('get parsed param exception: $e');
-                }
-              }
+              // 660296614
 
               if (param_map.containsKey('mock_location_set_ts')) {
                 try {
-                  int mock_set_millis_ago;
-                  _mock_location_set_ts = param_map['mock_location_set_ts'];
-                } on Exception catch (e) {
+                  _mock_location_set_ts = param_map['mock_location_set_ts'] ?? 0;
+                }  catch (e) {
                   print('get parsed param exception: $e');
                 }
               }
-
-
-              if (param_map.containsKey("GP_n_sats_used")) {
-                setState(() {
-                  try {
-                    _gp_n_sats_used = param_map["GP_n_sats_used"].toString();
-                  } on Exception catch (e) {
-                    print('get parsed param exception: $e');
-                  }
-                });
-              }
-
-
-              if (param_map.containsKey("GL_n_sats_used")) {
-                setState(() {
-                  try {
-                    _gl_n_sats_used = param_map["GL_n_sats_used"].toString();
-                  } on Exception catch (e) {
-                    print('get parsed param exception: $e');
-                  }
-                });
-              }
-
-
-              if (param_map.containsKey("GA_n_sats_used")) {
-                setState(() {
-                  try {
-                    _ga_n_sats_used = param_map["GA_n_sats_used"].toString();
-                  } on Exception catch (e) {
-                    print('get parsed param exception: $e');
-                  }
-                });
-              }
-
-
-              if (param_map.containsKey("GB_n_sats_used")) {
-                setState(() {
-                  try {
-                    _gb_n_sats_used = param_map["GB_n_sats_used"].toString();
-                  } on Exception catch (e) {
-                    print('get parsed param exception: $e');
-                  }
-                });
-              }
-
-
-              if (param_map.containsKey("GN_n_sats_used")) {
-                setState(() {
-                  try {
-                    _gn_n_sats_used = param_map["GN_n_sats_used"].toString();
-                  } on Exception catch (e) {
-                    print('get parsed param exception: $e');
-                  }
-                });
-              }
-
-              if (param_map.containsKey("GN_sat_ids")) {
-                setState(() {
-                  try {
-                    _gn_sat_ids = param_map["GN_sat_ids"].toString();
-                  } on Exception catch (e) {
-                    print('get parsed param exception: $e');
-                  }
-                });
-              }
-
-
-              if (false) {
-                for (dynamic key in param_map.keys) {
-                  dynamic val = param_map[key];
-                  print("key $key val $val");
-                }
-              }
-
         },
         onError: (dynamic error) {
           print('Received error: ${error.message}');
@@ -480,13 +330,14 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   }
 
   Scaffold _scaffold;
-
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     final Color iconColor = Theme.of(context).accentColor;
 
-    _scaffold = Scaffold(
 
+    _scaffold = Scaffold(
+        key: _scaffoldKey,
       appBar: AppBar(
         title: const Text('Bluetooth GNSS'),
         actions: <Widget>[
@@ -503,6 +354,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                           toast("Please turn ON Bluetooth and pair your Bluetooth Device first...");
                           return;
                         } else {
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) {
@@ -560,7 +412,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
         controller: _controller,
         children: _allPages.map<Widget>((_Page page) {
           String pname = page.text;
-          print ("page: $pname");
+          //print ("page: $pname");
 
           switch (pname) {
 
@@ -578,9 +430,10 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                   'Connected',
                                   style: Theme.of(context).textTheme.headline.copyWith(
                                           fontFamily: 'GoogleSans',
-                                          color: Colors.blueGrey
+                                          color: Colors.grey
                                   ),
                                 ),
+
                                 Padding(
                                   padding: const EdgeInsets.all(5.0),
                                 ),
@@ -596,7 +449,14 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                   padding: const EdgeInsets.all(5.0),
                                 ),
                                 Text(
-                                        "NOTE: We are now the 'Mock location app' and broadcasting below location to all other apps.\n"+note_how_to_disable_mock_location,
+                                    "You can now use other apps like 'Maps' normally\nPress HOME to goto use other apps\nPress BACK to cancel/stop and exit",
+                                    style: Theme.of(context).textTheme.body2
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                ),
+                                Text(
+                                        ""+note_how_to_disable_mock_location,
                                         style: Theme.of(context).textTheme.caption
                                 ),
                               ],
@@ -629,7 +489,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                      '$_dev_time',
+                                      _param_map['GN_time'] ?? WAITING_DEV,
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -642,7 +502,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                      '$_dev_lat, $_dev_lon',
+                                  (_param_map['lat_double_07_str'] ?? WAITING_DEV) + ", " + (_param_map['lon_double_07_str'] ?? WAITING_DEV),
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -651,25 +511,12 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                      'Altitude:',
-                                      style: Theme.of(context).textTheme.body2
+                                  'Altitude:',
+                                  style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                      '$_dev_alt',
-                                      style: Theme.of(context).textTheme.body1
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                      'HDOP:',
-                                      style: Theme.of(context).textTheme.body2
-                              ),
-                              Text(
-                                      '$_dev_hdop',
-                                      style: Theme.of(context).textTheme.body1
+                                  _param_map['alt_double_02_str'] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
                               ),
                             ],
                           ),
@@ -677,7 +524,85 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                      'Location updated to OS:',
+                                  'Acquired Fix:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  (_param_map["GN_status"] ?? _param_map["GP_status"]) == "ACTIVE" ? "YES" : "NO",
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'Fix quality:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["GN_fix_quality"] ?? _param_map["GP_fix_quality"] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'UBLOX Fix Type:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["UBX_POSITION_navStat"] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'UBLOX XY Accuracy(m):',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["UBX_POSITION_hAcc"] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'UBLOX Z Accuracy(m):',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["UBX_POSITION_vAcc"] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'HDOP:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["hdop_str"] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                      'Location sent to Android:',
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
@@ -693,40 +618,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                      'NMEA Talker used:',
+                                      'N Sats used TOTAL:',
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                      '$_location_from_talker',
-                                      style: Theme.of(context).textTheme.body1
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(5.0),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                      'GN Sat IDs:',
-                                      style: Theme.of(context).textTheme.body2
-                              ),
-                              Text(
-                                      '$_gn_sat_ids',
-                                      style: Theme.of(context).textTheme.body1
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                      'N Sats used total:',
-                                      style: Theme.of(context).textTheme.body2
-                              ),
-                              Text(
-                                      '$_gn_n_sats_used',
+                                  ((_param_map["GP_n_sats_used"] ?? 0) + (_param_map["GL_n_sats_used"] ?? 0) + (_param_map["GA_n_sats_used"] ?? 0) + (_param_map["GB_n_sats_used"] ?? 0)).toString(),
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -739,7 +635,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                      '$_ga_n_sats_used',
+                                  _param_map["GA_n_sats_used_str"] ?? WAITING_DEV,
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -752,7 +648,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                      '$_gp_n_sats_used',
+                                  _param_map["GP_n_sats_used_str"] ?? WAITING_DEV,
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -765,7 +661,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                      '$_gl_n_sats_used',
+                                  _param_map["GL_n_sats_used_str"] ?? WAITING_DEV,
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -778,7 +674,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                      '$_gb_n_sats_used',
+                                  _param_map["GB_n_sats_used_str"] ?? WAITING_DEV,
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -794,7 +690,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                      '$_gga_count',
+                                      _param_map["GN_GGA_count_str"] ?? _param_map["GP_GGA_count_str"] ?? WAITING_DEV,
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -807,7 +703,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                      '$_rmc_count',
+                                  _param_map["GN_RMC_count_str"] ?? _param_map["GP_RMC_count_str"] ?? WAITING_DEV,
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -1025,7 +921,19 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
         await disconnect();
         break;
       case "about":
-        //TODO show dialog
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) {
+                return Scaffold(
+                    appBar: AppBar(
+                      title: Text("About"),
+                    ),
+                    body: get_about_view()
+                );
+              }
+          ),
+        );
         break;
     }
   }
@@ -1038,7 +946,6 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   //return settings_widget that can be used to get selected bdaddr
   Future<settings_widget_state> check_and_update_selected_device([bool user_pressed_settings_take_action_and_ret_sw=false, bool user_pressed_connect_take_action_and_ret_sw=false]) async {
 
-    print('check_and_update_selected_device0');
     _m_floating_button_icon = FLOATING_ICON_BLUETOOTH_SETTINGS;
 
     try {
@@ -1069,7 +976,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
             });
           }
 
-        } on Exception catch (e) {
+        } catch (e) {
           print('get parsed param exception: $e');
         }
 
@@ -1156,7 +1063,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
     print('check_and_update_selected_device9');
 
-    if (sw.get_selected_bdaddr() == null) {
+    if (sw.get_selected_bdaddr() == null || sw.get_selected_bdname() == null) {
       String msg = "Please select your Bluetooth GPS/GNSS Receiver in Settings (the gear icon on top right)";
       /*Fluttertoast.showToast(
           msg: msg
@@ -1249,25 +1156,40 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     return sw;
   }
 
-  void toast(String msg)
+  void toast(String msg) async
   {
-    /*
-    */
-    if (true) {
-      Fluttertoast.showToast(
-        msg: msg,
+    try {
+      await method_channel.invokeMethod(
+          "toast",
+          {
+            "msg": msg
+          }
       );
-    } else {
-      final snackBar = SnackBar(content: Text(msg));
 
-      Scaffold.of(context).showSnackBar(snackBar);
+    }  catch (e) {
+      print("WARNING: toast failed exception: $e");
     }
+  }
 
+  void snackbar(String msg)
+  {
+    try {
+      final snackBar = SnackBar(content: Text(msg));
+      _scaffoldKey.currentState.showSnackBar(snackBar);
+    }  catch (e) {
+      print("WARNING: snackbar failed exception: $e");
+    }
   }
 
   Future<void> disconnect() async
   {
     try {
+      if (_is_bt_connected) {
+        toast("Disconnecting...");
+      } else {
+        toast("Not connected...");
+      }
+      //call it in any case just to be sure service it is stopped (.close()) method called
       await method_channel.invokeMethod('disconnect');
     } on PlatformException catch (e) {
       toast("WARNING: disconnect failed: $e");
@@ -1306,7 +1228,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
 
     String bdaddr = sw.get_selected_bdaddr();
-    if (bdaddr == null) {
+    if (bdaddr == null || sw.get_selected_bdname() == null) {
       toast(
         "Please select your Bluetooth GPS/GNSS Receiver device...",
       );
@@ -1369,7 +1291,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     try {
       ret = await method_channel.invokeMethod<bool>('is_bluetooth_on');
     } on PlatformException catch (e) {
-      String status = "is_bluetooth_on exception: '${e.message}'.";
+      String status = "is_bluetooth_on error: '${e.message}'.";
       print(status);
     }
     return ret;

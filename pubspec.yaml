@@ -20,9 +20,9 @@ dependencies:
   flutter:
     sdk: flutter
   preferences: ^4.0.0
-  fluttertoast: ^2.0.7
-  shared_preferences:
   flutter_gallery_assets: ^0.1.9+2
+  flutter_markdown: ^0.2.0
+
 
 dev_dependencies:
   flutter_driver:

@@ -21,10 +21,11 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugins.GeneratedPluginRegistrant;
 
-import android.support.v4.app.ActivityCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.pm.PackageManager;
-
+import android.os.Message;
 
 import com.clearevo.libecodroidbluetooth.*;
 import com.clearevo.libecodroidgnss_parse.*;
@@ -39,13 +40,30 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
     EventChannel.EventSink m_events_sink;
     bluetooth_gnss_service m_service;
     boolean mBound = false;
-    Handler m_handler = new Handler();
 
+    Handler m_handler;
+    final int MESSAGE_PARAMS_MAP = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         GeneratedPluginRegistrant.registerWith(this);
+
+        Log.d(TAG, "onCraete()");
+
+        m_handler = new Handler(getMainLooper()) {
+            @Override
+            public void handleMessage(Message inputMessage) {
+                if (inputMessage.what == MESSAGE_PARAMS_MAP) {
+                    try {
+                        Object params_map = inputMessage.obj;
+                        m_events_sink.success(params_map);
+                    } catch (Exception e) {
+                        Log.d(TAG, "handlemessage exception: "+Log.getStackTraceString(e));
+                    }
+                }
+            }
+        };
 
         new MethodChannel(getFlutterView(), ENGINE_METHOD_CHANNEL).setMethodCallHandler(
                 new MethodCallHandler() {
@@ -57,6 +75,9 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                             boolean reconnect = call.argument("reconnect");
                             int ret = connect(bdaddr, secure, reconnect);
                             result.success(ret);
+                        } else if (call.method.equals("toast")) {
+                            String msg = call.argument("msg");
+                            toast(msg);
                         } else if (call.method.equals("disconnect")) {
                             try {
                                 if (mBound) {
@@ -95,8 +116,8 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                         } else if (call.method.equals("is_location_enabled") || call.method.equals("is_mock_location_enabled")) {
 
                             Log.d(TAG, "is_location_enabled 0");
-                            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                                    ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                                    ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
                                     ) {
 
                                 Log.d(TAG, "is_location_enabled check locaiton permission already granted");
@@ -201,9 +222,19 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
     public void on_updated_nmea_params(HashMap<String, Object> params_map)
     {
         try {
-            m_events_sink.success(params_map);
+            Message msg = m_handler.obtainMessage(MESSAGE_PARAMS_MAP, params_map);
+            msg.sendToTarget();
         } catch (Exception e) {
             Log.d(TAG, "on_updated_nmea_params sink update exception: "+Log.getStackTraceString(e));
+        }
+    }
+
+    public void toast(String msg)
+    {
+        try {
+            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Log.d(TAG, "toast exception: "+Log.getStackTraceString(e));
         }
     }
 

@@ -63,15 +63,18 @@ class settings_widget_state extends State<settings_widget> {
     String ret = '';
     String bdaddr = get_selected_bdaddr();
     print("get_selected_bd_summary selected bdaddr: $bdaddr");
-    if ( bdaddr == null) {
+    String bdname = get_selected_bdname();
+    if ( bdaddr == null || bdname == null) {
       ret += "No device selected";
     } else {
-      ret += get_selected_bdname() ?? "";
+      ret +=  bdname;
       ret += " ($bdaddr)";
     }
     print("get_selected_bd_summary ret $ret");
     return ret;
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +104,7 @@ class settings_widget_state extends State<settings_widget> {
           ),
             PreferenceTitle('Bluetooth Connection settings'),
             CheckboxPreference("Secure RFCOMM connection", 'secure'),
-            CheckboxPreference("Try re-connect once on disconnection", 'reconnect'),
+            CheckboxPreference("Auto-reconnect mode (takes effect in next connection)", 'reconnect'),
         ]),
       ),
     );

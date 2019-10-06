@@ -16,6 +16,8 @@
 
 
 
+
+
     <application
         android:name="io.flutter.app.FlutterApplication"
         android:label="Bluetooth GNSS"
