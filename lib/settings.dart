@@ -51,7 +51,7 @@ class settings_widget_state extends State<settings_widget> {
   String get_selected_bdname()
   {
     String bdaddr = get_selected_bdaddr();
-    print("get_selected_bdname: bdaddr: "+bdaddr);
+    print("get_selected_bdname: bdaddr: $bdaddr");
     if (bdaddr == null || !(m_bdaddr_to_name_map.containsKey(bdaddr)) )
       return null;
     return m_bdaddr_to_name_map[bdaddr];
