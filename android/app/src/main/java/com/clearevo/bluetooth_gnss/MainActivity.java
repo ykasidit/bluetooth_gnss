@@ -240,8 +240,13 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
 
     @Override
     public void onBackPressed() {
+        if (mBound && m_service != null && m_service.is_bt_connected()) {
+            toast("Bluetooth GNSS running in backgroud...");
+        }
+        /* stop by disconnect button instead
         Intent intent = new Intent(getApplicationContext(), bluetooth_gnss_service.class);
         stopService(intent);
+         */
         super.onBackPressed();
     }
 

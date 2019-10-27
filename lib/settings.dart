@@ -105,6 +105,7 @@ class settings_widget_state extends State<settings_widget> {
             PreferenceTitle('Bluetooth Connection settings'),
             CheckboxPreference("Secure RFCOMM connection", 'secure'),
             CheckboxPreference("Auto-reconnect mode (takes effect in next connection)", 'reconnect'),
+            CheckboxPreference("Check for Settings > 'Location' ON and 'High Accuracy'", 'check_settings_location'),
         ]),
       ),
     );

@@ -21,6 +21,7 @@ main() async {
           {
             'reconnect': false,
             'secure': true,
+            'check_settings_location': true,
           }
   );
   //PrefService.setString("target_bdaddr", null);
@@ -205,6 +206,27 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   static String note_how_to_disable_mock_location = "NOTE: To use internal phone GPS again:\nGo to phone 'Settings' > 'Developer Options'\n > 'Mock location app'\nSet to 'No apps' and restart phone.";
   Map<dynamic, dynamic> _param_map = Map<dynamic, dynamic>();
 
+  static void LogPrint(Object object) async {
+    int defaultPrintLength = 1020;
+    if (object == null || object.toString().length <= defaultPrintLength) {
+      print(object);
+    } else {
+      String log = object.toString();
+      int start = 0;
+      int endIndex = defaultPrintLength;
+      int logLength = log.length;
+      int tmpLogLength = log.length;
+      while (endIndex < logLength) {
+        print(log.substring(start, endIndex));
+        endIndex += defaultPrintLength;
+        start += defaultPrintLength;
+        tmpLogLength -= defaultPrintLength;
+      }
+      if (tmpLogLength > 0) {
+        print(log.substring(start, logLength));
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -220,7 +242,8 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     event_channel.receiveBroadcastStream().listen(
             (dynamic event) {
 
-              //print("got event -----------");
+              print("got event -----------");
+              LogPrint("$event");
               Map<dynamic, dynamic> param_map = event;
 
               setState(() {
@@ -449,14 +472,14 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                   padding: const EdgeInsets.all(5.0),
                                 ),
                                 Text(
-                                    "You can now use other apps like 'Maps' normally\nPress HOME to goto use other apps\nPress BACK to cancel/stop and exit",
+                                    "You can now use other apps like 'Maps' normally\nPress HOME to goto use other apps\nTo stop, press the 'Disconnect' menu in top-right options.",
                                     style: Theme.of(context).textTheme.body2
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.all(5.0),
                                 ),
                                 Text(
-                                        ""+note_how_to_disable_mock_location,
+                                        ""+note_how_to_disable_mock_location.toString(),
                                         style: Theme.of(context).textTheme.caption
                                 ),
                               ],
@@ -631,11 +654,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                      'N Galileo used:',
+                                      'N Galileo in use/view:',
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                  _param_map["GA_n_sats_used_str"] ?? WAITING_DEV,
+                                  "${_param_map["GA_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GA_n_sats_in_view_str"] ?? WAITING_DEV}",
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -644,11 +667,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                      'N GPS used:',
+                                      'N GPS in use/view:',
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                  _param_map["GP_n_sats_used_str"] ?? WAITING_DEV,
+                                  "${_param_map["GP_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GP_n_sats_in_view_str"] ?? WAITING_DEV}",
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -657,11 +680,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                      'N GLONASS used:',
+                                      'N GLONASS in use/view:',
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                  _param_map["GL_n_sats_used_str"] ?? WAITING_DEV,
+                                  "${_param_map["GL_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GL_n_sats_in_view_str"] ?? WAITING_DEV}",
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -670,11 +693,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                      'N BeiDou used:',
+                                      'N BeiDou in use/view:',
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                  _param_map["GB_n_sats_used_str"] ?? WAITING_DEV,
+                                  "${_param_map["GB_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GB_n_sats_in_view_str"] ?? WAITING_DEV}",
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -1084,31 +1107,38 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
     print('check_and_update_selected_device11');
 
-    if (! (await is_location_enabled())) {
-      String msg = "Location needs to be on and set to 'High Accuracy Mode' - Please go to phone Settings > Location to change this...";
-      setState(() {
-        _check_state_map_icon["Location must be ON and 'High Accuracy'"] = ICON_FAIL;
-        _status = msg;
-      });
+    bool check_location = PrefService.getBool('check_settings_location') ?? true;
 
-      print('pre calling open_phone_location_settings() user_pressed_connect_take_action_and_ret_sw $user_pressed_connect_take_action_and_ret_sw');
+    if (check_location) {
+      if (!(await is_location_enabled())) {
+        String msg = "Location needs to be on and set to 'High Accuracy Mode' - Please go to phone Settings > Location to change this...";
+        setState(() {
+          _check_state_map_icon["Location must be ON and 'High Accuracy'"] =
+              ICON_FAIL;
+          _status = msg;
+        });
 
-      if (user_pressed_connect_take_action_and_ret_sw) {
-        bool open_act_ret = false;
-        try {
-          print('calling open_phone_location_settings()');
-          open_act_ret = await method_channel.invokeMethod('open_phone_location_settings');
-          toast("Please set Location ON and 'High Accuracy Mode'...");
-        } on PlatformException catch (e) {
-          print("Please open phone Settings and change first (can't redirect screen: $e)");
+        print(
+            'pre calling open_phone_location_settings() user_pressed_connect_take_action_and_ret_sw $user_pressed_connect_take_action_and_ret_sw');
+
+        if (user_pressed_connect_take_action_and_ret_sw) {
+          bool open_act_ret = false;
+          try {
+            print('calling open_phone_location_settings()');
+            open_act_ret =
+            await method_channel.invokeMethod('open_phone_location_settings');
+            toast("Please set Location ON and 'High Accuracy Mode'...");
+          } on PlatformException catch (e) {
+            print(
+                "Please open phone Settings and change first (can't redirect screen: $e)");
+          }
         }
+        print('check_and_update_selected_device12');
+        return null;
       }
-      print('check_and_update_selected_device12');
-      return null;
+      print('check_and_update_selected_device13');
+      _check_state_map_icon["Location is on and 'High Accuracy'"] = ICON_OK;
     }
-    print('check_and_update_selected_device13');
-    _check_state_map_icon["Location is on and 'High Accuracy'"] = ICON_OK;
-
 
     if (! (await is_mock_location_enabled())) {
       String msg = "Please go to phone Settings > Developer Options > Mock Location Provider and set 'Mock Location app' to 'Bluetooth GNSS'...";
