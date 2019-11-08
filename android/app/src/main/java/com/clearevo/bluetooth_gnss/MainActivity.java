@@ -80,10 +80,17 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                             toast(msg);
                         } else if (call.method.equals("disconnect")) {
                             try {
+                                Log.d(TAG, "disconnect0");
                                 if (mBound) {
+                                    Log.d(TAG, "disconnect1");
                                     m_service.close();
                                     result.success(true);
+                                    Log.d(TAG, "disconnect2");
                                 }
+                                Log.d(TAG, "disconnect3");
+                                Intent intent = new Intent(getApplicationContext(), bluetooth_gnss_service.class);
+                                stopService(intent);
+                                Log.d(TAG, "disconnect4");
                             } catch (Exception e) {
                                 Log.d(TAG, "disconnect exception: "+Log.getStackTraceString(e));
                             }
@@ -113,7 +120,9 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                             result.success(open_phone_bluetooth_settings());
                         } else if (call.method.equals("open_phone_location_settings")) {
                             result.success(open_phone_location_settings());
-                        } else if (call.method.equals("is_location_enabled") || call.method.equals("is_mock_location_enabled")) {
+                        } else if (call.method.equals("is_mock_location_enabled")) {
+                            result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
+                        } else if (call.method.equals("is_location_enabled")) {
 
                             Log.d(TAG, "is_location_enabled 0");
                             if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
@@ -121,6 +130,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                     ) {
 
                                 Log.d(TAG, "is_location_enabled check locaiton permission already granted");
+
                                 if (call.method.equals("is_location_enabled")) {
                                     result.success(bluetooth_gnss_service.is_location_enabled(getApplicationContext()));
                                 } else if (call.method.equals("is_mock_location_enabled")) {
@@ -133,7 +143,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                 new Thread() {
                                     public void run() {
                                         try {
-                                            Thread.sleep(2000);
+                                            Thread.sleep(1000);
                                         } catch (Exception e) {}
                                         m_handler.post(
                                                 new Runnable() {

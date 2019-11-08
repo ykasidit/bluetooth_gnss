@@ -203,7 +203,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   bool _customIndicator = false;
 
   Timer timer;
-  static String note_how_to_disable_mock_location = "NOTE: To use internal phone GPS again:\nGo to phone 'Settings' > 'Developer Options'\n > 'Mock location app'\nSet to 'No apps' and restart phone.";
+  static String note_how_to_disable_mock_location = "";
   Map<dynamic, dynamic> _param_map = Map<dynamic, dynamic>();
 
   static void LogPrint(Object object) async {
@@ -472,16 +472,16 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                   padding: const EdgeInsets.all(5.0),
                                 ),
                                 Text(
-                                    "You can now use other apps like 'Maps' normally\nPress HOME to goto use other apps\nTo stop, press the 'Disconnect' menu in top-right options.",
+                                    "- You can now use other apps like 'Maps' normally\n- Location is now from connected device\n- To stop, press the 'Disconnect' menu in top-right options.",
                                     style: Theme.of(context).textTheme.body2
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.all(5.0),
                                 ),
-                                Text(
+                                /*Text(
                                         ""+note_how_to_disable_mock_location.toString(),
                                         style: Theme.of(context).textTheme.caption
-                                ),
+                                ),*/
                               ],
                             )
                     ),
@@ -1057,7 +1057,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
     Map<dynamic, dynamic> bd_map = await get_bd_map();
     if (bd_map.length == 0) {
-      String msg = "Please pair your Bluetooth GPS/GNSS Receiver in phone Settings > Bluetooth first.\n\nClick button below to go there...";
+      String msg = "Please pair your Bluetooth GPS/GNSS Receiver in phone Settings > Bluetooth first.\n\nClick floating button to go there...";
       setState(() {
         _check_state_map_icon["No paired Bluetooth devices"] = ICON_FAIL;
         _status = msg;
@@ -1092,7 +1092,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
           msg: msg
       );*/
       setState(() {
-        _check_state_map_icon["Device not selected in gear icon"] = ICON_FAIL;
+        _check_state_map_icon["No device selected (select in top-right settings icon)"] = ICON_FAIL;
         _selected_device = sw.get_selected_bd_summary();
         _status = msg;
       });
@@ -1174,7 +1174,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       //ok - ready to connect
       setState(() {
         _selected_device = sw.get_selected_bd_summary();
-        _status = "Please press the button below to connect...";
+        _status = "Please press the floating button to connect...";
           _m_floating_button_icon = FLOATING_ICON_BLUETOOTH_CONNECT;
       });
       print('check_and_update_selected_device17');

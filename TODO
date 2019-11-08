@@ -1,3 +1,20 @@
+- service must stop when press disc
+- cleaner code - see https://www.codota.com/code/java/methods/android.location.LocationManager/addTestProvider
+  - is_mock_location_activated()
+  - deactivate_mock_location()
+  - activate_mock_location()
+- if disconnect fail show reason
+- capture all flow logs, can press send/share logfile
+- setmock speed/bearing
+- setmock/disablemock radio button, test google maps
+- check if is mocklocation app dont need user permission see bt gps app
+- alain not connect issue
+
+- ntrip unittest use from env, push code
+
+- rtk
+- USB mode
+
 - if no fix dont show you can now use other apps like maps
 - show bigger you can now use other apps like maps
 - should be no nmea parse exceptions
