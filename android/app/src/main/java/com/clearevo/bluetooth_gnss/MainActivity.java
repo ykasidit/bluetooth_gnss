@@ -11,6 +11,8 @@ import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 
 import io.flutter.app.FlutterActivity;
@@ -69,12 +71,41 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                 new MethodCallHandler() {
                     @Override
                     public void onMethodCall(MethodCall call, Result result) {
+
                         if (call.method.equals("connect")) {
                             String bdaddr = call.argument("bdaddr");
                             boolean secure = call.argument("secure");
                             boolean reconnect = call.argument("reconnect");
-                            int ret = connect(bdaddr, secure, reconnect);
+                            HashMap<String, String> extra_params = new HashMap<String, String>();
+
+                            for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
+                                extra_params.put(pk, call.argument(pk));
+                            }
+                            int ret = connect(bdaddr, secure, reconnect, extra_params);
                             result.success(ret);
+                        } else if (call.method.equals("get_mountpoint_list")) {
+                            String host = call.argument("ntrip_host");
+                            String port = call.argument("ntrip_port");
+                            String user = call.argument("ntrip_user");
+                            String pass = call.argument("ntrip_pass");
+                            int ret_code = 0;
+                            new Thread() {
+                                public void run() {
+                                    try {
+                                        ArrayList<String> ret = get_mountpoint_list(host, Integer.parseInt(port), user, pass);
+                                        Log.d(TAG,"get_mountpoint_list ret: "+ret);
+                                        HashMap<String, Object> cbmap = new HashMap<String, Object>();
+                                        cbmap.put("callback_src", "get_mountpoint_list");
+                                        cbmap.put("callback_payload", ret);
+                                        Message msg = m_handler.obtainMessage(MESSAGE_PARAMS_MAP, cbmap);
+                                        msg.sendToTarget();
+                                    } catch (Exception e) {
+                                        Log.d(TAG, "on_updated_nmea_params sink update exception: "+Log.getStackTraceString(e));
+                                        toast("Get mountpoint_list fialed: "+e);
+                                    }
+                                }
+                            }.start();
+                            result.success(ret_code);
                         } else if (call.method.equals("toast")) {
                             String msg = call.argument("msg");
                             toast(msg);
@@ -185,6 +216,26 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
         );
     }
 
+    public ArrayList<String> get_mountpoint_list(String host, int port, String user, String pass)
+    {
+        ArrayList<String> ret = null;
+        ntrip_conn_mgr mgr = null;
+        try {
+            mgr = new ntrip_conn_mgr(host, port, "", user, pass, null);
+            ret = mgr.get_mount_point_list();
+        } catch (Exception e) {
+            Log.d(TAG, "get_mountpoint_list call exception: "+Log.getStackTraceString(e));
+        } finally {
+            if (mgr != null) {
+                try {
+                    mgr.close();
+                } catch (Exception e) {
+                }
+            }
+        }
+        return ret;
+    }
+
     public boolean open_phone_settings()
     {
         try {
@@ -239,28 +290,46 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
         }
     }
 
+
     public void toast(String msg)
     {
-        try {
-            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
-        } catch (Exception e) {
-            Log.d(TAG, "toast exception: "+Log.getStackTraceString(e));
+        m_handler.post(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            Log.d(TAG, "toast exception: "+Log.getStackTraceString(e));
+                        }
+                    }
+                }
+        );
+    }
+
+    public void stop_service_if_not_connected()
+    {
+        if (mBound && m_service != null && m_service.is_bt_connected()) {
+            toast("Bluetooth GNSS running in backgroud...");
+        } else {
+            Intent intent = new Intent(getApplicationContext(), bluetooth_gnss_service.class);
+            stopService(intent);
         }
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        stop_service_if_not_connected();
+    }
+
+    @Override
     public void onBackPressed() {
-        if (mBound && m_service != null && m_service.is_bt_connected()) {
-            toast("Bluetooth GNSS running in backgroud...");
-        }
-        /* stop by disconnect button instead
-        Intent intent = new Intent(getApplicationContext(), bluetooth_gnss_service.class);
-        stopService(intent);
-         */
+
         super.onBackPressed();
     }
 
-    int connect(String bdaddr, boolean secure, boolean reconnect)
+    int connect(String bdaddr, boolean secure, boolean reconnect, HashMap<String, String> extra_params)
     {
         Log.d(TAG, "MainActivity connect(): "+bdaddr);
         int ret = -1;
@@ -269,8 +338,16 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
         intent.putExtra("bdaddr", bdaddr);
         intent.putExtra("secure", secure);
         intent.putExtra("reconnect", reconnect);
+        Log.d(TAG, "mainact extra_params: "+extra_params);
+        for (String key : extra_params.keySet()) {
+            String val = extra_params.get(key);
+            Log.d(TAG, "mainact extra_params key: "+key+" val: "+val);
+            intent.putExtra(key, val);
+        }
         intent.putExtra("activity_class_name", this.getClass().getName());
         intent.putExtra("activity_icon_id", R.mipmap.ic_launcher);
+
+
         ComponentName ssret = startService(intent);
         Log.d(TAG, "MainActivity connect(): startservice ssret: "+ssret.flattenToString());
         return 0;

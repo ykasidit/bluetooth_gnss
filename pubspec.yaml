@@ -19,9 +19,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  preferences: ^4.0.0
+  preferences: ^5.0.2
   flutter_gallery_assets: ^0.1.9+2
   flutter_markdown: ^0.2.0
+  progress_dialog: ^1.2.0
 
 
 dev_dependencies:

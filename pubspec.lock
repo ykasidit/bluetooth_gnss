@@ -293,7 +293,7 @@ packages:
       name: preferences
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "4.0.0"
+    version: "5.0.2"
   process:
     dependency: transitive
     description:
@@ -301,6 +301,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.12"
+  progress_dialog:
+    dependency: "direct main"
+    description:
+      name: progress_dialog
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.2.0"
   pub_semver:
     dependency: transitive
     description:
@@ -321,7 +328,7 @@ packages:
       name: shared_preferences
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.5.3+4"
+    version: "0.5.4+3"
   shelf:
     dependency: transitive
     description:
@@ -476,4 +483,4 @@ packages:
     version: "2.1.16"
 sdks:
   dart: ">=2.4.0 <3.0.0"
-  flutter: ">=1.5.0 <2.0.0"
+  flutter: ">=1.6.7 <2.0.0"

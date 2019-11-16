@@ -1092,7 +1092,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
           msg: msg
       );*/
       setState(() {
-        _check_state_map_icon["No device selected (select in top-right settings icon)"] = ICON_FAIL;
+        _check_state_map_icon["No device selected\n(select in top-right gear icon)"] = ICON_FAIL;
         _selected_device = sw.get_selected_bd_summary();
         _status = msg;
       });
@@ -1173,12 +1173,15 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     } else {
       //ok - ready to connect
       setState(() {
-        _selected_device = sw.get_selected_bd_summary();
         _status = "Please press the floating button to connect...";
           _m_floating_button_icon = FLOATING_ICON_BLUETOOTH_CONNECT;
       });
       print('check_and_update_selected_device17');
     }
+
+    setState(() {
+      _selected_device = sw.get_selected_bd_summary();
+    });
 
     //setState((){});
     print('check_and_update_selected_device18');
@@ -1275,13 +1278,19 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       return;
     }
 
+    _param_map = Map<dynamic, dynamic>(); //clear last conneciton params state...
     String status = "unknown";
     try {
       final int ret = await method_channel.invokeMethod('connect',
               {
                 "bdaddr": bdaddr,
                 'secure': PrefService.getBool('secure') ?? true,
-                'reconnect' :PrefService.getBool('reconnect') ?? false,
+                'reconnect' : PrefService.getBool('reconnect') ?? false,
+                'ntrip_host': PrefService.getString('ntrip_host'),
+                'ntrip_port': PrefService.getString('ntrip_port'),
+                'ntrip_mountpoint': PrefService.getString('ntrip_mountpoint'),
+                'ntrip_user': PrefService.getString('ntrip_user'),
+                'ntrip_pass': PrefService.getString('ntrip_pass'),
               }
       );
       if (ret == 0) {

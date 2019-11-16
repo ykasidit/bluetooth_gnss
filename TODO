@@ -1,9 +1,12 @@
-- service must stop when press disc
-- cleaner code - see https://www.codota.com/code/java/methods/android.location.LocationManager/addTestProvider
-  - is_mock_location_activated()
-  - deactivate_mock_location()
-  - activate_mock_location()
-- if disconnect fail show reason
+- add border to choose mount-point
+- must not be stuck at 'starting connection' - must go to connected but warning if no nmea, no gga received
+- checbox enable ntrip connect or not
+
+
+- ntrip real test
+- ntrip auto reconnect impl
+- auto-reconnect by default
+
 - capture all flow logs, can press send/share logfile
 - setmock speed/bearing
 - setmock/disablemock radio button, test google maps
