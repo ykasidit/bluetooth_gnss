@@ -2,20 +2,17 @@
 - must not be stuck at 'starting connection' - must go to connected but warning if no nmea, no gga received
 - checbox enable ntrip connect or not
 
-
 - ntrip real test
 - ntrip auto reconnect impl
 - auto-reconnect by default
 
-- capture all flow logs, can press send/share logfile
+- option to capture nmea, debug logs, can press send/share nmea logfile
+
 - setmock speed/bearing
 - setmock/disablemock radio button, test google maps
 - check if is mocklocation app dont need user permission see bt gps app
-- alain not connect issue
 
-- ntrip unittest use from env, push code
 
-- rtk
 - USB mode
 
 - if no fix dont show you can now use other apps like maps
