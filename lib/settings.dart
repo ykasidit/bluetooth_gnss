@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:preferences/preferences.dart';
 import 'package:flutter/services.dart';
@@ -49,7 +50,8 @@ class settings_widget_state extends State<settings_widget> {
             (dynamic event) async {
 
           Map<dynamic, dynamic> event_map = event;
-          if (event_map.containsKey('callback_src')) {
+
+    if (event_map.containsKey('callback_src')) {
             try {
               print("settings got callback event: $event_map");
             } catch (e) {
@@ -57,8 +59,11 @@ class settings_widget_state extends State<settings_widget> {
             }
 
             if (event_map["callback_src"] == "get_mountpoint_list") {
+              print("dismiss progress dialog now0");
               if (m_pr != null) {
+                print("dismiss progress dialog now...");
                 m_pr.dismiss();
+                //new Future.delayed(const Duration(seconds: 1), () => (m_pr != null && m_pr.isShowing()) ? m_pr.dismiss() : null); //fast dismisses wont close the dialog like if no internet cases
               }
 
               //get list from native engine
@@ -110,7 +115,6 @@ class settings_widget_state extends State<settings_widget> {
                                 String disp_text = "${valmap["mountpoint"]}: ${valmap["identifier"]}";
                             return SimpleDialogOption(
                                 onPressed: () {
-
                                   Navigator.pop(context, "${valmap["mountpoint"]}");
                                 },
                                 child: Text(disp_text)
@@ -244,52 +248,59 @@ class settings_widget_state extends State<settings_widget> {
                 return null;
               }
           ),
-          RaisedButton(
-            child: Text(
-              'Choose mount-point',
-            ),
-            onPressed: () async {
+          Padding(
+            padding: const EdgeInsets.all(5.0),
+            child: RaisedButton(
+              child: Text(
+                'List streams from above server',
+              ),
+              onPressed: () async {
 
-              if (PrefService.getString('ntrip_host') == null || PrefService.getString('ntrip_host') == "" || PrefService.getString('ntrip_port') == null) {
-                toast("Please specify the ntrip_host and ntrip_port first...");
-                return;
-              }
+                if (PrefService.getString('ntrip_host') == null || PrefService.getString('ntrip_host') == "" || PrefService.getString('ntrip_port') == null) {
+                  toast("Please specify the ntrip_host and ntrip_port first...");
+                  return;
+                }
 
-              int ret_code = -1;
+                int ret_code = -1;
 
 
-              try {
-                m_pr = new ProgressDialog(context,type: ProgressDialogType.Normal, isDismissible: false, showLogs: true);
-                m_pr.style(
+                try {
+                  m_pr = new ProgressDialog(context,type: ProgressDialogType.Normal, isDismissible: false, showLogs: true);
+                  m_pr.style(
                     message: 'Connecting to NTRIP server...',
                     borderRadius: 10.0,
                     backgroundColor: Colors.white,
                     progressWidget: CircularProgressIndicator(),
                     elevation: 10.0,
                     insetAnimCurve: Curves.easeInOut,
-                );
-                m_pr.show();
-                ret_code = await method_channel.invokeMethod(
-                    "get_mountpoint_list",
-                    {
-                      'ntrip_host': PrefService.getString('ntrip_host'),
-                      'ntrip_port': PrefService.getString('ntrip_port'),
-                      'ntrip_user': PrefService.getString('ntrip_user'),
-                      'ntrip_pass': PrefService.getString('ntrip_pass'),
-                    }
-                );
-                if (ret_code != 0) {
-                  throw "Start task failed...";
+                  );
+                  m_pr.show();
+
+                  //make sure dialog shows first otherwise if no internet the .dismoiss wont work if immediate fail and progress dialog would block forever
+                  new Future.delayed(const Duration(seconds: 1), () async
+                  {
+                    ret_code = await method_channel.invokeMethod(
+                        "get_mountpoint_list",
+                        {
+                          'ntrip_host': PrefService.getString('ntrip_host'),
+                          'ntrip_port': PrefService.getString('ntrip_port'),
+                          'ntrip_user': PrefService.getString('ntrip_user'),
+                          'ntrip_pass': PrefService.getString('ntrip_pass'),
+                        }
+                    );
+                    print("get_mountpoint_list req waiting callback ret: $ret_code");
+                  }
+                  );
+
+                } catch (e) {
+                  print("WARNING: Choose mount-point failed exception: $e");
+                  try {
+                    toast("List mount-points failed: $e");
+                    m_pr.dismiss();
+                  } catch (e) {}
                 }
-                print("get_mountpoint_list req waiting callback ret: $ret_code");
-              } catch (e) {
-                print("WARNING: Choose mount-point failed exception: $e");
-                try {
-                  toast("List mount-points failed: $e");
-                  m_pr.dismiss();
-                } catch (e) {}
-              }
-            },
+              },
+            ),
           ),
           TextFieldPreference('Stream (mount-point)', 'ntrip_mountpoint',
               defaultVal: '', validator: (str) {

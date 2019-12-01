@@ -91,8 +91,9 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                             int ret_code = 0;
                             new Thread() {
                                 public void run() {
+                                    ArrayList<String> ret = null;
                                     try {
-                                        ArrayList<String> ret = get_mountpoint_list(host, Integer.parseInt(port), user, pass);
+                                         ret = get_mountpoint_list(host, Integer.parseInt(port), user, pass);
                                         Log.d(TAG,"get_mountpoint_list ret: "+ret);
                                         HashMap<String, Object> cbmap = new HashMap<String, Object>();
                                         cbmap.put("callback_src", "get_mountpoint_list");
@@ -130,6 +131,10 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                             result.success(rfcomm_conn_mgr.get_bd_map());
                         } else if (call.method.equals("is_bluetooth_on")) {
                             result.success(rfcomm_conn_mgr.is_bluetooth_on());
+                        } else if (call.method.equals("is_ntrip_connected")) {
+                            result.success(m_service.is_ntrip_connected());
+                        } else if (call.method.equals("get_ntrip_cb_count")) {
+                            result.success(m_service.get_ntrip_cb_count());
                         } else if (call.method.equals("is_bt_connected")) {
                             if (mBound && m_service != null && m_service.is_bt_connected()) {
                                 result.success(true);

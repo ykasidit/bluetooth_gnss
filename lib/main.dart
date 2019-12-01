@@ -191,6 +191,8 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   String _main_state = "Loading...";
   static String WAITING_DEV = "No data";
   bool _is_bt_connected = false;
+  bool _is_ntrip_connected = false;
+  int _ntrip_packets_count = 0;
   bool _is_bt_conn_thread_alive_likely_connecting = false;
   String _location_from_talker = WAITING_DEV;
 
@@ -870,43 +872,44 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
               break;
 
 
-              /*
-            case "Location":
+
+            case "RTK/NTRIP":
               print("build location");
               return  SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: DataTable(
-                  columns: [
-                    DataColumn(
-                      label: Text("System"),
-                      numeric: false,
-                      tooltip: "The GNSS System used",
-                    ),
-                    DataColumn(
-                      label: Text("System"),
-                      numeric: false,
-                      tooltip: "The GNSS System used",
-                    ),
-                  ],
-                  rows: users
-                          .map(
-                            (user) => DataRow(
-
-                            cells: [
-                              DataCell(
-                                Text(user),
-
+                  child: Padding(
+                    padding: const EdgeInsets.all(25.0),
+                    child: new Container(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "${_is_ntrip_connected?'NTRIP Connected':'NTRIP Not Connected'}",
+                              style:  Theme.of(context).textTheme.headline.copyWith(
+                                fontFamily: 'GoogleSans',
+                                color: Colors.blueGrey,
                               ),
-                              DataCell(
-                                Text(user),
-                              ),
-                            ]),
+                            ),
+                            Padding(padding: EdgeInsets.all(10.0)),
+                            Text("${(PrefService.getString('ntrip_host') != null && PrefService.getString('ntrip_host') != null) ? (PrefService.getString('ntrip_host'))+":"+PrefService.getString('ntrip_port') : ''}"),
+                            Padding(padding: EdgeInsets.all(10.0)),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text(
+                                    "N NTRIP packets received:",
+                                    style: Theme.of(context).textTheme.body2
+                                ),
+                                Text(
+                                    "$_ntrip_packets_count",
+                                    style: Theme.of(context).textTheme.body1
+                                ),
+                              ],
+                            ),
+                          ],
+                        )),
                   )
-                          .toList(),
-                ),
               );
               break;
-              */
           }
           return SingleChildScrollView(
                   child: Padding(
@@ -973,6 +976,9 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
     try {
       _is_bt_connected = await method_channel.invokeMethod('is_bt_connected');
+      _is_ntrip_connected = await method_channel.invokeMethod('is_ntrip_connected');
+      _ntrip_packets_count = await method_channel.invokeMethod('get_ntrip_cb_count');
+
 
       if (_is_bt_connected) {
         _status = "Connected";
@@ -983,6 +989,9 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
           DateTime now = DateTime.now();
           int nowts = now.millisecondsSinceEpoch;
           _mock_location_set_status = "";
+          if (_mock_location_set_ts == null) {
+            _mock_location_set_ts = 0;
+          }
           mock_set_millis_ago = nowts - _mock_location_set_ts;
           //print("mock_location_set_ts $mock_set_ts, nowts $nowts");
 
@@ -999,8 +1008,8 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
             });
           }
 
-        } catch (e) {
-          print('get parsed param exception: $e');
+        } catch (e, trace) {
+          print('get parsed param exception: $e $trace');
         }
 
         return null;

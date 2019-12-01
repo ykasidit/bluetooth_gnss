@@ -1,5 +1,27 @@
-- add border to choose mount-point
-- must not be stuck at 'starting connection' - must go to connected but warning if no nmea, no gga received
+- rtk state parse
+
+- ntrip not disconnect after close
+
+- 12-01 19:54:41.564 D/btgnss_service(15125): deactivate_mock_location exception: java.lang.IllegalArgumentException: Provider "gps" already exists
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at android.os.Parcel.createException(Parcel.java:2075)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at android.os.Parcel.readException(Parcel.java:2039)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at android.os.Parcel.readException(Parcel.java:1987)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at android.location.ILocationManager$Stub$Proxy.addTestProvider(ILocationManager.java:2022)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at android.location.LocationManager.addTestProvider(LocationManager.java:1461)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.activate_mock_location(bluetooth_gnss_service.java:625)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.setMock(bluetooth_gnss_service.java:573)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.on_updated_nmea_params(bluetooth_gnss_service.java:715)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at com.clearevo.libecodroidgnss_parse.gnss_sentence_parser.parse_nmea_string(gnss_sentence_parser.java:231)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at com.clearevo.libecodroidgnss_parse.gnss_sentence_parser.parse(gnss_sentence_parser.java:88)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.on_readline(bluetooth_gnss_service.java:427)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at com.clearevo.libecodroidbluetooth.inputstream_to_queue_reader_thread.run(inputstream_to_queue_reader_thread.java:140)
+  12-01 19:54:41.564 D/btgnss_service(15125): Caused by: android.os.RemoteException: Remote stack trace:
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at com.android.server.LocationManagerService.addTestProvider(LocationManagerService.java:3536)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at android.location.ILocationManager$Stub.onTransact(ILocationManager.java:958)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at android.os.Binder.execTransactInternal(Binder.java:1021)
+  12-01 19:54:41.564 D/btgnss_service(15125): 	at android.os.Binder.execTransact(Binder.java:994)
+
+
 - checbox enable ntrip connect or not
 
 - ntrip real test
