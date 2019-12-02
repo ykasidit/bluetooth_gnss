@@ -1,4 +1,11 @@
+- dev bearing
+- android 10 get maps to use mock location for over 10 mins
+  - rm debug 1.0 lat lon
+  - set supports bearing accordingly, dev bearing
+
 - rtk state parse
+- rtk state parse exception - handle
+- arraylist concurrent exception
 
 - ntrip not disconnect after close
 

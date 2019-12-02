@@ -21,7 +21,7 @@ main() async {
           {
             'reconnect': false,
             'secure': true,
-            'check_settings_location': true,
+            'check_settings_location': false,
           }
   );
   //PrefService.setString("target_bdaddr", null);
@@ -474,7 +474,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                   padding: const EdgeInsets.all(5.0),
                                 ),
                                 Text(
-                                    "- You can now use other apps like 'Maps' normally\n- Location is now from connected device\n- To stop, press the 'Disconnect' menu in top-right options.",
+                                    "- You can now use other apps like 'Waze' normally ('Maps' works upto Android 9.0).\n- Location is now from connected device\n- To stop, press the 'Disconnect' menu in top-right options.",
                                     style: Theme.of(context).textTheme.body2
                                 ),
                                 Padding(

@@ -325,7 +325,6 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stop_service_if_not_connected();
     }
 
     @Override
