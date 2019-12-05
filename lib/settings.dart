@@ -304,7 +304,7 @@ class settings_widget_state extends State<settings_widget> {
           ),
           TextFieldPreference('Stream (mount-point)', 'ntrip_mountpoint',
               defaultVal: '', validator: (str) {
-                if (str == "") {
+                if (str == null) {
                   return "Invalid mount-point";
                 }
                 return null;

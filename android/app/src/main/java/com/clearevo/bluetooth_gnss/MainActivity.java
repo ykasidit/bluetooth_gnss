@@ -14,6 +14,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.flutter.app.FlutterActivity;
 import io.flutter.plugin.common.EventChannel;
@@ -91,19 +92,22 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                             int ret_code = 0;
                             new Thread() {
                                 public void run() {
-                                    ArrayList<String> ret = null;
+                                    ArrayList<String> ret = new ArrayList<String>(); //init with empty list in case get fails
                                     try {
                                          ret = get_mountpoint_list(host, Integer.parseInt(port), user, pass);
+                                         if (ret == null) {
+                                             ret = new ArrayList<String>(); //init with empty list in case get fails - can't push null into concurrenthashmap
+                                         }
                                         Log.d(TAG,"get_mountpoint_list ret: "+ret);
-                                        HashMap<String, Object> cbmap = new HashMap<String, Object>();
-                                        cbmap.put("callback_src", "get_mountpoint_list");
-                                        cbmap.put("callback_payload", ret);
-                                        Message msg = m_handler.obtainMessage(MESSAGE_PARAMS_MAP, cbmap);
-                                        msg.sendToTarget();
                                     } catch (Exception e) {
                                         Log.d(TAG, "on_updated_nmea_params sink update exception: "+Log.getStackTraceString(e));
                                         toast("Get mountpoint_list fialed: "+e);
                                     }
+                                    ConcurrentHashMap<String, Object> cbmap = new ConcurrentHashMap<String, Object>();
+                                    cbmap.put("callback_src", "get_mountpoint_list");
+                                    cbmap.put("callback_payload", ret);
+                                    Message msg = m_handler.obtainMessage(MESSAGE_PARAMS_MAP, cbmap);
+                                    msg.sendToTarget();
                                 }
                             }.start();
                             result.success(ret_code);

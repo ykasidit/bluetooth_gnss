@@ -1,3 +1,5 @@
+- after press back then shows 'loading selected device'
+- focus 'Waze'
 - dev bearing
 - android 10 get maps to use mock location for over 10 mins
   - rm debug 1.0 lat lon

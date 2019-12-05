@@ -244,8 +244,8 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     event_channel.receiveBroadcastStream().listen(
             (dynamic event) {
 
-              print("got event -----------");
-              LogPrint("$event");
+              //print("got event -----------");
+              //LogPrint("$event");
               Map<dynamic, dynamic> param_map = event;
 
               setState(() {
@@ -891,6 +891,49 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             ),
                             Padding(padding: EdgeInsets.all(10.0)),
                             Text("${(PrefService.getString('ntrip_host') != null && PrefService.getString('ntrip_host') != null) ? (PrefService.getString('ntrip_host'))+":"+PrefService.getString('ntrip_port') : ''}"),
+                            Padding(padding: EdgeInsets.all(10.0)),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text(
+                                    "NTRIP Server/Login filled:",
+                                    style: Theme.of(context).textTheme.body2
+                                ),
+                                Text(
+                                    (
+                                        PrefService.getString('ntrip_host') != null &&
+                                            PrefService.getString('ntrip_host').toString().length > 0 &&
+
+                                            PrefService.getString('ntrip_port') != null &&
+                                            PrefService.getString('ntrip_port').toString().length > 0 &&
+
+                                            PrefService.getString('ntrip_mountpoint') != null &&
+                                            PrefService.getString('ntrip_mountpoint').toString().length > 0 &&
+
+                                            PrefService.getString('ntrip_user') != null &&
+                                            PrefService.getString('ntrip_user').toString().length > 0 &&
+
+                                            PrefService.getString('ntrip_pass') != null &&
+                                            PrefService.getString('ntrip_pass').toString().length > 0
+                                    ) ? "Yes" : "No",
+                                    style: Theme.of(context).textTheme.body1
+                                ),
+                              ],
+                            ),
+                            Padding(padding: EdgeInsets.all(10.0)),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text(
+                                    "NTRIP Stream (Mount-point) selected:",
+                                    style: Theme.of(context).textTheme.body2
+                                ),
+                                Text(
+                                    PrefService.getString('ntrip_mountpoint') ?? "None",
+                                    style: Theme.of(context).textTheme.body1
+                                ),
+                              ],
+                            ),
                             Padding(padding: EdgeInsets.all(10.0)),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
