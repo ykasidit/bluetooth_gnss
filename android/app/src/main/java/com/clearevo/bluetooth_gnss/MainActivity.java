@@ -58,8 +58,25 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
             @Override
             public void handleMessage(Message inputMessage) {
                 if (inputMessage.what == MESSAGE_PARAMS_MAP) {
+                    Log.d(TAG, "mainactivity handler got params map");
                     try {
+                        /*
+                        PREVENT: clone the hashmap...
+                        D/btgnss_mainactvty(15208): handlemessage exception: java.util.ConcurrentModificationException
+D/btgnss_mainactvty(15208): 	at java.util.HashMap$HashIterator.nextNode(HashMap.java:1441)
+D/btgnss_mainactvty(15208): 	at java.util.HashMap$EntryIterator.next(HashMap.java:1475)
+D/btgnss_mainactvty(15208): 	at java.util.HashMap$EntryIterator.next(HashMap.java:1473)
+D/btgnss_mainactvty(15208): 	at io.flutter.plugin.common.StandardMessageCodec.writeValue(StandardMessageCodec.java:289)
+D/btgnss_mainactvty(15208): 	at io.flutter.plugin.common.StandardMethodCodec.encodeSuccessEnvelope(StandardMethodCodec.java:57)
+D/btgnss_mainactvty(15208): 	at io.flutter.plugin.common.EventChannel$IncomingStreamRequestHandler$EventSinkImplementation.success(EventChannel.java:226)
+D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handleMessage(MainActivity.java:64)
+                        * */
                         Object params_map = inputMessage.obj;
+                        if (params_map instanceof HashMap) {
+                            params_map = ((HashMap) params_map).clone();
+                            Log.d(TAG, "cloned HashMap to prevent ConcurrentModificationException...");
+                        }
+
                         m_events_sink.success(params_map);
                     } catch (Exception e) {
                         Log.d(TAG, "handlemessage exception: "+Log.getStackTraceString(e));
@@ -291,6 +308,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
 
     public void on_updated_nmea_params(HashMap<String, Object> params_map)
     {
+        Log.d(TAG, "mainactivity on_updated_nmea_params()");
         try {
             Message msg = m_handler.obtainMessage(MESSAGE_PARAMS_MAP, params_map);
             msg.sendToTarget();

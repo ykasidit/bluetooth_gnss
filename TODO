@@ -1,5 +1,1727 @@
 *ALWAYS* do final test with:
-flutter run --release -d BH9005AW5L
+flutter build apk --release
+
+---
+
+no data update on screen but will show if back to exit activity and start again:
+
+kasidit@kasidit-thinkpad:~$ adb logcat -v time | grep btgnss
+12-05 22:22:45.476 D/btgnss_nmea_p(18793): calling m_cb callback with parsed params
+12-05 22:22:45.476 D/btgnss_service(18793): service: on_updated_nmea_params()
+12-05 22:22:45.476 D/btgnss_service(18793): setMock accuracy_meters: 7.7
+12-05 22:22:45.477 D/btgnss_service(18793): setMock lat: 13.781534166666667
+12-05 22:22:45.477 D/btgnss_service(18793): setMock lon: 13.781534166666667
+12-05 22:22:45.478 D/btgnss_mainactvty(18793): mainactivity on_updated_nmea_params()
+12-05 22:22:45.478 D/btgnss_mainactvty(18793): mainactivity handler got params map
+12-05 22:22:45.478 D/btgnss_mainactvty(18793): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:23:09.314 D/btgnss_mainactvty(19368): onCraete()
+12-05 22:23:09.335 D/btgnss_service(19368): onCreate()
+12-05 22:23:09.336 D/btgnss_service(19368): onBind()
+12-05 22:23:09.406 D/btgnss_mainactvty(19368): onServiceConnected()
+12-05 22:23:09.797 W/btgnss_mainactvty(19368): adding listener
+12-05 22:23:19.615 D/btgnss_mainactvty(19368): MainActivity connect(): B8:27:EB:0C:6F:E6
+12-05 22:23:19.616 D/btgnss_mainactvty(19368): mainact extra_params: {ntrip_user=, ntrip_mountpoint=, ntrip_host=www.igs-ip.net, ntrip_port=2101, ntrip_pass=}
+12-05 22:23:19.616 D/btgnss_mainactvty(19368): mainact extra_params key: ntrip_user val:
+12-05 22:23:19.616 D/btgnss_mainactvty(19368): mainact extra_params key: ntrip_mountpoint val:
+12-05 22:23:19.616 D/btgnss_mainactvty(19368): mainact extra_params key: ntrip_host val: www.igs-ip.net
+12-05 22:23:19.616 D/btgnss_mainactvty(19368): mainact extra_params key: ntrip_port val: 2101
+12-05 22:23:19.616 D/btgnss_mainactvty(19368): mainact extra_params key: ntrip_pass val:
+12-05 22:23:19.617 D/btgnss_mainactvty(19368): MainActivity connect(): startservice ssret: com.clearevo.bluetooth_gnss/com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service
+12-05 22:23:19.618 D/btgnss_service(19368): onStartCommand
+12-05 22:23:19.618 D/btgnss_service(19368): onStartCommand got bdaddr
+12-05 22:23:19.618 D/btgnss_nmea_p(19368): set_callback() com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service@c731a81
+12-05 22:23:19.651 D/btgnss_service(19368): toast msg: connecting to: B8:27:EB:0C:6F:E6
+12-05 22:23:19.652 D/btgnss_service(19368): using dev: B8:27:EB:0C:6F:E6
+12-05 22:23:19.653 D/btgnss_rfcmgr(19368): tcp_server_host null so disabled conencting to tcp server mode...
+12-05 22:23:19.654 D/btgnss_rfcmgr(19368): init() done m_readline_callback_mode: true
+12-05 22:23:19.655 D/btgnss_service(19368): start_forgroud 0
+12-05 22:23:19.655 D/btgnss_rfcmgr(19368): connect() start
+12-05 22:23:19.656 D/btgnss_rfcmgr(19368): createRfcommSocketToServiceRecord SPP_WELL_KNOWN_UUNID
+12-05 22:23:19.658 D/btgnss_rfcmgr(19368): calling m_bluetooth_socket.connect() START m_target_bt_server_dev: name: EcoDroidGPS Bluetooth GPS bdaddr: B8:27:EB:0C:6F:E6
+12-05 22:23:19.662 D/btgnss_service(19368): start_forgroud end
+12-05 22:23:19.662 D/btgnss_service(19368): key: ntrip_mountpointgot null or empty string so all_ntrip_params_specified false
+12-05 22:23:19.662 D/btgnss_service(19368): all_ntrip_params_specified: false
+12-05 22:23:19.662 D/btgnss_service(19368): dont call connect_ntrip() since all_ntrip_params_specified false
+12-05 22:23:20.467 D/btgnss_rfcmgr(19368): calling m_bluetooth_socket.connect() DONE m_target_bt_server_dev: name: EcoDroidGPS Bluetooth GPS bdaddr: B8:27:EB:0C:6F:E6
+12-05 22:23:20.467 D/btgnss_service(19368): on_rfcomm_connected()
+12-05 22:23:20.478 D/btgnss_service(19368): toast msg: Connected...
+12-05 22:23:20.479 D/btgnss_qtowt(19368): thread start
+12-05 22:23:20.480 D/btgnss_istqrt(19368): thread start
+12-05 22:23:20.480 D/btgnss_istqrt(19368): readline_mode: true
+12-05 22:23:20.480 D/btgnss_istqrt(19368): read_buff_mode: false
+12-05 22:23:20.676 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:20.676 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:20.676 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:20.676 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:21.610 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:21.610 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:21.611 D/btgnss_service(19368): setMock accuracy_meters: 7.9
+12-05 22:23:21.617 D/btgnss_service(19368): setMock lat: 13.781527166666667
+12-05 22:23:21.617 D/btgnss_service(19368): setMock lon: 13.781527166666667
+12-05 22:23:21.623 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:21.625 D/btgnss_service(19368): toast msg: Activated Mock location provider...
+12-05 22:23:21.635 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:22.771 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:22.771 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:22.772 D/btgnss_service(19368): setMock accuracy_meters: 7.9
+12-05 22:23:22.773 D/btgnss_service(19368): setMock lat: 13.781527
+12-05 22:23:22.773 D/btgnss_service(19368): setMock lon: 13.781527
+12-05 22:23:22.779 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:22.779 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:23.711 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:23.711 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:23.711 D/btgnss_service(19368): setMock accuracy_meters: 7.8
+12-05 22:23:23.712 D/btgnss_service(19368): setMock lat: 13.781527
+12-05 22:23:23.713 D/btgnss_service(19368): setMock lon: 13.781527
+12-05 22:23:23.719 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:23.719 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:24.792 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:24.792 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:24.792 D/btgnss_service(19368): setMock accuracy_meters: 7.7
+12-05 22:23:24.794 D/btgnss_service(19368): setMock lat: 13.781527333333333
+12-05 22:23:24.794 D/btgnss_service(19368): setMock lon: 13.781527333333333
+12-05 22:23:24.799 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:24.799 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:25.830 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:25.830 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:25.830 D/btgnss_service(19368): setMock accuracy_meters: 7.7
+12-05 22:23:25.831 D/btgnss_service(19368): setMock lat: 13.781527833333334
+12-05 22:23:25.831 D/btgnss_service(19368): setMock lon: 13.781527833333334
+12-05 22:23:25.836 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:25.837 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:26.010 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:26.010 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:26.010 D/btgnss_service(19368): setMock accuracy_meters: 7.6
+12-05 22:23:26.011 D/btgnss_service(19368): setMock lat: 13.781527
+12-05 22:23:26.011 D/btgnss_service(19368): setMock lon: 13.781527
+12-05 22:23:26.013 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:26.013 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:26.926 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:26.926 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:26.927 D/btgnss_service(19368): setMock accuracy_meters: 7.5
+12-05 22:23:26.928 D/btgnss_service(19368): setMock lat: 13.7815265
+12-05 22:23:26.928 D/btgnss_service(19368): setMock lon: 13.7815265
+12-05 22:23:26.933 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:26.933 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:27.961 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:27.961 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:27.961 D/btgnss_service(19368): setMock accuracy_meters: 7.4
+12-05 22:23:27.963 D/btgnss_service(19368): setMock lat: 13.781525833333333
+12-05 22:23:27.963 D/btgnss_service(19368): setMock lon: 13.781525833333333
+12-05 22:23:27.967 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:27.967 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:29.024 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:29.024 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:29.025 D/btgnss_service(19368): setMock accuracy_meters: 7.3
+12-05 22:23:29.026 D/btgnss_service(19368): setMock lat: 13.781526
+12-05 22:23:29.027 D/btgnss_service(19368): setMock lon: 13.781526
+12-05 22:23:29.034 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:29.035 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:30.080 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:30.080 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:30.081 D/btgnss_service(19368): setMock accuracy_meters: 7.3
+12-05 22:23:30.083 D/btgnss_service(19368): setMock lat: 13.781525666666667
+12-05 22:23:30.083 D/btgnss_service(19368): setMock lon: 13.781525666666667
+12-05 22:23:30.088 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:30.089 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:31.134 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:31.134 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:31.135 D/btgnss_service(19368): setMock accuracy_meters: 7.2
+12-05 22:23:31.137 D/btgnss_service(19368): setMock lat: 13.781525
+12-05 22:23:31.137 D/btgnss_service(19368): setMock lon: 13.781525
+12-05 22:23:31.144 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:31.145 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:32.192 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:32.192 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:32.192 D/btgnss_service(19368): setMock accuracy_meters: 7.2
+12-05 22:23:32.194 D/btgnss_service(19368): setMock lat: 13.781525166666666
+12-05 22:23:32.194 D/btgnss_service(19368): setMock lon: 13.781525166666666
+12-05 22:23:32.198 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:32.198 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:33.270 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:33.270 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:33.270 D/btgnss_service(19368): setMock accuracy_meters: 7.2
+12-05 22:23:33.271 D/btgnss_service(19368): setMock lat: 13.7815255
+12-05 22:23:33.271 D/btgnss_service(19368): setMock lon: 13.7815255
+12-05 22:23:33.273 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:33.273 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:34.304 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:34.304 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:34.305 D/btgnss_service(19368): setMock accuracy_meters: 7.2
+12-05 22:23:34.307 D/btgnss_service(19368): setMock lat: 13.781525666666667
+12-05 22:23:34.307 D/btgnss_service(19368): setMock lon: 13.781525666666667
+12-05 22:23:34.314 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:34.314 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:35.363 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:35.363 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:35.364 D/btgnss_service(19368): setMock accuracy_meters: 7.2
+12-05 22:23:35.366 D/btgnss_service(19368): setMock lat: 13.7815275
+12-05 22:23:35.366 D/btgnss_service(19368): setMock lon: 13.7815275
+12-05 22:23:35.376 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:35.377 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:36.443 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:36.443 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:36.444 D/btgnss_service(19368): setMock accuracy_meters: 7.3
+12-05 22:23:36.446 D/btgnss_service(19368): setMock lat: 13.781526833333333
+12-05 22:23:36.447 D/btgnss_service(19368): setMock lon: 13.781526833333333
+12-05 22:23:36.455 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:36.455 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:37.458 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:37.458 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:37.458 D/btgnss_service(19368): setMock accuracy_meters: 7.3
+12-05 22:23:37.460 D/btgnss_service(19368): setMock lat: 13.7815255
+12-05 22:23:37.460 D/btgnss_service(19368): setMock lon: 13.7815255
+12-05 22:23:37.466 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:37.467 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:38.514 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:38.514 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:38.515 D/btgnss_service(19368): setMock accuracy_meters: 7.4
+12-05 22:23:38.517 D/btgnss_service(19368): setMock lat: 13.781523166666666
+12-05 22:23:38.518 D/btgnss_service(19368): setMock lon: 13.781523166666666
+12-05 22:23:38.523 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:38.523 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:39.573 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:39.573 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:39.574 D/btgnss_service(19368): setMock accuracy_meters: 7.4
+12-05 22:23:39.576 D/btgnss_service(19368): setMock lat: 13.7815215
+12-05 22:23:39.576 D/btgnss_service(19368): setMock lon: 13.7815215
+12-05 22:23:39.585 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:39.585 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:40.617 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:40.617 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:40.618 D/btgnss_service(19368): setMock accuracy_meters: 7.5
+12-05 22:23:40.619 D/btgnss_service(19368): setMock lat: 13.781520666666667
+12-05 22:23:40.619 D/btgnss_service(19368): setMock lon: 13.781520666666667
+12-05 22:23:40.623 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:40.623 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:41.764 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:41.764 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:41.764 D/btgnss_service(19368): setMock accuracy_meters: 7.5
+12-05 22:23:41.767 D/btgnss_service(19368): setMock lat: 13.7815205
+12-05 22:23:41.767 D/btgnss_service(19368): setMock lon: 13.7815205
+12-05 22:23:41.775 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:41.776 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:42.729 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:42.730 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:42.731 D/btgnss_service(19368): setMock accuracy_meters: 7.5
+12-05 22:23:42.733 D/btgnss_service(19368): setMock lat: 13.781521166666666
+12-05 22:23:42.733 D/btgnss_service(19368): setMock lon: 13.781521166666666
+12-05 22:23:42.741 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:42.741 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:43.785 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:43.785 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:43.785 D/btgnss_service(19368): setMock accuracy_meters: 7.6
+12-05 22:23:43.786 D/btgnss_service(19368): setMock lat: 13.781521333333334
+12-05 22:23:43.786 D/btgnss_service(19368): setMock lon: 13.781521333333334
+12-05 22:23:43.789 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:43.790 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:43.852 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:43.852 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:43.852 D/btgnss_service(19368): setMock accuracy_meters: 7.6
+12-05 22:23:43.853 D/btgnss_service(19368): setMock lat: 13.781519333333334
+12-05 22:23:43.853 D/btgnss_service(19368): setMock lon: 13.781519333333334
+12-05 22:23:43.855 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:43.856 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:44.951 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:44.951 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:44.951 D/btgnss_service(19368): setMock accuracy_meters: 7.6
+12-05 22:23:44.953 D/btgnss_service(19368): setMock lat: 13.781519166666667
+12-05 22:23:44.953 D/btgnss_service(19368): setMock lon: 13.781519166666667
+12-05 22:23:44.960 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:44.961 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:45.985 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:45.985 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:45.985 D/btgnss_service(19368): setMock accuracy_meters: 7.6
+12-05 22:23:45.986 D/btgnss_service(19368): setMock lat: 13.781519166666667
+12-05 22:23:45.986 D/btgnss_service(19368): setMock lon: 13.781519166666667
+12-05 22:23:45.986 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:45.986 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:47.051 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:47.051 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:47.051 D/btgnss_service(19368): setMock accuracy_meters: 7.6
+12-05 22:23:47.053 D/btgnss_service(19368): setMock lat: 13.781519666666666
+12-05 22:23:47.054 D/btgnss_service(19368): setMock lon: 13.781519666666666
+12-05 22:23:47.061 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:47.061 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:48.095 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:48.095 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:48.096 D/btgnss_service(19368): setMock accuracy_meters: 7.6
+12-05 22:23:48.098 D/btgnss_service(19368): setMock lat: 13.7815195
+12-05 22:23:48.098 D/btgnss_service(19368): setMock lon: 13.7815195
+12-05 22:23:48.104 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:48.104 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:49.151 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:49.151 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:49.151 D/btgnss_service(19368): setMock accuracy_meters: 7.7
+12-05 22:23:49.153 D/btgnss_service(19368): setMock lat: 13.781519333333334
+12-05 22:23:49.153 D/btgnss_service(19368): setMock lon: 13.781519333333334
+12-05 22:23:49.158 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:49.159 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:23:50.197 D/btgnss_nmea_p(19368): calling m_cb callback with parsed params
+12-05 22:23:50.197 D/btgnss_service(19368): service: on_updated_nmea_params()
+12-05 22:23:50.198 D/btgnss_service(19368): setMock accuracy_meters: 7.7
+12-05 22:23:50.199 D/btgnss_service(19368): setMock lat: 13.7815185
+12-05 22:23:50.200 D/btgnss_service(19368): setMock lon: 13.7815185
+12-05 22:23:50.204 D/btgnss_mainactvty(19368): mainactivity on_updated_nmea_params()
+12-05 22:23:50.205 D/btgnss_mainactvty(19368): mainactivity handler got params map
+12-05 22:25:54.859 W/btgnss_mainactvty(19772): cancelling listener
+12-05 22:25:54.859 W/btgnss_mainactvty(19772): adding listener
+12-05 22:25:58.537 D/btgnss_service(19772): check mock_enabled exception: java.lang.SecurityException: com.clearevo.bluetooth_gnss from uid 10230 not allowed to perform MOCK_LOCATION
+12-05 22:25:58.537 D/btgnss_service(19772): 	at android.app.AppOpsManager.checkOp(AppOpsManager.java:2274)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at android.app.AppOpsManager.checkOp(AppOpsManager.java:2127)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.is_mock_location_enabled(bluetooth_gnss_service.java:567)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at com.clearevo.bluetooth_gnss.MainActivity$2.onMethodCall(MainActivity.java:181)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at io.flutter.plugin.common.MethodChannel$IncomingMethodCallHandler.onMessage(MethodChannel.java:231)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at io.flutter.embedding.engine.dart.DartMessenger.handleMessageFromDart(DartMessenger.java:96)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at io.flutter.embedding.engine.FlutterJNI.handlePlatformMessage(FlutterJNI.java:645)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at android.os.MessageQueue.nativePollOnce(Native Method)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at android.os.MessageQueue.next(MessageQueue.java:329)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at android.os.Looper.loop(Looper.java:300)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at android.app.ActivityThread.main(ActivityThread.java:6764)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at java.lang.reflect.Method.invoke(Native Method)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+12-05 22:25:58.537 D/btgnss_service(19772): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+12-05 22:26:00.545 D/btgnss_service(19772): check mock_enabled exception: java.lang.SecurityException: com.clearevo.bluetooth_gnss from uid 10230 not allowed to perform MOCK_LOCATION
+12-05 22:26:00.545 D/btgnss_service(19772): 	at android.app.AppOpsManager.checkOp(AppOpsManager.java:2274)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at android.app.AppOpsManager.checkOp(AppOpsManager.java:2127)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.is_mock_location_enabled(bluetooth_gnss_service.java:567)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at com.clearevo.bluetooth_gnss.MainActivity$2.onMethodCall(MainActivity.java:181)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at io.flutter.plugin.common.MethodChannel$IncomingMethodCallHandler.onMessage(MethodChannel.java:231)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at io.flutter.embedding.engine.dart.DartMessenger.handleMessageFromDart(DartMessenger.java:96)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at io.flutter.embedding.engine.FlutterJNI.handlePlatformMessage(FlutterJNI.java:645)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at android.os.MessageQueue.nativePollOnce(Native Method)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at android.os.MessageQueue.next(MessageQueue.java:329)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at android.os.Looper.loop(Looper.java:300)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at android.app.ActivityThread.main(ActivityThread.java:6764)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at java.lang.reflect.Method.invoke(Native Method)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+12-05 22:26:00.545 D/btgnss_service(19772): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+12-05 22:26:01.036 D/btgnss_service(19772): check mock_enabled exception: java.lang.SecurityException: com.clearevo.bluetooth_gnss from uid 10230 not allowed to perform MOCK_LOCATION
+12-05 22:26:01.036 D/btgnss_service(19772): 	at android.app.AppOpsManager.checkOp(AppOpsManager.java:2274)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at android.app.AppOpsManager.checkOp(AppOpsManager.java:2127)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.is_mock_location_enabled(bluetooth_gnss_service.java:567)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at com.clearevo.bluetooth_gnss.MainActivity$2.onMethodCall(MainActivity.java:181)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at io.flutter.plugin.common.MethodChannel$IncomingMethodCallHandler.onMessage(MethodChannel.java:231)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at io.flutter.embedding.engine.dart.DartMessenger.handleMessageFromDart(DartMessenger.java:96)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at io.flutter.embedding.engine.FlutterJNI.handlePlatformMessage(FlutterJNI.java:645)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at android.os.MessageQueue.nativePollOnce(Native Method)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at android.os.MessageQueue.next(MessageQueue.java:329)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at android.os.Looper.loop(Looper.java:300)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at android.app.ActivityThread.main(ActivityThread.java:6764)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at java.lang.reflect.Method.invoke(Native Method)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+12-05 22:26:01.036 D/btgnss_service(19772): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+12-05 22:26:01.554 D/btgnss_service(19772): onDestroy()
+12-05 22:26:01.554 D/btgnss_service(19772): close()0
+12-05 22:26:01.554 D/btgnss_service(19772): deactivate_mock_location0
+12-05 22:26:01.554 D/btgnss_service(19772): deactivate_mock_location return
+12-05 22:26:01.554 D/btgnss_service(19772): close()1
+12-05 22:26:01.554 D/btgnss_service(19772): close() m_ntrip_conn_mgr: null
+12-05 22:26:01.554 D/btgnss_service(19772): m_is_bound false so omit: toast msg: Stopped Bluetooth GNSS Service...
+12-05 22:26:02.524 D/btgnss_service(19772): check mock_enabled exception: java.lang.SecurityException: com.clearevo.bluetooth_gnss from uid 10230 not allowed to perform MOCK_LOCATION
+12-05 22:26:02.524 D/btgnss_service(19772): 	at android.app.AppOpsManager.checkOp(AppOpsManager.java:2274)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at android.app.AppOpsManager.checkOp(AppOpsManager.java:2127)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.is_mock_location_enabled(bluetooth_gnss_service.java:567)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at com.clearevo.bluetooth_gnss.MainActivity$2.onMethodCall(MainActivity.java:181)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at io.flutter.plugin.common.MethodChannel$IncomingMethodCallHandler.onMessage(MethodChannel.java:231)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at io.flutter.embedding.engine.dart.DartMessenger.handleMessageFromDart(DartMessenger.java:96)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at io.flutter.embedding.engine.FlutterJNI.handlePlatformMessage(FlutterJNI.java:645)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at android.os.MessageQueue.nativePollOnce(Native Method)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at android.os.MessageQueue.next(MessageQueue.java:329)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at android.os.Looper.loop(Looper.java:300)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at android.app.ActivityThread.main(ActivityThread.java:6764)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at java.lang.reflect.Method.invoke(Native Method)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+12-05 22:26:02.524 D/btgnss_service(19772): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+12-05 22:26:04.528 D/btgnss_service(19772): check mock_enabled exception: java.lang.SecurityException: com.clearevo.bluetooth_gnss from uid 10230 not allowed to perform MOCK_LOCATION
+12-05 22:26:04.528 D/btgnss_service(19772): 	at android.app.AppOpsManager.checkOp(AppOpsManager.java:2274)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at android.app.AppOpsManager.checkOp(AppOpsManager.java:2127)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.is_mock_location_enabled(bluetooth_gnss_service.java:567)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at com.clearevo.bluetooth_gnss.MainActivity$2.onMethodCall(MainActivity.java:181)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at io.flutter.plugin.common.MethodChannel$IncomingMethodCallHandler.onMessage(MethodChannel.java:231)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at io.flutter.embedding.engine.dart.DartMessenger.handleMessageFromDart(DartMessenger.java:96)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at io.flutter.embedding.engine.FlutterJNI.handlePlatformMessage(FlutterJNI.java:645)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at android.os.MessageQueue.nativePollOnce(Native Method)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at android.os.MessageQueue.next(MessageQueue.java:329)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at android.os.Looper.loop(Looper.java:300)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at android.app.ActivityThread.main(ActivityThread.java:6764)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at java.lang.reflect.Method.invoke(Native Method)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+12-05 22:26:04.528 D/btgnss_service(19772): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+12-05 22:26:06.239 D/btgnss_service(19772): onCreate()
+12-05 22:26:06.239 D/btgnss_service(19772): onBind()
+12-05 22:26:06.255 D/btgnss_mainactvty(19772): onServiceConnected()
+12-05 22:26:11.040 D/btgnss_mainactvty(19772): MainActivity connect(): B8:27:EB:0C:6F:E6
+12-05 22:26:11.041 D/btgnss_mainactvty(19772): mainact extra_params: {ntrip_user=, ntrip_mountpoint=, ntrip_host=www.igs-ip.net, ntrip_port=2101, ntrip_pass=}
+12-05 22:26:11.041 D/btgnss_mainactvty(19772): mainact extra_params key: ntrip_user val:
+12-05 22:26:11.041 D/btgnss_mainactvty(19772): mainact extra_params key: ntrip_mountpoint val:
+12-05 22:26:11.041 D/btgnss_mainactvty(19772): mainact extra_params key: ntrip_host val: www.igs-ip.net
+12-05 22:26:11.041 D/btgnss_mainactvty(19772): mainact extra_params key: ntrip_port val: 2101
+12-05 22:26:11.041 D/btgnss_mainactvty(19772): mainact extra_params key: ntrip_pass val:
+12-05 22:26:11.042 D/btgnss_mainactvty(19772): MainActivity connect(): startservice ssret: com.clearevo.bluetooth_gnss/com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service
+12-05 22:26:11.042 D/btgnss_service(19772): onStartCommand
+12-05 22:26:11.043 D/btgnss_service(19772): onStartCommand got bdaddr
+12-05 22:26:11.043 D/btgnss_nmea_p(19772): set_callback() com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service@93439ae
+12-05 22:26:11.049 D/btgnss_service(19772): toast msg: connecting to: B8:27:EB:0C:6F:E6
+12-05 22:26:11.051 D/btgnss_service(19772): using dev: B8:27:EB:0C:6F:E6
+12-05 22:26:11.051 D/btgnss_rfcmgr(19772): tcp_server_host null so disabled conencting to tcp server mode...
+12-05 22:26:11.052 D/btgnss_rfcmgr(19772): init() done m_readline_callback_mode: true
+12-05 22:26:11.053 D/btgnss_service(19772): start_forgroud 0
+12-05 22:26:11.054 D/btgnss_rfcmgr(19772): connect() start
+12-05 22:26:11.054 D/btgnss_rfcmgr(19772): createRfcommSocketToServiceRecord SPP_WELL_KNOWN_UUNID
+12-05 22:26:11.056 D/btgnss_rfcmgr(19772): calling m_bluetooth_socket.connect() START m_target_bt_server_dev: name: EcoDroidGPS Bluetooth GPS bdaddr: B8:27:EB:0C:6F:E6
+12-05 22:26:11.058 D/btgnss_service(19772): start_forgroud end
+12-05 22:26:11.058 D/btgnss_service(19772): key: ntrip_mountpointgot null or empty string so all_ntrip_params_specified false
+12-05 22:26:11.058 D/btgnss_service(19772): all_ntrip_params_specified: false
+12-05 22:26:11.058 D/btgnss_service(19772): dont call connect_ntrip() since all_ntrip_params_specified false
+12-05 22:26:14.200 D/btgnss_rfcmgr(19772): connect() exception: java.io.IOException: read failed, socket might closed or timeout, read ret: -1
+12-05 22:26:14.200 D/btgnss_rfcmgr(19772): 	at android.bluetooth.BluetoothSocket.readAll(BluetoothSocket.java:789)
+12-05 22:26:14.200 D/btgnss_rfcmgr(19772): 	at android.bluetooth.BluetoothSocket.readInt(BluetoothSocket.java:803)
+12-05 22:26:14.200 D/btgnss_rfcmgr(19772): 	at android.bluetooth.BluetoothSocket.connect(BluetoothSocket.java:410)
+12-05 22:26:14.200 D/btgnss_rfcmgr(19772): 	at com.clearevo.libecodroidbluetooth.rfcomm_conn_mgr.connect(rfcomm_conn_mgr.java:292)
+12-05 22:26:14.200 D/btgnss_rfcmgr(19772): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service$6.run(bluetooth_gnss_service.java:412)
+12-05 22:26:14.202 D/btgnss_rfcmgr(19772): m_bluetooth_socket close() done
+12-05 22:26:14.203 D/btgnss_service(19772): g_rfcomm_mgr connect exception: java.io.IOException: read failed, socket might closed or timeout, read ret: -1
+12-05 22:26:14.203 D/btgnss_service(19772): 	at android.bluetooth.BluetoothSocket.readAll(BluetoothSocket.java:789)
+12-05 22:26:14.203 D/btgnss_service(19772): 	at android.bluetooth.BluetoothSocket.readInt(BluetoothSocket.java:803)
+12-05 22:26:14.203 D/btgnss_service(19772): 	at android.bluetooth.BluetoothSocket.connect(BluetoothSocket.java:410)
+12-05 22:26:14.203 D/btgnss_service(19772): 	at com.clearevo.libecodroidbluetooth.rfcomm_conn_mgr.connect(rfcomm_conn_mgr.java:292)
+12-05 22:26:14.203 D/btgnss_service(19772): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service$6.run(bluetooth_gnss_service.java:412)
+12-05 22:26:14.209 D/btgnss_service(19772): toast msg: Connect failed... Please make sure your device is ready...
+12-05 22:26:20.291 D/btgnss_mainactvty(19772): MainActivity connect(): B8:27:EB:0C:6F:E6
+12-05 22:26:20.291 D/btgnss_mainactvty(19772): mainact extra_params: {ntrip_user=, ntrip_mountpoint=, ntrip_host=www.igs-ip.net, ntrip_port=2101, ntrip_pass=}
+12-05 22:26:20.291 D/btgnss_mainactvty(19772): mainact extra_params key: ntrip_user val:
+12-05 22:26:20.291 D/btgnss_mainactvty(19772): mainact extra_params key: ntrip_mountpoint val:
+12-05 22:26:20.291 D/btgnss_mainactvty(19772): mainact extra_params key: ntrip_host val: www.igs-ip.net
+12-05 22:26:20.291 D/btgnss_mainactvty(19772): mainact extra_params key: ntrip_port val: 2101
+12-05 22:26:20.291 D/btgnss_mainactvty(19772): mainact extra_params key: ntrip_pass val:
+12-05 22:26:20.292 D/btgnss_mainactvty(19772): MainActivity connect(): startservice ssret: com.clearevo.bluetooth_gnss/com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service
+12-05 22:26:20.292 D/btgnss_service(19772): onStartCommand
+12-05 22:26:20.293 D/btgnss_service(19772): onStartCommand got bdaddr
+12-05 22:26:20.293 D/btgnss_nmea_p(19772): set_callback() com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service@93439ae
+12-05 22:26:20.299 D/btgnss_service(19772): toast msg: connecting to: B8:27:EB:0C:6F:E6
+12-05 22:26:20.300 D/btgnss_service(19772): using dev: B8:27:EB:0C:6F:E6
+12-05 22:26:20.300 D/btgnss_rfcmgr(19772): tcp_server_host null so disabled conencting to tcp server mode...
+12-05 22:26:20.301 D/btgnss_rfcmgr(19772): init() done m_readline_callback_mode: true
+12-05 22:26:20.301 D/btgnss_service(19772): start_forgroud 0
+12-05 22:26:20.301 D/btgnss_rfcmgr(19772): connect() start
+12-05 22:26:20.301 D/btgnss_rfcmgr(19772): createRfcommSocketToServiceRecord SPP_WELL_KNOWN_UUNID
+12-05 22:26:20.303 D/btgnss_service(19772): start_forgroud end
+12-05 22:26:20.303 D/btgnss_service(19772): key: ntrip_mountpointgot null or empty string so all_ntrip_params_specified false
+12-05 22:26:20.303 D/btgnss_service(19772): all_ntrip_params_specified: false
+12-05 22:26:20.303 D/btgnss_rfcmgr(19772): calling m_bluetooth_socket.connect() START m_target_bt_server_dev: name: EcoDroidGPS Bluetooth GPS bdaddr: B8:27:EB:0C:6F:E6
+12-05 22:26:20.303 D/btgnss_service(19772): dont call connect_ntrip() since all_ntrip_params_specified false
+12-05 22:26:21.579 D/btgnss_rfcmgr(19772): calling m_bluetooth_socket.connect() DONE m_target_bt_server_dev: name: EcoDroidGPS Bluetooth GPS bdaddr: B8:27:EB:0C:6F:E6
+12-05 22:26:21.579 D/btgnss_service(19772): on_rfcomm_connected()
+12-05 22:26:21.587 D/btgnss_service(19772): toast msg: Connected...
+12-05 22:26:21.588 D/btgnss_istqrt(19772): thread start
+12-05 22:26:21.588 D/btgnss_istqrt(19772): readline_mode: true
+12-05 22:26:21.588 D/btgnss_istqrt(19772): read_buff_mode: false
+12-05 22:26:21.588 D/btgnss_qtowt(19772): thread start
+12-05 22:26:22.492 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:22.492 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:22.492 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:22.492 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:22.493 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:23.490 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:23.490 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:23.490 D/btgnss_service(19772): setMock accuracy_meters: 4.8
+12-05 22:26:23.496 D/btgnss_service(19772): setMock lat: 13.781515333333333
+12-05 22:26:23.496 D/btgnss_service(19772): setMock lon: 13.781515333333333
+12-05 22:26:23.497 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:23.506 D/btgnss_service(19772): toast msg: Activated Mock location provider...
+12-05 22:26:23.512 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:23.512 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:24.577 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:24.577 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:24.577 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:26:24.578 D/btgnss_service(19772): setMock lat: 13.781511833333333
+12-05 22:26:24.579 D/btgnss_service(19772): setMock lon: 13.781511833333333
+12-05 22:26:24.580 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:24.580 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:24.581 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:25.593 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:25.594 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:25.594 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:26:25.595 D/btgnss_service(19772): setMock lat: 13.781513333333333
+12-05 22:26:25.595 D/btgnss_service(19772): setMock lon: 13.781513333333333
+12-05 22:26:25.596 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:25.596 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:25.597 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:26.589 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:26.590 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:26.590 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:26:26.591 D/btgnss_service(19772): setMock lat: 13.7815105
+12-05 22:26:26.591 D/btgnss_service(19772): setMock lon: 13.7815105
+12-05 22:26:26.592 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:26.593 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:26.593 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:27.604 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:27.604 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:27.604 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:26:27.606 D/btgnss_service(19772): setMock lat: 13.781508
+12-05 22:26:27.607 D/btgnss_service(19772): setMock lon: 13.781508
+12-05 22:26:27.607 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:27.608 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:27.608 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:28.673 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:28.673 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:28.673 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:26:28.675 D/btgnss_service(19772): setMock lat: 13.781506333333333
+12-05 22:26:28.675 D/btgnss_service(19772): setMock lon: 13.781506333333333
+12-05 22:26:28.676 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:28.676 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:28.677 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:29.764 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:29.764 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:29.765 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:26:29.766 D/btgnss_service(19772): setMock lat: 13.781506666666667
+12-05 22:26:29.766 D/btgnss_service(19772): setMock lon: 13.781506666666667
+12-05 22:26:29.768 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:29.769 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:29.769 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:30.970 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:30.971 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:30.971 D/btgnss_service(19772): setMock accuracy_meters: 11.0
+12-05 22:26:30.973 D/btgnss_service(19772): setMock lat: 13.781505833333334
+12-05 22:26:30.973 D/btgnss_service(19772): setMock lon: 13.781505833333334
+12-05 22:26:30.975 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:30.975 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:30.975 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:31.859 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:31.859 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:31.860 D/btgnss_service(19772): setMock accuracy_meters: 11.0
+12-05 22:26:31.861 D/btgnss_service(19772): setMock lat: 13.781504666666667
+12-05 22:26:31.861 D/btgnss_service(19772): setMock lon: 13.781504666666667
+12-05 22:26:31.863 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:31.863 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:31.864 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:32.172 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:32.173 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:32.173 D/btgnss_service(19772): setMock accuracy_meters: 11.0
+12-05 22:26:32.176 D/btgnss_service(19772): setMock lat: 13.781504833333333
+12-05 22:26:32.176 D/btgnss_service(19772): setMock lon: 13.781504833333333
+12-05 22:26:32.178 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:32.178 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:32.179 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:32.938 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:32.938 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:32.938 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:26:32.940 D/btgnss_service(19772): setMock lat: 13.7815075
+12-05 22:26:32.940 D/btgnss_service(19772): setMock lon: 13.7815075
+12-05 22:26:32.941 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:32.942 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:32.942 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:34.147 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:34.148 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:34.148 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:26:34.151 D/btgnss_service(19772): setMock lat: 13.781506166666667
+12-05 22:26:34.151 D/btgnss_service(19772): setMock lon: 13.781506166666667
+12-05 22:26:34.153 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:34.154 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:34.155 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:35.562 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:35.562 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:35.563 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:26:35.564 D/btgnss_service(19772): setMock lat: 13.781508333333333
+12-05 22:26:35.564 D/btgnss_service(19772): setMock lon: 13.781508333333333
+12-05 22:26:35.566 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:35.566 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:35.567 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:36.499 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:36.499 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:36.499 D/btgnss_service(19772): setMock accuracy_meters: 9.7
+12-05 22:26:36.501 D/btgnss_service(19772): setMock lat: 13.7815095
+12-05 22:26:36.501 D/btgnss_service(19772): setMock lon: 13.7815095
+12-05 22:26:36.502 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:36.503 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:36.503 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:37.396 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:37.396 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:37.396 D/btgnss_service(19772): setMock accuracy_meters: 9.5
+12-05 22:26:37.398 D/btgnss_service(19772): setMock lat: 13.781509
+12-05 22:26:37.398 D/btgnss_service(19772): setMock lon: 13.781509
+12-05 22:26:37.399 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:37.400 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:37.400 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:38.505 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:38.505 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:38.505 D/btgnss_service(19772): setMock accuracy_meters: 9.4
+12-05 22:26:38.506 D/btgnss_service(19772): setMock lat: 13.781506
+12-05 22:26:38.506 D/btgnss_service(19772): setMock lon: 13.781506
+12-05 22:26:38.507 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:38.508 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:38.508 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:39.502 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:39.502 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:39.502 D/btgnss_service(19772): setMock accuracy_meters: 9.2
+12-05 22:26:39.503 D/btgnss_service(19772): setMock lat: 13.781505833333334
+12-05 22:26:39.503 D/btgnss_service(19772): setMock lon: 13.781505833333334
+12-05 22:26:39.505 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:39.505 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:39.506 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:40.605 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:40.605 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:40.605 D/btgnss_service(19772): setMock accuracy_meters: 9.0
+12-05 22:26:40.605 D/btgnss_service(19772): setMock lat: 13.7815065
+12-05 22:26:40.605 D/btgnss_service(19772): setMock lon: 13.7815065
+12-05 22:26:40.605 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:40.605 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:40.605 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:41.653 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:41.653 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:41.653 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:41.654 D/btgnss_service(19772): setMock lat: 13.7815085
+12-05 22:26:41.654 D/btgnss_service(19772): setMock lon: 13.7815085
+12-05 22:26:41.654 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:41.654 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:41.654 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:42.782 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:42.782 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:42.782 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:42.783 D/btgnss_service(19772): setMock lat: 13.781508333333333
+12-05 22:26:42.783 D/btgnss_service(19772): setMock lon: 13.781508333333333
+12-05 22:26:42.784 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:42.785 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:42.785 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:43.766 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:43.766 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:43.767 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:26:43.767 D/btgnss_service(19772): setMock lat: 13.781508166666667
+12-05 22:26:43.768 D/btgnss_service(19772): setMock lon: 13.781508166666667
+12-05 22:26:43.768 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:43.768 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:43.769 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:43.854 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:43.854 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:43.854 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:26:43.855 D/btgnss_service(19772): setMock lat: 13.7815085
+12-05 22:26:43.855 D/btgnss_service(19772): setMock lon: 13.7815085
+12-05 22:26:43.856 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:43.856 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:43.856 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:44.910 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:44.911 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:44.911 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:26:44.912 D/btgnss_service(19772): setMock lat: 13.781509
+12-05 22:26:44.912 D/btgnss_service(19772): setMock lon: 13.781509
+12-05 22:26:44.914 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:44.915 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:44.915 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:45.947 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:45.947 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:45.948 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:26:45.949 D/btgnss_service(19772): setMock lat: 13.781506833333333
+12-05 22:26:45.949 D/btgnss_service(19772): setMock lon: 13.781506833333333
+12-05 22:26:45.950 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:45.951 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:45.951 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:47.010 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:47.010 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:47.011 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:26:47.012 D/btgnss_service(19772): setMock lat: 13.781506833333333
+12-05 22:26:47.012 D/btgnss_service(19772): setMock lon: 13.781506833333333
+12-05 22:26:47.014 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:47.014 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:47.015 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:48.071 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:48.072 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:48.072 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:48.073 D/btgnss_service(19772): setMock lat: 13.7815105
+12-05 22:26:48.074 D/btgnss_service(19772): setMock lon: 13.7815105
+12-05 22:26:48.075 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:48.075 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:48.076 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:49.132 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:49.132 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:49.132 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:49.133 D/btgnss_service(19772): setMock lat: 13.781511
+12-05 22:26:49.133 D/btgnss_service(19772): setMock lon: 13.781511
+12-05 22:26:49.135 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:49.135 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:49.135 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:50.189 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:50.189 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:50.189 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:50.191 D/btgnss_service(19772): setMock lat: 13.7815115
+12-05 22:26:50.191 D/btgnss_service(19772): setMock lon: 13.7815115
+12-05 22:26:50.192 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:50.193 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:50.193 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:51.247 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:51.247 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:51.247 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:51.248 D/btgnss_service(19772): setMock lat: 13.7815095
+12-05 22:26:51.248 D/btgnss_service(19772): setMock lon: 13.7815095
+12-05 22:26:51.250 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:51.250 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:51.251 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:52.303 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:52.303 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:52.304 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:52.305 D/btgnss_service(19772): setMock lat: 13.7815065
+12-05 22:26:52.306 D/btgnss_service(19772): setMock lon: 13.7815065
+12-05 22:26:52.307 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:52.308 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:52.308 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:53.360 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:53.360 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:53.360 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:53.361 D/btgnss_service(19772): setMock lat: 13.781502
+12-05 22:26:53.361 D/btgnss_service(19772): setMock lon: 13.781502
+12-05 22:26:53.362 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:53.364 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:53.364 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:54.424 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:54.424 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:54.424 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:54.425 D/btgnss_service(19772): setMock lat: 13.781503166666667
+12-05 22:26:54.426 D/btgnss_service(19772): setMock lon: 13.781503166666667
+12-05 22:26:54.427 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:54.428 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:54.428 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:55.535 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:55.536 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:55.536 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:55.538 D/btgnss_service(19772): setMock lat: 13.781501333333333
+12-05 22:26:55.538 D/btgnss_service(19772): setMock lon: 13.781501333333333
+12-05 22:26:55.540 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:55.540 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:55.541 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:56.537 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:56.537 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:56.537 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:56.539 D/btgnss_service(19772): setMock lat: 13.7814975
+12-05 22:26:56.539 D/btgnss_service(19772): setMock lon: 13.7814975
+12-05 22:26:56.540 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:56.540 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:56.541 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:57.611 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:57.611 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:57.611 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:26:57.613 D/btgnss_service(19772): setMock lat: 13.781496
+12-05 22:26:57.613 D/btgnss_service(19772): setMock lon: 13.781496
+12-05 22:26:57.615 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:57.616 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:57.616 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:58.950 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:58.950 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:58.951 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:26:58.952 D/btgnss_service(19772): setMock lat: 13.781495166666666
+12-05 22:26:58.952 D/btgnss_service(19772): setMock lon: 13.781495166666666
+12-05 22:26:58.953 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:58.953 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:58.954 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:26:59.717 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:26:59.717 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:26:59.717 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:26:59.719 D/btgnss_service(19772): setMock lat: 13.781494666666667
+12-05 22:26:59.719 D/btgnss_service(19772): setMock lon: 13.781494666666667
+12-05 22:26:59.720 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:26:59.720 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:26:59.721 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:00.771 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:00.771 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:00.771 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:27:00.772 D/btgnss_service(19772): setMock lat: 13.781493333333334
+12-05 22:27:00.772 D/btgnss_service(19772): setMock lon: 13.781493333333334
+12-05 22:27:00.774 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:00.774 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:00.775 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:01.838 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:01.838 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:01.838 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:27:01.839 D/btgnss_service(19772): setMock lat: 13.781494333333333
+12-05 22:27:01.839 D/btgnss_service(19772): setMock lon: 13.781494333333333
+12-05 22:27:01.841 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:01.841 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:01.841 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:01.906 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:01.906 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:01.906 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:27:01.911 D/btgnss_service(19772): setMock lat: 13.781498333333333
+12-05 22:27:01.911 D/btgnss_service(19772): setMock lon: 13.781498333333333
+12-05 22:27:01.913 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:01.913 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:01.914 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:02.987 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:02.987 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:02.987 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:27:02.989 D/btgnss_service(19772): setMock lat: 13.781494666666667
+12-05 22:27:02.989 D/btgnss_service(19772): setMock lon: 13.781494666666667
+12-05 22:27:02.990 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:02.991 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:02.991 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:04.041 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:04.041 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:04.041 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:27:04.043 D/btgnss_service(19772): setMock lat: 13.781495
+12-05 22:27:04.043 D/btgnss_service(19772): setMock lon: 13.781495
+12-05 22:27:04.044 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:04.044 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:04.045 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:05.094 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:05.094 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:05.094 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:27:05.096 D/btgnss_service(19772): setMock lat: 13.7814965
+12-05 22:27:05.096 D/btgnss_service(19772): setMock lon: 13.7814965
+12-05 22:27:05.098 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:05.098 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:05.098 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:06.165 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:06.166 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:06.166 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:27:06.167 D/btgnss_service(19772): setMock lat: 13.781492833333333
+12-05 22:27:06.167 D/btgnss_service(19772): setMock lon: 13.781492833333333
+12-05 22:27:06.169 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:06.169 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:06.169 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:07.239 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:07.239 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:07.239 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:27:07.241 D/btgnss_service(19772): setMock lat: 13.7814895
+12-05 22:27:07.241 D/btgnss_service(19772): setMock lon: 13.7814895
+12-05 22:27:07.246 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:07.246 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:07.246 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:08.272 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:08.272 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:08.272 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:27:08.274 D/btgnss_service(19772): setMock lat: 13.781493
+12-05 22:27:08.274 D/btgnss_service(19772): setMock lon: 13.781493
+12-05 22:27:08.276 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:08.276 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:08.276 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:09.326 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:09.326 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:09.326 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:27:09.327 D/btgnss_service(19772): setMock lat: 13.781491333333333
+12-05 22:27:09.327 D/btgnss_service(19772): setMock lon: 13.781491333333333
+12-05 22:27:09.329 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:09.329 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:09.330 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:10.405 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:10.406 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:10.406 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:27:10.408 D/btgnss_service(19772): setMock lat: 13.781488833333333
+12-05 22:27:10.408 D/btgnss_service(19772): setMock lon: 13.781488833333333
+12-05 22:27:10.409 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:10.409 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:10.410 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:11.585 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:11.585 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:11.585 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:27:11.587 D/btgnss_service(19772): setMock lat: 13.781488666666666
+12-05 22:27:11.587 D/btgnss_service(19772): setMock lon: 13.781488666666666
+12-05 22:27:11.588 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:11.589 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:11.589 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:12.505 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:12.506 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:12.506 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:27:12.507 D/btgnss_service(19772): setMock lat: 13.781488666666666
+12-05 22:27:12.507 D/btgnss_service(19772): setMock lon: 13.781488666666666
+12-05 22:27:12.509 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:12.509 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:12.510 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:13.561 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:13.561 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:13.561 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:13.563 D/btgnss_service(19772): setMock lat: 13.781492833333333
+12-05 22:27:13.563 D/btgnss_service(19772): setMock lon: 13.781492833333333
+12-05 22:27:13.565 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:13.565 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:13.566 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:14.620 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:14.620 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:14.620 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:14.622 D/btgnss_service(19772): setMock lat: 13.7814945
+12-05 22:27:14.622 D/btgnss_service(19772): setMock lon: 13.7814945
+12-05 22:27:14.624 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:14.624 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:14.625 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:15.883 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:15.883 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:15.883 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:15.885 D/btgnss_service(19772): setMock lat: 13.781497833333333
+12-05 22:27:15.885 D/btgnss_service(19772): setMock lon: 13.781497833333333
+12-05 22:27:15.886 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:15.887 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:15.887 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:16.741 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:16.741 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:16.741 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:16.743 D/btgnss_service(19772): setMock lat: 13.781500333333334
+12-05 22:27:16.743 D/btgnss_service(19772): setMock lon: 13.781500333333334
+12-05 22:27:16.744 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:16.745 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:16.746 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:17.785 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:17.785 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:17.785 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:27:17.786 D/btgnss_service(19772): setMock lat: 13.781502833333333
+12-05 22:27:17.787 D/btgnss_service(19772): setMock lon: 13.781502833333333
+12-05 22:27:17.788 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:17.788 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:17.789 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:17.861 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:17.862 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:17.862 D/btgnss_service(19772): setMock accuracy_meters: 8.4
+12-05 22:27:17.863 D/btgnss_service(19772): setMock lat: 13.781501333333333
+12-05 22:27:17.863 D/btgnss_service(19772): setMock lon: 13.781501333333333
+12-05 22:27:17.865 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:17.865 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:17.866 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:18.889 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:18.889 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:18.889 D/btgnss_service(19772): setMock accuracy_meters: 8.4
+12-05 22:27:18.891 D/btgnss_service(19772): setMock lat: 13.781501833333333
+12-05 22:27:18.891 D/btgnss_service(19772): setMock lon: 13.781501833333333
+12-05 22:27:18.892 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:18.892 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:18.893 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:20.004 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:20.004 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:20.004 D/btgnss_service(19772): setMock accuracy_meters: 8.3
+12-05 22:27:20.006 D/btgnss_service(19772): setMock lat: 13.781502833333333
+12-05 22:27:20.006 D/btgnss_service(19772): setMock lon: 13.781502833333333
+12-05 22:27:20.008 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:20.008 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:20.009 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:21.024 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:21.024 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:21.025 D/btgnss_service(19772): setMock accuracy_meters: 8.3
+12-05 22:27:21.026 D/btgnss_service(19772): setMock lat: 13.781504333333332
+12-05 22:27:21.026 D/btgnss_service(19772): setMock lon: 13.781504333333332
+12-05 22:27:21.028 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:21.028 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:21.028 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:22.073 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:22.073 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:22.073 D/btgnss_service(19772): setMock accuracy_meters: 8.3
+12-05 22:27:22.075 D/btgnss_service(19772): setMock lat: 13.781507
+12-05 22:27:22.075 D/btgnss_service(19772): setMock lon: 13.781507
+12-05 22:27:22.077 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:22.077 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:22.078 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:23.130 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:23.130 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:23.130 D/btgnss_service(19772): setMock accuracy_meters: 8.3
+12-05 22:27:23.132 D/btgnss_service(19772): setMock lat: 13.7815075
+12-05 22:27:23.132 D/btgnss_service(19772): setMock lon: 13.7815075
+12-05 22:27:23.133 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:23.134 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:23.134 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:24.215 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:24.215 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:24.216 D/btgnss_service(19772): setMock accuracy_meters: 8.3
+12-05 22:27:24.217 D/btgnss_service(19772): setMock lat: 13.7815095
+12-05 22:27:24.217 D/btgnss_service(19772): setMock lon: 13.7815095
+12-05 22:27:24.220 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:24.220 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:24.222 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:25.254 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:25.254 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:25.255 D/btgnss_service(19772): setMock accuracy_meters: 8.3
+12-05 22:27:25.256 D/btgnss_service(19772): setMock lat: 13.781512333333334
+12-05 22:27:25.256 D/btgnss_service(19772): setMock lon: 13.781512333333334
+12-05 22:27:25.258 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:25.258 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:25.258 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:26.316 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:26.316 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:26.317 D/btgnss_service(19772): setMock accuracy_meters: 8.4
+12-05 22:27:26.318 D/btgnss_service(19772): setMock lat: 13.781513333333333
+12-05 22:27:26.318 D/btgnss_service(19772): setMock lon: 13.781513333333333
+12-05 22:27:26.320 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:26.320 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:26.321 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:27.392 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:27.392 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:27.392 D/btgnss_service(19772): setMock accuracy_meters: 8.4
+12-05 22:27:27.394 D/btgnss_service(19772): setMock lat: 13.781513333333333
+12-05 22:27:27.394 D/btgnss_service(19772): setMock lon: 13.781513333333333
+12-05 22:27:27.396 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:27.396 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:27.396 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:28.421 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:28.422 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:28.422 D/btgnss_service(19772): setMock accuracy_meters: 8.4
+12-05 22:27:28.422 D/btgnss_service(19772): setMock lat: 13.781512333333334
+12-05 22:27:28.423 D/btgnss_service(19772): setMock lon: 13.781512333333334
+12-05 22:27:28.424 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:28.425 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:28.425 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:29.507 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:29.507 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:29.507 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:27:29.509 D/btgnss_service(19772): setMock lat: 13.781513666666667
+12-05 22:27:29.509 D/btgnss_service(19772): setMock lon: 13.781513666666667
+12-05 22:27:29.511 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:29.511 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:29.511 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:30.550 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:30.550 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:30.550 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:27:30.551 D/btgnss_service(19772): setMock lat: 13.781510333333333
+12-05 22:27:30.551 D/btgnss_service(19772): setMock lon: 13.781510333333333
+12-05 22:27:30.552 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:30.553 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:30.553 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:31.691 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:31.692 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:31.692 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:27:31.693 D/btgnss_service(19772): setMock lat: 13.781513
+12-05 22:27:31.693 D/btgnss_service(19772): setMock lon: 13.781513
+12-05 22:27:31.695 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:31.695 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:31.696 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:32.679 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:32.679 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:32.679 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:32.681 D/btgnss_service(19772): setMock lat: 13.781519166666667
+12-05 22:27:32.681 D/btgnss_service(19772): setMock lon: 13.781519166666667
+12-05 22:27:32.682 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:32.683 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:32.683 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:33.738 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:33.738 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:33.738 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:33.739 D/btgnss_service(19772): setMock lat: 13.781519666666666
+12-05 22:27:33.739 D/btgnss_service(19772): setMock lon: 13.781519666666666
+12-05 22:27:33.741 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:33.742 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:33.742 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:34.800 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:34.800 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:34.800 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:34.802 D/btgnss_service(19772): setMock lat: 13.781520666666667
+12-05 22:27:34.802 D/btgnss_service(19772): setMock lon: 13.781520666666667
+12-05 22:27:34.804 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:34.804 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:34.805 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:34.878 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:34.878 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:34.878 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:34.880 D/btgnss_service(19772): setMock lat: 13.7815205
+12-05 22:27:34.880 D/btgnss_service(19772): setMock lon: 13.7815205
+12-05 22:27:34.882 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:34.882 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:34.882 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:35.908 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:35.908 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:35.909 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:35.911 D/btgnss_service(19772): setMock lat: 13.781520666666667
+12-05 22:27:35.911 D/btgnss_service(19772): setMock lon: 13.781520666666667
+12-05 22:27:35.912 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:35.912 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:35.913 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:36.974 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:36.974 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:36.974 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:36.976 D/btgnss_service(19772): setMock lat: 13.781521833333333
+12-05 22:27:36.976 D/btgnss_service(19772): setMock lon: 13.781521833333333
+12-05 22:27:36.978 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:36.978 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:36.978 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:38.032 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:38.033 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:38.033 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:38.034 D/btgnss_service(19772): setMock lat: 13.781522333333333
+12-05 22:27:38.034 D/btgnss_service(19772): setMock lon: 13.781522333333333
+12-05 22:27:38.035 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:38.036 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:38.036 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:39.086 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:39.086 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:39.086 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:39.088 D/btgnss_service(19772): setMock lat: 13.781524833333334
+12-05 22:27:39.088 D/btgnss_service(19772): setMock lon: 13.781524833333334
+12-05 22:27:39.089 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:39.089 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:39.090 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:40.148 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:40.148 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:40.148 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:40.150 D/btgnss_service(19772): setMock lat: 13.7815275
+12-05 22:27:40.150 D/btgnss_service(19772): setMock lon: 13.7815275
+12-05 22:27:40.152 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:40.153 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:40.153 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:41.202 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:41.203 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:41.203 D/btgnss_service(19772): setMock accuracy_meters: 8.6
+12-05 22:27:41.204 D/btgnss_service(19772): setMock lat: 13.781529833333334
+12-05 22:27:41.204 D/btgnss_service(19772): setMock lon: 13.781529833333334
+12-05 22:27:41.206 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:41.207 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:41.207 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:42.262 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:42.262 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:42.262 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:27:42.264 D/btgnss_service(19772): setMock lat: 13.781532666666667
+12-05 22:27:42.264 D/btgnss_service(19772): setMock lon: 13.781532666666667
+12-05 22:27:42.266 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:42.266 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:42.266 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:43.344 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:43.344 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:43.345 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:27:43.346 D/btgnss_service(19772): setMock lat: 13.781536666666666
+12-05 22:27:43.346 D/btgnss_service(19772): setMock lon: 13.781536666666666
+12-05 22:27:43.347 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:43.348 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:43.348 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:44.394 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:44.394 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:44.394 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:27:44.396 D/btgnss_service(19772): setMock lat: 13.7815385
+12-05 22:27:44.396 D/btgnss_service(19772): setMock lon: 13.7815385
+12-05 22:27:44.397 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:44.398 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:44.398 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:45.440 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:45.440 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:45.440 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:27:45.441 D/btgnss_service(19772): setMock lat: 13.781538666666666
+12-05 22:27:45.441 D/btgnss_service(19772): setMock lon: 13.781538666666666
+12-05 22:27:45.442 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:45.442 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:45.443 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:46.501 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:46.501 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:46.501 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:27:46.502 D/btgnss_service(19772): setMock lat: 13.781542666666667
+12-05 22:27:46.502 D/btgnss_service(19772): setMock lon: 13.781542666666667
+12-05 22:27:46.504 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:46.505 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:46.505 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:47.560 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:47.560 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:47.560 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:27:47.562 D/btgnss_service(19772): setMock lat: 13.781545166666668
+12-05 22:27:47.562 D/btgnss_service(19772): setMock lon: 13.781545166666668
+12-05 22:27:47.563 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:47.564 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:47.564 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:48.643 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:48.643 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:48.644 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:27:48.646 D/btgnss_service(19772): setMock lat: 13.781547
+12-05 22:27:48.646 D/btgnss_service(19772): setMock lon: 13.781547
+12-05 22:27:48.647 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:48.647 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:48.647 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:49.685 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:49.685 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:49.685 D/btgnss_service(19772): setMock accuracy_meters: 9.0
+12-05 22:27:49.687 D/btgnss_service(19772): setMock lat: 13.781549833333333
+12-05 22:27:49.687 D/btgnss_service(19772): setMock lon: 13.781549833333333
+12-05 22:27:49.688 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:49.688 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:49.689 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:50.744 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:50.744 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:50.744 D/btgnss_service(19772): setMock accuracy_meters: 9.1
+12-05 22:27:50.746 D/btgnss_service(19772): setMock lat: 13.781549166666666
+12-05 22:27:50.746 D/btgnss_service(19772): setMock lon: 13.781549166666666
+12-05 22:27:50.747 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:50.748 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:50.748 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:51.810 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:51.810 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:51.810 D/btgnss_service(19772): setMock accuracy_meters: 9.1
+12-05 22:27:51.812 D/btgnss_service(19772): setMock lat: 13.781550666666666
+12-05 22:27:51.812 D/btgnss_service(19772): setMock lon: 13.781550666666666
+12-05 22:27:51.813 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:51.814 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:51.814 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:51.872 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:51.872 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:51.872 D/btgnss_service(19772): setMock accuracy_meters: 9.2
+12-05 22:27:51.873 D/btgnss_service(19772): setMock lat: 13.781544166666666
+12-05 22:27:51.873 D/btgnss_service(19772): setMock lon: 13.781544166666666
+12-05 22:27:51.875 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:51.875 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:51.876 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:52.979 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:52.979 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:52.979 D/btgnss_service(19772): setMock accuracy_meters: 9.4
+12-05 22:27:52.980 D/btgnss_service(19772): setMock lat: 13.781547833333333
+12-05 22:27:52.981 D/btgnss_service(19772): setMock lon: 13.781547833333333
+12-05 22:27:52.983 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:52.983 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:52.983 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:53.983 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:53.983 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:53.984 D/btgnss_service(19772): setMock accuracy_meters: 9.6
+12-05 22:27:53.986 D/btgnss_service(19772): setMock lat: 13.781547
+12-05 22:27:53.986 D/btgnss_service(19772): setMock lon: 13.781547
+12-05 22:27:53.987 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:53.988 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:53.988 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:55.066 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:55.067 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:55.067 D/btgnss_service(19772): setMock accuracy_meters: 9.9
+12-05 22:27:55.068 D/btgnss_service(19772): setMock lat: 13.781546166666667
+12-05 22:27:55.069 D/btgnss_service(19772): setMock lon: 13.781546166666667
+12-05 22:27:55.070 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:55.071 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:55.071 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:56.095 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:56.095 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:56.095 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:27:56.097 D/btgnss_service(19772): setMock lat: 13.781547833333333
+12-05 22:27:56.097 D/btgnss_service(19772): setMock lon: 13.781547833333333
+12-05 22:27:56.098 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:56.098 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:56.099 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:57.177 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:57.178 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:57.178 D/btgnss_service(19772): setMock accuracy_meters: 11.0
+12-05 22:27:57.179 D/btgnss_service(19772): setMock lat: 13.781548166666667
+12-05 22:27:57.179 D/btgnss_service(19772): setMock lon: 13.781548166666667
+12-05 22:27:57.180 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:57.180 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:57.181 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:58.216 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:58.216 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:58.216 D/btgnss_service(19772): setMock accuracy_meters: 11.0
+12-05 22:27:58.218 D/btgnss_service(19772): setMock lat: 13.781551
+12-05 22:27:58.218 D/btgnss_service(19772): setMock lon: 13.781551
+12-05 22:27:58.219 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:58.219 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:58.220 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:27:59.270 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:27:59.270 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:27:59.270 D/btgnss_service(19772): setMock accuracy_meters: 11.0
+12-05 22:27:59.272 D/btgnss_service(19772): setMock lat: 13.7815445
+12-05 22:27:59.272 D/btgnss_service(19772): setMock lon: 13.7815445
+12-05 22:27:59.273 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:27:59.273 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:27:59.274 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:00.546 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:00.546 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:00.546 D/btgnss_service(19772): setMock accuracy_meters: 11.0
+12-05 22:28:00.547 D/btgnss_service(19772): setMock lat: 13.781544166666666
+12-05 22:28:00.547 D/btgnss_service(19772): setMock lon: 13.781544166666666
+12-05 22:28:00.549 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:00.549 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:00.549 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:01.396 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:01.396 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:01.397 D/btgnss_service(19772): setMock accuracy_meters: 12.0
+12-05 22:28:01.398 D/btgnss_service(19772): setMock lat: 13.781539
+12-05 22:28:01.398 D/btgnss_service(19772): setMock lon: 13.781539
+12-05 22:28:01.399 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:01.400 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:01.400 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:02.456 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:02.456 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:02.456 D/btgnss_service(19772): setMock accuracy_meters: 12.0
+12-05 22:28:02.458 D/btgnss_service(19772): setMock lat: 13.781540666666666
+12-05 22:28:02.458 D/btgnss_service(19772): setMock lon: 13.781540666666666
+12-05 22:28:02.459 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:02.460 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:02.460 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:03.529 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:03.529 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:03.529 D/btgnss_service(19772): setMock accuracy_meters: 12.0
+12-05 22:28:03.530 D/btgnss_service(19772): setMock lat: 13.781547
+12-05 22:28:03.530 D/btgnss_service(19772): setMock lon: 13.781547
+12-05 22:28:03.531 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:03.532 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:03.532 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:04.575 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:04.575 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:04.575 D/btgnss_service(19772): setMock accuracy_meters: 12.0
+12-05 22:28:04.576 D/btgnss_service(19772): setMock lat: 13.781555
+12-05 22:28:04.576 D/btgnss_service(19772): setMock lon: 13.781555
+12-05 22:28:04.577 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:04.578 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:04.578 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:05.659 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:05.659 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:05.659 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:05.661 D/btgnss_service(19772): setMock lat: 13.781556333333333
+12-05 22:28:05.661 D/btgnss_service(19772): setMock lon: 13.781556333333333
+12-05 22:28:05.662 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:05.663 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:05.664 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:06.780 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:06.780 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:06.780 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:06.782 D/btgnss_service(19772): setMock lat: 13.781559666666666
+12-05 22:28:06.782 D/btgnss_service(19772): setMock lon: 13.781559666666666
+12-05 22:28:06.784 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:06.785 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:06.785 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:06.833 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:06.834 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:06.834 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:06.834 D/btgnss_service(19772): setMock lat: 13.781556666666667
+12-05 22:28:06.834 D/btgnss_service(19772): setMock lon: 13.781556666666667
+12-05 22:28:06.835 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:06.835 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:06.836 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:07.889 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:07.890 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:07.890 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:07.891 D/btgnss_service(19772): setMock lat: 13.781555833333334
+12-05 22:28:07.891 D/btgnss_service(19772): setMock lon: 13.781555833333334
+12-05 22:28:07.892 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:07.892 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:07.893 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:08.952 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:08.952 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:08.952 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:08.953 D/btgnss_service(19772): setMock lat: 13.781562166666667
+12-05 22:28:08.954 D/btgnss_service(19772): setMock lon: 13.781562166666667
+12-05 22:28:08.956 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:08.956 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:08.956 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:10.015 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:10.015 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:10.015 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:10.016 D/btgnss_service(19772): setMock lat: 13.781567833333334
+12-05 22:28:10.016 D/btgnss_service(19772): setMock lon: 13.781567833333334
+12-05 22:28:10.018 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:10.018 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:10.019 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:11.077 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:11.078 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:11.078 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:11.079 D/btgnss_service(19772): setMock lat: 13.781563833333333
+12-05 22:28:11.079 D/btgnss_service(19772): setMock lon: 13.781563833333333
+12-05 22:28:11.080 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:11.081 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:11.081 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:12.144 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:12.144 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:12.144 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:12.145 D/btgnss_service(19772): setMock lat: 13.781565833333334
+12-05 22:28:12.145 D/btgnss_service(19772): setMock lon: 13.781565833333334
+12-05 22:28:12.145 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:12.146 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:12.146 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:13.224 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:13.224 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:13.224 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:13.226 D/btgnss_service(19772): setMock lat: 13.781559333333334
+12-05 22:28:13.226 D/btgnss_service(19772): setMock lon: 13.781559333333334
+12-05 22:28:13.227 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:13.227 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:13.228 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:14.245 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:14.246 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:14.246 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:14.247 D/btgnss_service(19772): setMock lat: 13.781552666666666
+12-05 22:28:14.247 D/btgnss_service(19772): setMock lon: 13.781552666666666
+12-05 22:28:14.249 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:14.249 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:14.249 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:15.322 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:15.322 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:15.322 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:15.323 D/btgnss_service(19772): setMock lat: 13.781559666666666
+12-05 22:28:15.324 D/btgnss_service(19772): setMock lon: 13.781559666666666
+12-05 22:28:15.325 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:15.325 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:15.326 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:16.391 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:16.392 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:16.392 D/btgnss_service(19772): setMock accuracy_meters: 13.0
+12-05 22:28:16.393 D/btgnss_service(19772): setMock lat: 13.7815655
+12-05 22:28:16.393 D/btgnss_service(19772): setMock lon: 13.7815655
+12-05 22:28:16.395 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:16.396 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:16.396 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:17.445 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:17.445 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:17.446 D/btgnss_service(19772): setMock accuracy_meters: 12.0
+12-05 22:28:17.447 D/btgnss_service(19772): setMock lat: 13.781572166666667
+12-05 22:28:17.447 D/btgnss_service(19772): setMock lon: 13.781572166666667
+12-05 22:28:17.448 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:17.449 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:17.449 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:18.498 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:18.498 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:18.499 D/btgnss_service(19772): setMock accuracy_meters: 12.0
+12-05 22:28:18.500 D/btgnss_service(19772): setMock lat: 13.781579
+12-05 22:28:18.500 D/btgnss_service(19772): setMock lon: 13.781579
+12-05 22:28:18.502 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:18.502 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:18.502 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:19.554 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:19.554 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:19.554 D/btgnss_service(19772): setMock accuracy_meters: 11.0
+12-05 22:28:19.555 D/btgnss_service(19772): setMock lat: 13.781582
+12-05 22:28:19.555 D/btgnss_service(19772): setMock lon: 13.781582
+12-05 22:28:19.557 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:19.558 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:19.558 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:20.620 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:20.621 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:20.621 D/btgnss_service(19772): setMock accuracy_meters: 11.0
+12-05 22:28:20.622 D/btgnss_service(19772): setMock lat: 13.781580166666666
+12-05 22:28:20.622 D/btgnss_service(19772): setMock lon: 13.781580166666666
+12-05 22:28:20.624 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:20.624 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:20.624 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:21.723 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:21.724 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:21.724 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:28:21.726 D/btgnss_service(19772): setMock lat: 13.781581666666666
+12-05 22:28:21.726 D/btgnss_service(19772): setMock lon: 13.781581666666666
+12-05 22:28:21.727 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:21.727 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:21.727 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:22.748 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:22.748 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:22.749 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:28:22.750 D/btgnss_service(19772): setMock lat: 13.781584666666667
+12-05 22:28:22.750 D/btgnss_service(19772): setMock lon: 13.781584666666667
+12-05 22:28:22.751 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:22.752 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:22.752 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:23.802 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:23.802 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:23.802 D/btgnss_service(19772): setMock accuracy_meters: 10.0
+12-05 22:28:23.803 D/btgnss_service(19772): setMock lat: 13.7815855
+12-05 22:28:23.804 D/btgnss_service(19772): setMock lon: 13.7815855
+12-05 22:28:23.805 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:23.805 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:23.806 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:23.859 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:23.859 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:23.859 D/btgnss_service(19772): setMock accuracy_meters: 9.9
+12-05 22:28:23.860 D/btgnss_service(19772): setMock lat: 13.781583666666666
+12-05 22:28:23.860 D/btgnss_service(19772): setMock lon: 13.781583666666666
+12-05 22:28:23.861 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:23.862 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:23.862 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:24.922 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:24.922 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:24.923 D/btgnss_service(19772): setMock accuracy_meters: 9.7
+12-05 22:28:24.924 D/btgnss_service(19772): setMock lat: 13.781587333333333
+12-05 22:28:24.924 D/btgnss_service(19772): setMock lon: 13.781587333333333
+12-05 22:28:24.926 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:24.926 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:24.926 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:25.999 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:26.000 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:26.000 D/btgnss_service(19772): setMock accuracy_meters: 9.6
+12-05 22:28:26.001 D/btgnss_service(19772): setMock lat: 13.781585666666667
+12-05 22:28:26.001 D/btgnss_service(19772): setMock lon: 13.781585666666667
+12-05 22:28:26.002 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:26.002 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:26.003 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:27.024 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:27.024 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:27.024 D/btgnss_service(19772): setMock accuracy_meters: 9.5
+12-05 22:28:27.026 D/btgnss_service(19772): setMock lat: 13.781586
+12-05 22:28:27.026 D/btgnss_service(19772): setMock lon: 13.781586
+12-05 22:28:27.028 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:27.028 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:27.028 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:28.094 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:28.094 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:28.095 D/btgnss_service(19772): setMock accuracy_meters: 9.4
+12-05 22:28:28.096 D/btgnss_service(19772): setMock lat: 13.781585333333334
+12-05 22:28:28.096 D/btgnss_service(19772): setMock lon: 13.781585333333334
+12-05 22:28:28.097 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:28.098 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:28.098 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:29.160 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:29.160 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:29.160 D/btgnss_service(19772): setMock accuracy_meters: 9.3
+12-05 22:28:29.162 D/btgnss_service(19772): setMock lat: 13.7815845
+12-05 22:28:29.162 D/btgnss_service(19772): setMock lon: 13.7815845
+12-05 22:28:29.163 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:29.164 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:29.164 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:30.205 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:30.205 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:30.205 D/btgnss_service(19772): setMock accuracy_meters: 9.2
+12-05 22:28:30.207 D/btgnss_service(19772): setMock lat: 13.781583666666666
+12-05 22:28:30.207 D/btgnss_service(19772): setMock lon: 13.781583666666666
+12-05 22:28:30.208 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:30.208 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:30.209 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:31.274 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:31.274 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:31.274 D/btgnss_service(19772): setMock accuracy_meters: 9.2
+12-05 22:28:31.275 D/btgnss_service(19772): setMock lat: 13.781581333333333
+12-05 22:28:31.275 D/btgnss_service(19772): setMock lon: 13.781581333333333
+12-05 22:28:31.277 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:31.277 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:31.278 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:32.337 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:32.338 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:32.338 D/btgnss_service(19772): setMock accuracy_meters: 9.2
+12-05 22:28:32.339 D/btgnss_service(19772): setMock lat: 13.781580333333334
+12-05 22:28:32.339 D/btgnss_service(19772): setMock lon: 13.781580333333334
+12-05 22:28:32.340 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:32.341 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:32.341 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:33.402 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:33.402 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:33.402 D/btgnss_service(19772): setMock accuracy_meters: 9.1
+12-05 22:28:33.403 D/btgnss_service(19772): setMock lat: 13.781576833333334
+12-05 22:28:33.403 D/btgnss_service(19772): setMock lon: 13.781576833333334
+12-05 22:28:33.405 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:33.405 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:33.406 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:34.468 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:34.468 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:34.468 D/btgnss_service(19772): setMock accuracy_meters: 9.1
+12-05 22:28:34.469 D/btgnss_service(19772): setMock lat: 13.781576
+12-05 22:28:34.470 D/btgnss_service(19772): setMock lon: 13.781576
+12-05 22:28:34.471 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:34.472 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:34.472 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:35.496 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:35.497 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:35.497 D/btgnss_service(19772): setMock accuracy_meters: 9.1
+12-05 22:28:35.498 D/btgnss_service(19772): setMock lat: 13.781572
+12-05 22:28:35.498 D/btgnss_service(19772): setMock lon: 13.781572
+12-05 22:28:35.500 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:35.500 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:35.500 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:36.556 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:36.556 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:36.557 D/btgnss_service(19772): setMock accuracy_meters: 9.1
+12-05 22:28:36.558 D/btgnss_service(19772): setMock lat: 13.7815685
+12-05 22:28:36.558 D/btgnss_service(19772): setMock lon: 13.7815685
+12-05 22:28:36.559 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:36.560 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:36.561 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:37.654 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:37.654 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:37.654 D/btgnss_service(19772): setMock accuracy_meters: 9.1
+12-05 22:28:37.656 D/btgnss_service(19772): setMock lat: 13.781565
+12-05 22:28:37.656 D/btgnss_service(19772): setMock lon: 13.781565
+12-05 22:28:37.657 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:37.658 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:37.658 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:38.668 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:38.668 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:38.668 D/btgnss_service(19772): setMock accuracy_meters: 9.0
+12-05 22:28:38.670 D/btgnss_service(19772): setMock lat: 13.781559333333334
+12-05 22:28:38.670 D/btgnss_service(19772): setMock lon: 13.781559333333334
+12-05 22:28:38.672 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:38.672 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:38.672 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:39.728 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:39.728 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:39.728 D/btgnss_service(19772): setMock accuracy_meters: 9.0
+12-05 22:28:39.729 D/btgnss_service(19772): setMock lat: 13.781559833333333
+12-05 22:28:39.729 D/btgnss_service(19772): setMock lon: 13.781559833333333
+12-05 22:28:39.730 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:39.731 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:39.731 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:40.787 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:40.787 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:40.787 D/btgnss_service(19772): setMock accuracy_meters: 8.9
+12-05 22:28:40.788 D/btgnss_service(19772): setMock lat: 13.781560833333334
+12-05 22:28:40.788 D/btgnss_service(19772): setMock lon: 13.781560833333334
+12-05 22:28:40.790 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:40.790 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:40.790 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:40.866 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:40.866 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:40.866 D/btgnss_service(19772): setMock accuracy_meters: 8.8
+12-05 22:28:40.867 D/btgnss_service(19772): setMock lat: 13.781559333333334
+12-05 22:28:40.867 D/btgnss_service(19772): setMock lon: 13.781559333333334
+12-05 22:28:40.868 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:40.868 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:40.869 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:41.946 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:41.946 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:41.946 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:28:41.947 D/btgnss_service(19772): setMock lat: 13.78156
+12-05 22:28:41.947 D/btgnss_service(19772): setMock lon: 13.78156
+12-05 22:28:41.949 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:41.949 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:41.949 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:28:42.950 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:28:42.951 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:28:42.951 D/btgnss_service(19772): setMock accuracy_meters: 8.7
+12-05 22:28:42.952 D/btgnss_service(19772): setMock lat: 13.781556833333333
+12-05 22:28:42.952 D/btgnss_service(19772): setMock lon: 13.781556833333333
+12-05 22:28:42.954 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:28:42.954 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:28:42.954 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+
+but if exit activity and re-enter it works:
+12-05 22:29:47.668 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:48.726 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:48.726 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:48.726 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:29:48.728 D/btgnss_service(19772): setMock lat: 13.7815365
+12-05 22:29:48.728 D/btgnss_service(19772): setMock lon: 13.7815365
+12-05 22:29:48.728 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:48.729 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:48.729 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:49.234 D/btgnss_mainactvty(19772): onCraete()
+12-05 22:29:49.238 D/btgnss_mainactvty(19772): onServiceConnected()
+12-05 22:29:49.303 W/btgnss_mainactvty(19772): adding listener
+12-05 22:29:49.791 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:49.791 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:49.791 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:29:49.791 D/btgnss_service(19772): setMock lat: 13.781536333333333
+12-05 22:29:49.791 D/btgnss_service(19772): setMock lon: 13.781536333333333
+12-05 22:29:49.791 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:49.791 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:49.791 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:49.873 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:49.873 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:49.873 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:29:49.873 D/btgnss_service(19772): setMock lat: 13.781533666666666
+12-05 22:29:49.873 D/btgnss_service(19772): setMock lon: 13.781533666666666
+12-05 22:29:49.873 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:49.873 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:49.873 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:50.926 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:50.926 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:50.926 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:29:50.926 D/btgnss_service(19772): setMock lat: 13.7815315
+12-05 22:29:50.926 D/btgnss_service(19772): setMock lon: 13.7815315
+12-05 22:29:50.926 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:50.926 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:50.926 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:51.962 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:51.962 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:51.962 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:29:51.963 D/btgnss_service(19772): setMock lat: 13.781531166666667
+12-05 22:29:51.963 D/btgnss_service(19772): setMock lon: 13.781531166666667
+12-05 22:29:51.964 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:51.964 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:51.965 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:53.077 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:53.077 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:53.077 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:29:53.078 D/btgnss_service(19772): setMock lat: 13.781534666666667
+12-05 22:29:53.078 D/btgnss_service(19772): setMock lon: 13.781534666666667
+12-05 22:29:53.080 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:53.080 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:53.080 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:54.072 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:54.072 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:54.072 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:29:54.073 D/btgnss_service(19772): setMock lat: 13.781530666666667
+12-05 22:29:54.073 D/btgnss_service(19772): setMock lon: 13.781530666666667
+12-05 22:29:54.075 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:54.075 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:54.076 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:55.134 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:55.134 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:55.134 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:29:55.136 D/btgnss_service(19772): setMock lat: 13.781526333333334
+12-05 22:29:55.136 D/btgnss_service(19772): setMock lon: 13.781526333333334
+12-05 22:29:55.137 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:55.138 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:55.138 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:56.210 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:56.210 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:56.210 D/btgnss_service(19772): setMock accuracy_meters: 8.5
+12-05 22:29:56.211 D/btgnss_service(19772): setMock lat: 13.781524333333333
+12-05 22:29:56.212 D/btgnss_service(19772): setMock lon: 13.781524333333333
+12-05 22:29:56.213 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:56.213 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:56.214 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:57.259 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:57.259 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:57.259 D/btgnss_service(19772): setMock accuracy_meters: 8.4
+12-05 22:29:57.261 D/btgnss_service(19772): setMock lat: 13.781521833333333
+12-05 22:29:57.261 D/btgnss_service(19772): setMock lon: 13.781521833333333
+12-05 22:29:57.263 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:57.263 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:57.263 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:58.318 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:58.318 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:58.318 D/btgnss_service(19772): setMock accuracy_meters: 8.4
+12-05 22:29:58.319 D/btgnss_service(19772): setMock lat: 13.781524833333334
+12-05 22:29:58.320 D/btgnss_service(19772): setMock lon: 13.781524833333334
+12-05 22:29:58.321 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:58.322 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:58.322 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:29:59.371 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:29:59.371 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:29:59.371 D/btgnss_service(19772): setMock accuracy_meters: 8.4
+12-05 22:29:59.372 D/btgnss_service(19772): setMock lat: 13.7815235
+12-05 22:29:59.372 D/btgnss_service(19772): setMock lon: 13.7815235
+12-05 22:29:59.373 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:29:59.373 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:29:59.374 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:30:00.420 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:30:00.420 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:30:00.420 D/btgnss_service(19772): setMock accuracy_meters: 8.3
+12-05 22:30:00.421 D/btgnss_service(19772): setMock lat: 13.78152
+12-05 22:30:00.421 D/btgnss_service(19772): setMock lon: 13.78152
+12-05 22:30:00.422 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:30:00.422 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:30:00.422 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:30:01.482 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:30:01.482 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:30:01.482 D/btgnss_service(19772): setMock accuracy_meters: 8.3
+12-05 22:30:01.483 D/btgnss_service(19772): setMock lat: 13.781521833333333
+12-05 22:30:01.483 D/btgnss_service(19772): setMock lon: 13.781521833333333
+12-05 22:30:01.484 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:30:01.485 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:30:01.485 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:30:02.540 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:30:02.540 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:30:02.540 D/btgnss_service(19772): setMock accuracy_meters: 8.3
+12-05 22:30:02.542 D/btgnss_service(19772): setMock lat: 13.781520666666667
+12-05 22:30:02.542 D/btgnss_service(19772): setMock lon: 13.781520666666667
+12-05 22:30:02.543 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:30:02.543 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:30:02.544 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:30:03.605 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:30:03.605 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:30:03.605 D/btgnss_service(19772): setMock accuracy_meters: 8.2
+12-05 22:30:03.607 D/btgnss_service(19772): setMock lat: 13.78152
+12-05 22:30:03.607 D/btgnss_service(19772): setMock lon: 13.78152
+12-05 22:30:03.608 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:30:03.608 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:30:03.609 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:30:04.668 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:30:04.668 D/btgnss_service(19772): service: on_updated_nmea_params()
+12-05 22:30:04.669 D/btgnss_service(19772): setMock accuracy_meters: 8.2
+12-05 22:30:04.670 D/btgnss_service(19772): setMock lat: 13.781519166666667
+12-05 22:30:04.670 D/btgnss_service(19772): setMock lon: 13.781519166666667
+12-05 22:30:04.672 D/btgnss_mainactvty(19772): mainactivity on_updated_nmea_params()
+12-05 22:30:04.672 D/btgnss_mainactvty(19772): mainactivity handler got params map
+12-05 22:30:04.672 D/btgnss_mainactvty(19772): cloned HashMap to prevent ConcurrentModificationException...
+12-05 22:30:05.721 D/btgnss_nmea_p(19772): calling m_cb callback with parsed params
+12-05 22:30:05.721 D/btgnss_service(19772): service: on_updated_nmea_params()
+
+
+
+
+- cpu optimize...
+- dont clone hashmap, use concurrenthashmap from lib
+- dont connect if no username/password entered
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): connect() start
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): start opening tcp socket to host: www.igs-ip.net port: 2101
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): connect() exception: java.lang.SecurityException: Permission denied (missing INTERNET permission?)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:151)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:105)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	at java.net.InetAddress.getByName(InetAddress.java:1108)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	at java.net.InetSocketAddress.<init>(InetSocketAddress.java:235)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	at com.clearevo.libecodroidbluetooth.ntrip_conn_mgr.connect_or_get_mount_point_list(ntrip_conn_mgr.java:99)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	at com.clearevo.libecodroidbluetooth.ntrip_conn_mgr.connect(ntrip_conn_mgr.java:76)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	at com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service$2.run(bluetooth_gnss_service.java:269)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): Caused by: android.system.GaiException: android_getaddrinfo failed: EAI_NODATA (No address associated with hostname)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	at libcore.io.Linux.android_getaddrinfo(Native Method)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	at libcore.io.BlockGuardOs.android_getaddrinfo(BlockGuardOs.java:172)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:137)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	... 6 more
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): Caused by: android.system.ErrnoException: android_getaddrinfo failed: EACCES (Permission denied)
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): 	... 9 more
+12-05 22:08:40.663 D/btgnss_ntripmgr(14670): close()
+
 
 ---
 

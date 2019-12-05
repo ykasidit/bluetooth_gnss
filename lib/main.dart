@@ -244,7 +244,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     event_channel.receiveBroadcastStream().listen(
             (dynamic event) {
 
-              //print("got event -----------");
+              print("got event -----------");
               //LogPrint("$event");
               Map<dynamic, dynamic> param_map = event;
 
