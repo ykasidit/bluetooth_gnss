@@ -398,7 +398,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
           PopupMenuButton(
                   itemBuilder: (_) => <PopupMenuItem<String>>[
                     new PopupMenuItem<String>(
-                            child: const Text('Disconnect'),
+                            child: const Text('Disconnect/Stop'),
                             value: 'disconnect',
                     ),
                     new PopupMenuItem<String>(
@@ -877,8 +877,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
               print("build location");
               return  SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.all(25.0),
-                    child: new Container(
+                    padding: const EdgeInsets.all(5.0),
+                    child:  Card(
+                      child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                        child: new Container(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -925,7 +928,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Text(
-                                    "NTRIP Stream (Mount-point) selected:",
+                                    "NTRIP Stream selected:",
                                     style: Theme.of(context).textTheme.body2
                                 ),
                                 Text(
@@ -950,6 +953,8 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             ),
                           ],
                         )),
+                        )
+                    )
                   )
               );
               break;

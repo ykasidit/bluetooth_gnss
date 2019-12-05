@@ -72,7 +72,7 @@ This app's UI uses, and I would like to hereby say thanks all authors of, below 
 - preferences
 - flutter_gallery_assets
 - flutter_markdown
-
+- progress_dialog
 
 Notices for engine part of this app
 -----------------------------------

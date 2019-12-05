@@ -1,3 +1,8 @@
+*ALWAYS* do final test with:
+flutter run --release -d BH9005AW5L
+
+---
+
 - after press back then shows 'loading selected device'
 - focus 'Waze'
 - dev bearing

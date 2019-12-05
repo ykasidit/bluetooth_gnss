@@ -1,0 +1,1 @@
+include ':app', ':libecodroidbluetooth', ':libecodroidgnss_parse', ':libbluetooth_gnss_service'
