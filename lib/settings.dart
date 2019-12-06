@@ -27,7 +27,7 @@ class settings_widget_state extends State<settings_widget> {
   ProgressDialog m_pr;
 
   static const method_channel = MethodChannel("com.clearevo.bluetooth_gnss/engine");
-  static const event_channel = EventChannel("com.clearevo.bluetooth_gnss/engine_events");
+  static const event_channel = EventChannel("com.clearevo.bluetooth_gnss/settings_events");
   void toast(String msg) async
   {
     try {

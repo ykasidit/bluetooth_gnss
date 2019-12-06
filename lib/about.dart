@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+
 import 'main.dart';
 
 const String _markdownData = """# Markdown Example
@@ -47,8 +48,9 @@ void main() {
 Enjoy!
 """;
 
-Widget get_about_view(){
+Widget get_about_view(String version) {
   String md = """
+  App version: """+version+ """
   
 Purpose
 =======
@@ -59,7 +61,8 @@ Use this app to get more accurate positioning data (latitude, longitude, elevati
 
 This app is provided for free by [www.ClearEvo.com](http://www.clearevo.com) - home of the 'EcoDroidGPS' Bluetooth GPS Receiver for Android phones and Tablets.
 
-Also, the source code of this app's engine, named 'libbluetooth_gnss', is free software, re-licensed and released under the GNU GPL for anyone to study/use/modify/share freely at:
+Also, the source code of app 'bluetooth_gnss', amd its engine, named 'libbluetooth_gnss', is re-licensed as free software for released under the GNU GPL for anyone to study/use/modify/share freely at:
+- <https://gitlab.com/ykasidit/bluetooth_gnss>
 - <https://github.com/ykasidit/libbluetooth_gnss>
 
 Copyright (c) 2019 Kasidit Yusuf. All rights reserved.
@@ -73,6 +76,7 @@ This app's UI uses, and I would like to hereby say thanks all authors of, below 
 - flutter_gallery_assets
 - flutter_markdown
 - progress_dialog
+- package_info
 
 Notices for engine part of this app
 -----------------------------------

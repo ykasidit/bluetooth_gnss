@@ -35,24 +35,26 @@ import com.clearevo.libecodroidgnss_parse.*;
 import com.clearevo.libbluetooth_gnss_service.*;
 
 
-public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks {
+public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks, EventChannel.StreamHandler {
 
     private static final String ENGINE_METHOD_CHANNEL = "com.clearevo.bluetooth_gnss/engine";
     private static final String ENGINE_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/engine_events";
+    private static final String SETTINGS_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/settings_events";
     static final String TAG = "btgnss_mainactvty";
     EventChannel.EventSink m_events_sink;
+    EventChannel.EventSink m_settings_events_sink;
     bluetooth_gnss_service m_service;
     boolean mBound = false;
 
     Handler m_handler;
     final int MESSAGE_PARAMS_MAP = 0;
+    final int MESSAGE_SETTINGS_MAP = 1;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
         GeneratedPluginRegistrant.registerWith(this);
-
-        Log.d(TAG, "onCraete()");
 
         m_handler = new Handler(getMainLooper()) {
             @Override
@@ -60,8 +62,13 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                 if (inputMessage.what == MESSAGE_PARAMS_MAP) {
                     Log.d(TAG, "mainactivity handler got params map");
                     try {
-                        /*
-                        PREVENT: clone the hashmap...
+                        if (mBound == false || m_events_sink == null) {
+                            Log.d(TAG, "mBound == false || m_events_sink == null so not delivering params_map");
+                        } else {
+                            Object params_map = inputMessage.obj;
+                            if (params_map instanceof HashMap) {
+                                /*
+                        PREVENT BELOW: try clone the hashmap...
                         D/btgnss_mainactvty(15208): handlemessage exception: java.util.ConcurrentModificationException
 D/btgnss_mainactvty(15208): 	at java.util.HashMap$HashIterator.nextNode(HashMap.java:1441)
 D/btgnss_mainactvty(15208): 	at java.util.HashMap$EntryIterator.next(HashMap.java:1475)
@@ -71,15 +78,30 @@ D/btgnss_mainactvty(15208): 	at io.flutter.plugin.common.StandardMethodCodec.enc
 D/btgnss_mainactvty(15208): 	at io.flutter.plugin.common.EventChannel$IncomingStreamRequestHandler$EventSinkImplementation.success(EventChannel.java:226)
 D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handleMessage(MainActivity.java:64)
                         * */
-                        Object params_map = inputMessage.obj;
-                        if (params_map instanceof HashMap) {
-                            params_map = ((HashMap) params_map).clone();
-                            Log.d(TAG, "cloned HashMap to prevent ConcurrentModificationException...");
+                                params_map = ((HashMap) params_map).clone();
+                                Log.d(TAG, "cloned HashMap to prevent ConcurrentModificationException...");
+                            }
+                            Log.d(TAG, "sending params map to m_events_sink start");
+                            m_events_sink.success(params_map);
+                            Log.d(TAG, "sending params map to m_events_sink done");
                         }
-
-                        m_events_sink.success(params_map);
                     } catch (Exception e) {
-                        Log.d(TAG, "handlemessage exception: "+Log.getStackTraceString(e));
+                        Log.d(TAG, "handlemessage MESSAGE_PARAMS_MAP exception: "+Log.getStackTraceString(e));
+                    }
+                } else if (inputMessage.what == MESSAGE_SETTINGS_MAP) {
+                    Log.d(TAG, "mainactivity handler got settings map");
+                    try {
+                        if (mBound == false || m_settings_events_sink == null) {
+                            Log.d(TAG, "mBound == false || m_settings_events_sink == null so not delivering params_map");
+                        } else {
+                            Object params_map = inputMessage.obj;
+                            //this is already a concurrenthashmap - no need to clone
+                            Log.d(TAG, "sending params map to m_settings_events_sink start");
+                            m_settings_events_sink.success(params_map);
+                            Log.d(TAG, "sending params map to m_settings_events_sink done");
+                        }
+                    } catch (Exception e) {
+                        Log.d(TAG, "handlemessage MESSAGE_SETTINGS_MAP exception: " + Log.getStackTraceString(e));
                     }
                 }
             }
@@ -123,7 +145,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                                     ConcurrentHashMap<String, Object> cbmap = new ConcurrentHashMap<String, Object>();
                                     cbmap.put("callback_src", "get_mountpoint_list");
                                     cbmap.put("callback_payload", ret);
-                                    Message msg = m_handler.obtainMessage(MESSAGE_PARAMS_MAP, cbmap);
+                                    Message msg = m_handler.obtainMessage(MESSAGE_SETTINGS_MAP, cbmap);
                                     msg.sendToTarget();
                                 }
                             }.start();
@@ -226,20 +248,37 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         );
 
         new EventChannel(getFlutterView(), ENGINE_EVENTS_CHANNEL).setStreamHandler(
+                MainActivity.this
+        );
+
+        new EventChannel(getFlutterView(), SETTINGS_EVENTS_CHANNEL).setStreamHandler(
                 new EventChannel.StreamHandler() {
                     @Override
                     public void onListen(Object args, final EventChannel.EventSink events) {
-                        Log.w(TAG, "adding listener");
-                        m_events_sink = events;
+                        m_settings_events_sink = events;
+                        Log.d(TAG, "SETTINGS_EVENTS_CHANNEL added listener: "+events);
                     }
 
                     @Override
                     public void onCancel(Object args) {
-                        Log.w(TAG, "cancelling listener");
-                        m_events_sink = null;
+                        m_settings_events_sink = null;
+                        Log.d(TAG, "SETTINGS_EVENTS_CHANNEL cancelled listener");
                     }
+
                 }
         );
+    }
+
+    @Override
+    public void onListen(Object args, final EventChannel.EventSink events) {
+        m_events_sink = events;
+        Log.d(TAG, "ENGINE_EVENTS_CHANNEL added listener: "+events);
+    }
+
+    @Override
+    public void onCancel(Object args) {
+        m_events_sink = null;
+        Log.d(TAG, "ENGINE_EVENTS_CHANNEL cancelled listener");
     }
 
     public ArrayList<String> get_mountpoint_list(String host, int port, String user, String pass)
@@ -346,12 +385,13 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy()");
         super.onDestroy();
     }
 
     @Override
     public void onBackPressed() {
-
+        Log.d(TAG, "onBackPressed()");
         super.onBackPressed();
     }
 
@@ -381,20 +421,33 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
 
     @Override
     protected void onStart() {
+        Log.d(TAG, "onStart()");
         super.onStart();
         // Bind to LocalService
         Intent intent = new Intent(this, bluetooth_gnss_service.class);
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
-
     }
 
 
     @Override
     protected void onStop() {
+        Log.d(TAG, "onStop()");
         super.onStop();
         unbindService(connection);
         mBound = false;
 
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(TAG, "onPause()");
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        Log.d(TAG, "onResume()");
+        super.onResume();
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
@@ -415,7 +468,9 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
+            Log.d(TAG, "onServiceDisconnected()");
             mBound = false;
+            m_service.set_callback((gnss_sentence_parser.gnss_parser_callbacks) null);
         }
     };
 

@@ -5,6 +5,8 @@
 import 'package:bluetooth_gnss/about.dart';
 import 'package:flutter/material.dart';
 import 'package:preferences/preferences.dart';
+import 'package:package_info/package_info.dart';
+
 import 'package:flutter/services.dart';
 
 import 'settings.dart';
@@ -995,6 +997,9 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
         await disconnect();
         break;
       case "about":
+
+        PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -1003,7 +1008,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                     appBar: AppBar(
                       title: Text("About"),
                     ),
-                    body: get_about_view()
+                    body: get_about_view(packageInfo.version.toString())
                 );
               }
           ),
@@ -1149,7 +1154,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
           msg: msg
       );*/
       setState(() {
-        _check_state_map_icon["No device selected\n(select in top-right gear icon)"] = ICON_FAIL;
+        _check_state_map_icon["No device selected\n(select in top-right settings/gear icon)"] = ICON_FAIL;
         _selected_device = sw.get_selected_bd_summary();
         _status = msg;
       });
@@ -1198,7 +1203,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     }
 
     if (! (await is_mock_location_enabled())) {
-      String msg = "Please go to phone Settings > Developer Options > Mock Location Provider and set 'Mock Location app' to 'Bluetooth GNSS'...";
+      String msg = "Please go to phone Settings > Developer Options > Under 'Debugging', set 'Mock Location app' to 'Bluetooth GNSS'...";
       setState(() {
         _check_state_map_icon["'Mock Location app' not 'Bluetooth GNSS'\n"] = ICON_FAIL;
         _status = msg;

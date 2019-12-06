@@ -1,4 +1,4 @@
-*ALWAYS* do final test with:
+*ALWAYS* do final test with apk from:
 flutter build apk --release
 
 ---
