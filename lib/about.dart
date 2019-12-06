@@ -50,10 +50,14 @@ Enjoy!
 
 Widget get_about_view(String version) {
   String md = """
-  App version: """+version+ """
+  
+Bluetooth GNSS
+==============
+App version: """+version+ """
+
   
 Purpose
-=======
+------
 
 Use this app to get more accurate positioning data (latitude, longitude, elevation...) from external 'Bluetooth GNSS Receivers' (like 'EcoDroidGPS', 'HOLUX', 'Garmin GLO' etc) and use it as the position for apps in this phone (like Google Maps, etc) via 'Mock location app' Android Developer Settings.
 
