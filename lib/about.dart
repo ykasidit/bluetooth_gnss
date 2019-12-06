@@ -59,7 +59,7 @@ App version: """+version+ """
 Purpose
 ------
 
-Use this app to get more accurate positioning data (latitude, longitude, elevation...) from external 'Bluetooth GNSS Receivers' (like 'EcoDroidGPS', 'HOLUX', 'Garmin GLO' etc) and use it as the position for apps in this phone (like Google Maps, etc) via 'Mock location app' Android Developer Settings.
+Use this app to get more accurate positioning data (latitude, longitude, elevation...) from external 'Bluetooth GNSS Receivers' (like 'EcoDroidGPS', 'HOLUX', 'Garmin GLO' etc) and use it as the position for apps in this phone (like Waze, etc) via 'Mock location app' Android Developer Settings.
 
 """+ScrollableTabsDemoState.note_how_to_disable_mock_location+"""
 
