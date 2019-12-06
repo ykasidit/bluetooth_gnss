@@ -65,11 +65,9 @@ Use this app to get more accurate positioning data (latitude, longitude, elevati
 
 This app is provided for free by [www.ClearEvo.com](http://www.clearevo.com) - home of the 'EcoDroidGPS' Bluetooth GPS Receiver for Android phones and Tablets.
 
-Also, the source code of app 'bluetooth_gnss', amd its engine, named 'libbluetooth_gnss', is re-licensed as free software for released under the GNU GPL for anyone to study/use/modify/share freely at:
+Also, the source code of app 'bluetooth_gnss', amd its engine, named 'libbluetooth_gnss', is free software and released under the GNU GPL for anyone to study/use/modify/share freely at:
 - <https://gitlab.com/ykasidit/bluetooth_gnss>
 - <https://github.com/ykasidit/libbluetooth_gnss>
-
-Copyright (c) 2019 Kasidit Yusuf. All rights reserved.
 
 
 Notices for the UI part of this app
@@ -82,12 +80,27 @@ This app's UI uses, and I would like to hereby say thanks all authors of, below 
 - progress_dialog
 - package_info
 
+
 Notices for engine part of this app
 -----------------------------------
 
 This 'libbluetooth_gnss' engine uses, and I would like to hereby say thanks all authors of, the 'Java Marine API' - NMEA 0183 library for Java - under the GNU LGPL - see the project page for more info:
 - <https://github.com/ktuukkan/marine-api>
 
+
+---
+
+License
+-------
+
+Copyright (c) 2019 Kasidit Yusuf. All rights reserved.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
+    
 """;
 
   return Markdown(data: md);
