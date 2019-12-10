@@ -1,7 +1,29 @@
 *ALWAYS* do final test with apk from:
 flutter build apk --release
+then try enter main menu (minifyenable false in build gradle fixed this)
 
 ---
+
+
+- try with AUSCORS servers
+  - parse failed $GNRMC,020125.00,A,1845.82207,N,09859.94984,E,0.027,,101219,,,F,V*1A
+
+- try with IGS-IP servers
+- show ntrip connect log in listview, througput rx, troughput tx to bt
+
+- unittest libbt_gnss again all
+
+- show ntrip connect trace - test wrong mountmount, wrong authen etc cases
+
+- ntrip auto re-connect if bt still connected
+ - if bt diconnected, disconnect ntrip too: test
+
+- show map view
+- can log gpx/nmea, can post to server
+
+- test HC-06 normal board on ardusimple UART1 wired/soldered connections - PUBX coming through UART2 (HC-06 XBee board) event after app sent enable ubx config (UART2 already set to accept UBX+NMEA+RTCM3...)
+
+- re-test RTK on EcoDroidGPS in BKK
 
 no data update on screen but will show if back to exit activity and start again:
 

@@ -551,11 +551,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                  'Acquired Fix:',
+                                  'Fix status:',
                                   style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                  (_param_map["GN_status"] ?? _param_map["GP_status"]) == "ACTIVE" ? "YES" : "NO",
+                                  (_param_map["GN_status"] ?? _param_map["GP_status"] ?? "No data"),
                                   style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -876,7 +876,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
 
             case "RTK/NTRIP":
-              print("build location");
+              //print("build location");
               return  SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.all(5.0),
@@ -1158,7 +1158,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
         _selected_device = sw.get_selected_bd_summary();
         _status = msg;
       });
-      print('check_and_update_selected_device10');
+      //print('check_and_update_selected_device10');
 
       _main_icon = ICON_NOT_CONNECTED;
       _main_state = "Not connected";
