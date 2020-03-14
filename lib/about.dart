@@ -79,6 +79,7 @@ This app's UI uses, and I would like to hereby say thanks all authors of, below 
 - flutter_markdown
 - progress_dialog
 - package_info
+- share
 
 
 Notices for engine part of this app

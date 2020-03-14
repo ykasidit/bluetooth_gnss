@@ -6,7 +6,7 @@ import 'package:bluetooth_gnss/about.dart';
 import 'package:flutter/material.dart';
 import 'package:preferences/preferences.dart';
 import 'package:package_info/package_info.dart';
-
+import 'package:share/share.dart';
 import 'package:flutter/services.dart';
 
 import 'settings.dart';
@@ -532,6 +532,30 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                   (_param_map['lat_double_07_str'] ?? WAITING_DEV) + ", " + (_param_map['lon_double_07_str'] ?? WAITING_DEV),
                                       style: Theme.of(context).textTheme.body1
                               ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              RaisedButton(
+                                onPressed: () {
+                                  String content = (_param_map['lat_double_07_str'] ?? WAITING_DEV) + "," /* no space here for sharing to gmaps */ + (_param_map['lon_double_07_str'] ?? WAITING_DEV);
+                                  Share.share('https://www.google.com/maps/search/?api=1&query='+content).then((result) {
+                                    snackbar('Shared: '+content);
+                                  });
+                                },
+                                child: const Icon(Icons.share),
+                              ),
+                              Padding(padding: const EdgeInsets.all(2.0),),
+                              RaisedButton(
+                                onPressed: () {
+                                  String content = (_param_map['lat_double_07_str'] ?? WAITING_DEV) + "," + (_param_map['lon_double_07_str'] ?? WAITING_DEV);
+                                  Clipboard.setData(ClipboardData(text: content)).then((result) {
+                                    snackbar('Copied to clipboard: '+content);
+                                  });
+                                },
+                                child: const Icon(Icons.content_copy),
+                              )
                             ],
                           ),
                           Row(

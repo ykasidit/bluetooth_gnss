@@ -4,6 +4,8 @@ then try enter main menu (minifyenable false in build gradle fixed this)
 
 ---
 
+- share/copy button
+- why accuracy not showing
 
 - try with AUSCORS servers
   - parse failed $GNRMC,020125.00,A,1845.82207,N,09859.94984,E,0.027,,101219,,,F,V*1A
