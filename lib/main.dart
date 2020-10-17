@@ -24,6 +24,8 @@ main() async {
             'reconnect': false,
             'secure': true,
             'check_settings_location': false,
+            'log_bt_rx': false,
+            'disable_ntrip': false,
           }
   );
   //PrefService.setString("target_bdaddr", null);
@@ -960,7 +962,9 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
                                             PrefService.getString('ntrip_pass') != null &&
                                             PrefService.getString('ntrip_pass').toString().length > 0
-                                    ) ? "Yes" : "No",
+                                    ) ? (
+                                        (PrefService.getBool('disable_ntrip') ?? false) ? "Yes but disabled": "Yes"
+                                    ) : "No",
                                     style: Theme.of(context).textTheme.body1
                                 ),
                               ],
@@ -1333,6 +1337,21 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
   Future<void> connect() async {
 
+    bool log_bt_rx = PrefService.getBool('log_bt_rx') ?? false;
+
+    if (log_bt_rx) {
+      bool write_enabled = false;
+      try {
+        write_enabled = await method_channel.invokeMethod('is_write_enabled');
+      } on PlatformException catch (e) {
+        toast("WARNING: check _is_connecting failed: $e");
+      }
+      if (write_enabled == false) {
+        toast("Write external storage permission required for data loggging...");
+        return;
+      }
+    }
+
     if (_is_bt_connected) {
       toast("Already connected...");
       return;
@@ -1388,6 +1407,8 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                 "bdaddr": bdaddr,
                 'secure': PrefService.getBool('secure') ?? true,
                 'reconnect' : PrefService.getBool('reconnect') ?? false,
+                'log_bt_rx' : log_bt_rx,
+                'disable_ntrip' : PrefService.getBool('disable_ntrip') ?? false,
                 'ntrip_host': PrefService.getString('ntrip_host'),
                 'ntrip_port': PrefService.getString('ntrip_port'),
                 'ntrip_mountpoint': PrefService.getString('ntrip_mountpoint'),

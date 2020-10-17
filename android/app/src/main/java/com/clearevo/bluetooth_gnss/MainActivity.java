@@ -116,12 +116,14 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                             String bdaddr = call.argument("bdaddr");
                             boolean secure = call.argument("secure");
                             boolean reconnect = call.argument("reconnect");
+                            boolean log_bt_rx = call.argument("log_bt_rx");
+                            boolean disable_ntrip = call.argument("disable_ntrip");
                             HashMap<String, String> extra_params = new HashMap<String, String>();
 
                             for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
                                 extra_params.put(pk, call.argument(pk));
                             }
-                            int ret = connect(bdaddr, secure, reconnect, extra_params);
+                            int ret = connect(bdaddr, secure, reconnect, log_bt_rx, disable_ntrip, extra_params);
                             result.success(ret);
                         } else if (call.method.equals("get_mountpoint_list")) {
                             String host = call.argument("ntrip_host");
@@ -199,6 +201,32 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                             result.success(open_phone_bluetooth_settings());
                         } else if (call.method.equals("open_phone_location_settings")) {
                             result.success(open_phone_location_settings());
+                        } else if (call.method.equals("is_write_enabled")) {
+                            if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                                result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
+                            } else {
+                                Log.d(TAG, "is_write_enabled check write permission not granted yet so requesting permission now");
+                                Toast.makeText(getApplicationContext(), "BluetoothGNSS needs external storage write permissions to log data - please allow...", Toast.LENGTH_LONG).show();
+
+                                new Thread() {
+                                    public void run() {
+                                        try {
+                                            Thread.sleep(1000);
+                                        } catch (Exception e) {}
+                                        m_handler.post(
+                                                new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        ActivityCompat.requestPermissions(MainActivity.this, new String[] {
+                                                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                                        }, 1);
+                                                    }
+                                                }
+                                        );
+                                    }
+                                }.start();
+                                result.success(false);
+                            }
                         } else if (call.method.equals("is_mock_location_enabled")) {
                             result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
                         } else if (call.method.equals("is_location_enabled")) {
@@ -230,7 +258,8 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                                                     public void run() {
                                                         ActivityCompat.requestPermissions(MainActivity.this, new String[] {
                                                                 Manifest.permission.ACCESS_FINE_LOCATION,
-                                                                Manifest.permission.ACCESS_COARSE_LOCATION
+                                                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                                                Manifest.permission.WRITE_EXTERNAL_STORAGE
                                                         }, 1);
                                                     }
                                                 }
@@ -395,7 +424,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         super.onBackPressed();
     }
 
-    int connect(String bdaddr, boolean secure, boolean reconnect, HashMap<String, String> extra_params)
+    int connect(String bdaddr, boolean secure, boolean reconnect, boolean log_bt_rx, boolean disable_ntrip, HashMap<String, String> extra_params)
     {
         Log.d(TAG, "MainActivity connect(): "+bdaddr);
         int ret = -1;
@@ -404,6 +433,8 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         intent.putExtra("bdaddr", bdaddr);
         intent.putExtra("secure", secure);
         intent.putExtra("reconnect", reconnect);
+        intent.putExtra("log_bt_rx", log_bt_rx);
+        intent.putExtra("disable_ntrip", disable_ntrip);
         Log.d(TAG, "mainact extra_params: "+extra_params);
         for (String key : extra_params.keySet()) {
             String val = extra_params.get(key);

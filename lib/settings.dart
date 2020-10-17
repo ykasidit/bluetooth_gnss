@@ -226,7 +226,9 @@ class settings_widget_state extends State<settings_widget> {
           CheckboxPreference("Secure RFCOMM connection", 'secure'),
           CheckboxPreference("Auto-reconnect mode (takes effect in next connection)", 'reconnect'),
           CheckboxPreference("Check for Settings > 'Location' ON and 'High Accuracy'", 'check_settings_location'),
+          CheckboxPreference("Save all read data (NMEA/UBX/etc) to 'Internal Storage' > 'bluetooth_gnss_logs' folder", 'log_bt_rx'),
           PreferenceTitle('RTK/NTRIP Server settings'),
+          CheckboxPreference("Disable NTRIP", 'disable_ntrip'),
           PreferenceText(
             "Set these if your Bluetooth GNSS device supports RTK,\n(Like EcoDroidGPS + Ardusimple U-Blox F9 etc)",
             style: Theme.of(context).textTheme.caption,
