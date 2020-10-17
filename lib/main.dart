@@ -142,14 +142,17 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
   static const FLOATING_ICON_BLUETOOTH_SETTINGS =  Icon(
     Icons.settings_bluetooth,
+    color: Colors.white,
   );
 
   static const FLOATING_ICON_BLUETOOTH_CONNECT =  Icon(
     Icons.bluetooth_connected,
+    color: Colors.white,
   );
 
   static const FLOATING_ICON_BLUETOOTH_CONNECTING =  Icon(
     Icons.bluetooth_connected,
+    color: Colors.white,
   );
 
   static const ICON_CONNECTED =  Icon(
@@ -645,6 +648,19 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               ),
                               Text(
                                   _param_map["hdop_str"] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'Course:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["course_str"] ?? WAITING_DEV,
                                   style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -1380,7 +1396,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
               }
       );
       if (ret == 0) {
-        status = "Starting connection...";
+        status = "Starting connection to:\n"+sw.get_selected_bdname() ?? "(No name)";
       } else {
         status = "Failed to connect...";
         setState(() {
