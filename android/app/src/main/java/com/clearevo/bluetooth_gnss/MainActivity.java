@@ -1,38 +1,38 @@
 package com.clearevo.bluetooth_gnss;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
+import com.clearevo.libecodroidbluetooth.ntrip_conn_mgr;
+import com.clearevo.libecodroidbluetooth.rfcomm_conn_mgr;
+import com.clearevo.libecodroidgnss_parse.gnss_sentence_parser;
+
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.flutter.app.FlutterActivity;
 import io.flutter.plugin.common.EventChannel;
+import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugins.GeneratedPluginRegistrant;
-
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Message;
-
-import com.clearevo.libecodroidbluetooth.*;
-import com.clearevo.libecodroidgnss_parse.*;
-import com.clearevo.libbluetooth_gnss_service.*;
 
 
 public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks, EventChannel.StreamHandler {
@@ -86,7 +86,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                             Log.d(TAG, "sending params map to m_events_sink done");
                         }
                     } catch (Exception e) {
-                        Log.d(TAG, "handlemessage MESSAGE_PARAMS_MAP exception: "+Log.getStackTraceString(e));
+                        Log.d(TAG, "handlemessage MESSAGE_PARAMS_MAP exception: " + Log.getStackTraceString(e));
                     }
                 } else if (inputMessage.what == MESSAGE_SETTINGS_MAP) {
                     Log.d(TAG, "mainactivity handler got settings map");
@@ -123,7 +123,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                             for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
                                 extra_params.put(pk, call.argument(pk));
                             }
-                            int ret = connect(bdaddr, secure, reconnect, log_bt_rx, disable_ntrip, extra_params);
+                            int ret = Util.connect(this.getClass().getName(), getApplicationContext(), bdaddr, secure, reconnect, log_bt_rx, disable_ntrip, extra_params);
                             result.success(ret);
                         } else if (call.method.equals("get_mountpoint_list")) {
                             String host = call.argument("ntrip_host");
@@ -135,14 +135,14 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                                 public void run() {
                                     ArrayList<String> ret = new ArrayList<String>(); //init with empty list in case get fails
                                     try {
-                                         ret = get_mountpoint_list(host, Integer.parseInt(port), user, pass);
-                                         if (ret == null) {
-                                             ret = new ArrayList<String>(); //init with empty list in case get fails - can't push null into concurrenthashmap
-                                         }
-                                        Log.d(TAG,"get_mountpoint_list ret: "+ret);
+                                        ret = get_mountpoint_list(host, Integer.parseInt(port), user, pass);
+                                        if (ret == null) {
+                                            ret = new ArrayList<String>(); //init with empty list in case get fails - can't push null into concurrenthashmap
+                                        }
+                                        Log.d(TAG, "get_mountpoint_list ret: " + ret);
                                     } catch (Exception e) {
-                                        Log.d(TAG, "on_updated_nmea_params sink update exception: "+Log.getStackTraceString(e));
-                                        toast("Get mountpoint_list fialed: "+e);
+                                        Log.d(TAG, "on_updated_nmea_params sink update exception: " + Log.getStackTraceString(e));
+                                        toast("Get mountpoint_list fialed: " + e);
                                     }
                                     ConcurrentHashMap<String, Object> cbmap = new ConcurrentHashMap<String, Object>();
                                     cbmap.put("callback_src", "get_mountpoint_list");
@@ -169,7 +169,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                                 stopService(intent);
                                 Log.d(TAG, "disconnect4");
                             } catch (Exception e) {
-                                Log.d(TAG, "disconnect exception: "+Log.getStackTraceString(e));
+                                Log.d(TAG, "disconnect exception: " + Log.getStackTraceString(e));
                             }
                             result.success(false);
                         } else if (call.method.equals("get_bd_map")) {
@@ -212,12 +212,13 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                                     public void run() {
                                         try {
                                             Thread.sleep(1000);
-                                        } catch (Exception e) {}
+                                        } catch (Exception e) {
+                                        }
                                         m_handler.post(
                                                 new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        ActivityCompat.requestPermissions(MainActivity.this, new String[] {
+                                                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                                                                 Manifest.permission.WRITE_EXTERNAL_STORAGE
                                                         }, 1);
                                                     }
@@ -234,7 +235,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                             Log.d(TAG, "is_location_enabled 0");
                             if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                                     ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                                    ) {
+                            ) {
 
                                 Log.d(TAG, "is_location_enabled check locaiton permission already granted");
 
@@ -251,12 +252,13 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                                     public void run() {
                                         try {
                                             Thread.sleep(1000);
-                                        } catch (Exception e) {}
+                                        } catch (Exception e) {
+                                        }
                                         m_handler.post(
                                                 new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        ActivityCompat.requestPermissions(MainActivity.this, new String[] {
+                                                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                                                                 Manifest.permission.ACCESS_FINE_LOCATION,
                                                                 Manifest.permission.ACCESS_COARSE_LOCATION,
                                                                 Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -285,7 +287,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                     @Override
                     public void onListen(Object args, final EventChannel.EventSink events) {
                         m_settings_events_sink = events;
-                        Log.d(TAG, "SETTINGS_EVENTS_CHANNEL added listener: "+events);
+                        Log.d(TAG, "SETTINGS_EVENTS_CHANNEL added listener: " + events);
                     }
 
                     @Override
@@ -301,7 +303,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
     @Override
     public void onListen(Object args, final EventChannel.EventSink events) {
         m_events_sink = events;
-        Log.d(TAG, "ENGINE_EVENTS_CHANNEL added listener: "+events);
+        Log.d(TAG, "ENGINE_EVENTS_CHANNEL added listener: " + events);
     }
 
     @Override
@@ -310,15 +312,14 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         Log.d(TAG, "ENGINE_EVENTS_CHANNEL cancelled listener");
     }
 
-    public ArrayList<String> get_mountpoint_list(String host, int port, String user, String pass)
-    {
+    public ArrayList<String> get_mountpoint_list(String host, int port, String user, String pass) {
         ArrayList<String> ret = null;
         ntrip_conn_mgr mgr = null;
         try {
             mgr = new ntrip_conn_mgr(host, port, "", user, pass, null);
             ret = mgr.get_mount_point_list();
         } catch (Exception e) {
-            Log.d(TAG, "get_mountpoint_list call exception: "+Log.getStackTraceString(e));
+            Log.d(TAG, "get_mountpoint_list call exception: " + Log.getStackTraceString(e));
         } finally {
             if (mgr != null) {
                 try {
@@ -330,64 +331,58 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         return ret;
     }
 
-    public boolean open_phone_settings()
-    {
+    public boolean open_phone_settings() {
         try {
             startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS));
             return true;
-        } catch (Exception e ) {
-            Log.d(TAG, "launch phone settings activity exception: "+Log.getStackTraceString(e));
+        } catch (Exception e) {
+            Log.d(TAG, "launch phone settings activity exception: " + Log.getStackTraceString(e));
         }
         return false;
     }
 
-    public boolean open_phone_bluetooth_settings()
-    {
+    public boolean open_phone_bluetooth_settings() {
         try {
             startActivity(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS));
             return true;
-        } catch (Exception e ) {
-            Log.d(TAG, "launch phone settings activity exception: "+Log.getStackTraceString(e));
+        } catch (Exception e) {
+            Log.d(TAG, "launch phone settings activity exception: " + Log.getStackTraceString(e));
         }
         return false;
     }
 
-    public boolean open_phone_location_settings()
-    {
+    public boolean open_phone_location_settings() {
         try {
             startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
             return true;
-        } catch (Exception e ) {
-            Log.d(TAG, "launch phone settings activity exception: "+Log.getStackTraceString(e));
+        } catch (Exception e) {
+            Log.d(TAG, "launch phone settings activity exception: " + Log.getStackTraceString(e));
         }
         return false;
     }
 
-    public boolean open_phone_developer_settings()
-    {
+    public boolean open_phone_developer_settings() {
         try {
             startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS));
             return true;
-        } catch (Exception e ) {
-            Log.d(TAG, "launch phone settings activity exception: "+Log.getStackTraceString(e));
+        } catch (Exception e) {
+            Log.d(TAG, "launch phone settings activity exception: " + Log.getStackTraceString(e));
         }
         return false;
     }
 
-    public void on_updated_nmea_params(HashMap<String, Object> params_map)
-    {
+    public void on_updated_nmea_params(HashMap<String, Object> params_map) {
         Log.d(TAG, "mainactivity on_updated_nmea_params()");
         try {
             Message msg = m_handler.obtainMessage(MESSAGE_PARAMS_MAP, params_map);
             msg.sendToTarget();
         } catch (Exception e) {
-            Log.d(TAG, "on_updated_nmea_params sink update exception: "+Log.getStackTraceString(e));
+            Log.d(TAG, "on_updated_nmea_params sink update exception: " + Log.getStackTraceString(e));
         }
     }
 
 
-    public void toast(String msg)
-    {
+    public void toast(String msg) {
         m_handler.post(
                 new Runnable() {
                     @Override
@@ -395,15 +390,14 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                         try {
                             Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
                         } catch (Exception e) {
-                            Log.d(TAG, "toast exception: "+Log.getStackTraceString(e));
+                            Log.d(TAG, "toast exception: " + Log.getStackTraceString(e));
                         }
                     }
                 }
         );
     }
 
-    public void stop_service_if_not_connected()
-    {
+    public void stop_service_if_not_connected() {
         if (mBound && m_service != null && m_service.is_bt_connected()) {
             toast("Bluetooth GNSS running in backgroud...");
         } else {
@@ -422,32 +416,6 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
     public void onBackPressed() {
         Log.d(TAG, "onBackPressed()");
         super.onBackPressed();
-    }
-
-    int connect(String bdaddr, boolean secure, boolean reconnect, boolean log_bt_rx, boolean disable_ntrip, HashMap<String, String> extra_params)
-    {
-        Log.d(TAG, "MainActivity connect(): "+bdaddr);
-        int ret = -1;
-
-        Intent intent = new Intent(getApplicationContext(), bluetooth_gnss_service.class);
-        intent.putExtra("bdaddr", bdaddr);
-        intent.putExtra("secure", secure);
-        intent.putExtra("reconnect", reconnect);
-        intent.putExtra("log_bt_rx", log_bt_rx);
-        intent.putExtra("disable_ntrip", disable_ntrip);
-        Log.d(TAG, "mainact extra_params: "+extra_params);
-        for (String key : extra_params.keySet()) {
-            String val = extra_params.get(key);
-            Log.d(TAG, "mainact extra_params key: "+key+" val: "+val);
-            intent.putExtra(key, val);
-        }
-        intent.putExtra("activity_class_name", this.getClass().getName());
-        intent.putExtra("activity_icon_id", R.mipmap.ic_launcher);
-
-
-        ComponentName ssret = startService(intent);
-        Log.d(TAG, "MainActivity connect(): startservice ssret: "+ssret.flattenToString());
-        return 0;
     }
 
     @Override
@@ -481,7 +449,9 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         super.onResume();
     }
 
-    /** Defines callbacks for service binding, passed to bindService() */
+    /**
+     * Defines callbacks for service binding, passed to bindService()
+     */
     private ServiceConnection connection = new ServiceConnection() {
 
         @Override
