@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 
 public class StartConnectionReceiver extends BroadcastReceiver {
@@ -16,8 +19,16 @@ public class StartConnectionReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
 
-        // assumes WordService is a registered service
-        Util.connect(this.getClass().getName(), context, "00:00:00:00:00:00", true, false, false, false, new HashMap<>());
+        if ("bluetooth.CONNECT".equals(intent.getAction())) {
+
+            try {
+                JSONObject extras = new JSONObject(intent.getExtras().getString("config"));
+                final String bdaddr  = extras.getString("bdaddr");
+                Util.connect(this.getClass().getName(), context, bdaddr, true, false, false, false, new HashMap<>());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
