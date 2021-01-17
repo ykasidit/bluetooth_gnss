@@ -89,11 +89,16 @@ On the `PROFILES` tab, you can use a state change or a event. In this example, I
 
 This will trigger the event only when my GPS receiver is connected. You can add multiple devices here, which is why I choose this method: in the action, the variable `%bt_address` will be available as well and I'll use that to pass to Bluetooth GNSS.
 
+Special thanks
+--------------
+
+- Thanks to "Auric Goldfinger" for his great contribution in developing the auto connect on bluetooth feature and the detailed readme merged into above.
+
 
 Copyright and License
 ---------------------
 
-Copyright (C) 2019 Kasidit Yusuf <ykasidit@gmail.com>
+Copyright (C) 2019 Kasidit Yusuf <ykasidit@gmail.com> and all respective project source code contributors.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
