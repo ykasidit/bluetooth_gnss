@@ -92,7 +92,7 @@ This will trigger the event only when my GPS receiver is connected. You can add 
 Special thanks
 --------------
 
-- Thanks to "Auric Goldfinger" for his great contribution in developing the auto connect on bluetooth feature and the detailed readme merged into above.
+- Thanks to [Auric Goldfinger](https://github.com/auricgoldfinger) for his great contribution in developing the auto connect on bluetooth feature and the detailed readme merged into above.
 
 
 Copyright and License
