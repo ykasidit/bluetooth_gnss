@@ -1,12 +1,11 @@
 Bluetooth GNSS
 --------------
 
-This is the soruce code repo for the Bluetooth GNSS app. Connect your Android phone to external Bluetooth GPS, GLONASS, Galileo and BeiDou receivers and use their location.
+This is the source code repo for the Bluetooth GNSS app. Connect your Android phone to external Bluetooth GPS, GLONASS, Galileo and BeiDou receivers and use their location.
 
 This is the UI part.
 
 The engine part is hosted at <https://github.com/ykasidit/libbluetooth_gnss>.
-
 
 Copyright and License
 ---------------------
