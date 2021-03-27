@@ -113,17 +113,17 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                     public void onMethodCall(MethodCall call, Result result) {
 
                         if (call.method.equals("connect")) {
-                            String bdaddr = call.argument("bdaddr");
-                            boolean secure = call.argument("secure");
-                            boolean reconnect = call.argument("reconnect");
-                            boolean log_bt_rx = call.argument("log_bt_rx");
-                            boolean disable_ntrip = call.argument("disable_ntrip");
-                            HashMap<String, String> extra_params = new HashMap<String, String>();
+                            final GnssConnection gnssConnection = new GnssConnection();
+                            gnssConnection.setBdaddr(call.argument("bdaddr"));
+                            gnssConnection.setSecure(call.argument("secure"));
+                            gnssConnection.setReconnect(call.argument("reconnect"));
+                            gnssConnection.setLogBtRx(call.argument("log_bt_rx"));
+                            gnssConnection.setDisableNtrip(call.argument("disable_ntrip"));
 
                             for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-                                extra_params.put(pk, call.argument(pk));
+                                gnssConnection.getExtraParams().put(pk, call.argument(pk));
                             }
-                            int ret = Util.connect(this.getClass().getName(), getApplicationContext(), bdaddr, secure, reconnect, log_bt_rx, disable_ntrip, extra_params);
+                            int ret = Util.connect(this.getClass().getName(), getApplicationContext(), gnssConnection);
                             result.success(ret);
                         } else if (call.method.equals("get_mountpoint_list")) {
                             String host = call.argument("ntrip_host");
