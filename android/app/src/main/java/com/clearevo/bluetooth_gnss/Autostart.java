@@ -4,13 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-public class StartConnectionReceiver extends BroadcastReceiver {
-
-    static final String TAG = "btgnss_receiver";
-
-    @Override
+public class Autostart extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
-        if ("bluetooth.CONNECT".equals(intent.getAction())) {
+        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())
+                || "tasker.MOCK".equals(intent.getAction()) ) {
             Util.makeConnection(this.getClass().getName(), context, intent);
         }
     }
