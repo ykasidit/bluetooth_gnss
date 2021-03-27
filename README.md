@@ -15,7 +15,7 @@ Preparation
  ```
  flutter.sdk=/path/to/flutter
  ```
-* Run `flutter pub get` in the android directory (where this README file is located)
+* Run `flutter pub get` in the *android* directory
 * Create the file `key.properties` and add your keystore information
 ```
 storeFile=/path/to/keystore.jks
@@ -23,6 +23,12 @@ storePassword=*********
 keyAlias=bluetooth_gnss
 keyPassword=**********
 ``` 
+* Install the [Lombok plugin](https://projectlombok.org/setup/android) in IntelliJ
+  * Go to `File > Settings > Plugins`
+  * Click on `Browse repositories...`
+  * Search for `Lombok Plugin`
+  * Click on `Install plugin`
+  * Restart Android Studio 
 * Resync project Gradle
 
 Initiate connection using external intent
