@@ -10,7 +10,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class GnssConnection {
+public class GnssConnectionParams {
     private String bdaddr;
     private boolean secure;
     private boolean reconnect;

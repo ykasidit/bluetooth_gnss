@@ -17,17 +17,17 @@ public class StartConnectionReceiver extends BroadcastReceiver {
             // defaults from preferences
             final SharedPreferences prefs = context.getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
 
-            final GnssConnection gnssConnection = Util.createGnssConnectionFromPreferences(prefs);
+            final GnssConnectionParams gnssConnectionParams = Util.createGnssConnectionFromPreferences(prefs);
 
             // get override from intent
             final Bundle extras = intent.getExtras();
             if (extras != null) {
                 final String configStr = extras.getString("config");
 
-                Util.overrideConnectionWithOptions(gnssConnection, configStr);
+                Util.overrideConnectionWithOptions(gnssConnectionParams, configStr);
             }
 
-            Util.connect(StartConnectionReceiver.class.getName(), context, gnssConnection);
+            Util.connect(StartConnectionReceiver.class.getName(), context, gnssConnectionParams);
         }
     }
 }

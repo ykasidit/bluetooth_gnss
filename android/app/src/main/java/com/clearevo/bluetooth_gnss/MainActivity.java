@@ -113,17 +113,17 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                     public void onMethodCall(MethodCall call, Result result) {
 
                         if (call.method.equals("connect")) {
-                            final GnssConnection gnssConnection = new GnssConnection();
-                            gnssConnection.setBdaddr(call.argument("bdaddr"));
-                            gnssConnection.setSecure(call.argument("secure"));
-                            gnssConnection.setReconnect(call.argument("reconnect"));
-                            gnssConnection.setLogBtRx(call.argument("log_bt_rx"));
-                            gnssConnection.setDisableNtrip(call.argument("disable_ntrip"));
+                            final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
+                            gnssConnectionParams.setBdaddr(call.argument("bdaddr"));
+                            gnssConnectionParams.setSecure(call.argument("secure"));
+                            gnssConnectionParams.setReconnect(call.argument("reconnect"));
+                            gnssConnectionParams.setLogBtRx(call.argument("log_bt_rx"));
+                            gnssConnectionParams.setDisableNtrip(call.argument("disable_ntrip"));
 
                             for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-                                gnssConnection.getExtraParams().put(pk, call.argument(pk));
+                                gnssConnectionParams.getExtraParams().put(pk, call.argument(pk));
                             }
-                            int ret = Util.connect(this.getClass().getName(), getApplicationContext(), gnssConnection);
+                            int ret = Util.connect(this.getClass().getName(), getApplicationContext(), gnssConnectionParams);
                             result.success(ret);
                         } else if (call.method.equals("get_mountpoint_list")) {
                             String host = call.argument("ntrip_host");
