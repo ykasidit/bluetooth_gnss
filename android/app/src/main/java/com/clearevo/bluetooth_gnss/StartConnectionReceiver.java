@@ -34,7 +34,7 @@ public class StartConnectionReceiver extends BroadcastReceiver {
                 overrideConnectionWithOptions(gnssConnectionParams, configStr);
             }
 
-            Util.connect(StartConnectionReceiver.class.getName(), context, gnssConnectionParams);
+            Util.connect(this.getClass().getName(), context, gnssConnectionParams);
         }
     }
 
@@ -57,7 +57,7 @@ public class StartConnectionReceiver extends BroadcastReceiver {
                     }
                 }
             } catch (JSONException e) {
-                Log.e(Util.class.getSimpleName(), e.getMessage(), e);
+                Log.e(this.getClass().getSimpleName(), e.getMessage(), e);
             }
         }
     }
