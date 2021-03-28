@@ -10,11 +10,8 @@ import android.util.Log;
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class Util {
 
@@ -33,31 +30,6 @@ public class Util {
         }
 
         return gnssConnectionParams;
-    }
-
-
-    public static void overrideConnectionWithOptions(GnssConnectionParams gnssConnectionParams, String overriddenOptions) {
-        Objects.requireNonNull(gnssConnectionParams, "GnssConnection must already been initialised");
-        if (overriddenOptions != null && !overriddenOptions.isEmpty()) {
-            try {
-                final JSONObject overrides = new JSONObject(overriddenOptions);
-                gnssConnectionParams.setBdaddr(overrides.optString("bdaddr", gnssConnectionParams.getBdaddr()));
-                gnssConnectionParams.setSecure(overrides.optBoolean("secure", gnssConnectionParams.isSecure()));
-                gnssConnectionParams.setReconnect(overrides.optBoolean("reconnect", gnssConnectionParams.isReconnect()));
-                gnssConnectionParams.setLogBtRx(overrides.optBoolean("log_bt_rx", gnssConnectionParams.isLogBtRx()));
-                gnssConnectionParams.setDisableNtrip(overrides.optBoolean("disable_ntrip", gnssConnectionParams.isDisableNtrip()));
-
-                final JSONObject overrides_extra_params = overrides.optJSONObject("extra");
-                if (overrides_extra_params != null) {
-                    for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-                        final String value = overrides_extra_params.optString(pk, gnssConnectionParams.getExtraParams().get(pk));
-                        if (value != null) gnssConnectionParams.getExtraParams().put(pk, value);
-                    }
-                }
-            } catch (JSONException e) {
-                Log.e(Util.class.getSimpleName(), e.getMessage(), e);
-            }
-        }
     }
 
     public static int connect(final String activityClassName,
@@ -99,7 +71,7 @@ public class Util {
             ssret = context.startService(intent);
         }
 
-        Log.d(activityClassName, "MainActivity connect(): startservice ssret: " + ssret.flattenToString());
+        Log.d(activityClassName, "connect(): startservice ssret: " + ssret.flattenToString());
         return 0;
     }
 
