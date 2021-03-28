@@ -17,7 +17,7 @@ public class Autostart extends BroadcastReceiver {
 
             final GnssConnectionParams gnssConnectionParams = Util.createGnssConnectionFromPreferences(prefs);
 
-            Util.connect(Autostart.class.getName(), context, gnssConnectionParams);
+            Util.connect(this.getClass().getName(), context, gnssConnectionParams);
         }
     }
 }
