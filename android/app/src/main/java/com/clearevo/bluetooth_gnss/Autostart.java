@@ -15,9 +15,9 @@ public class Autostart extends BroadcastReceiver {
             // defaults from preferences
             final SharedPreferences prefs = context.getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
 
-            final GnssConnection gnssConnection = Util.createGnssConnectionFromPreferences(prefs);
+            final GnssConnectionParams gnssConnectionParams = Util.createGnssConnectionFromPreferences(prefs);
 
-            Util.connect(Autostart.class.getName(), context, gnssConnection);
+            Util.connect(Autostart.class.getName(), context, gnssConnectionParams);
         }
     }
 }
