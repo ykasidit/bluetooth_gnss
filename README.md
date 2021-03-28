@@ -23,7 +23,7 @@ storePassword=*********
 keyAlias=bluetooth_gnss
 keyPassword=**********
 ``` 
-* Install the [Lombok plugin](https://projectlombok.org/setup/android) in IntelliJ
+* Install the [Lombok plugin](https://projectlombok.org/setup/android) in Android Studio
   * Go to `File > Settings > Plugins`
   * Click on `Browse repositories...`
   * Search for `Lombok Plugin`
