@@ -90,4 +90,6 @@ dependencies {
     implementation project(':libecodroidbluetooth')
     implementation project(':libecodroidgnss_parse')
     implementation project(':libbluetooth_gnss_service')
+    compileOnly 'org.projectlombok:lombok:1.18.18'
+    annotationProcessor 'org.projectlombok:lombok:1.18.18'
 }
