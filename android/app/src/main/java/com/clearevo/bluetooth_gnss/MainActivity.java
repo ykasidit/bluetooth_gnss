@@ -160,7 +160,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                         } else if (call.method.equals("disconnect")) {
                             try {
                                 Log.d(TAG, "disconnect0");
-                                if (mBound) {
+                                if (m_service != null && mBound) {
                                     Log.d(TAG, "disconnect1");
                                     m_service.close();
                                     result.success(true);
@@ -179,8 +179,8 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                         } else if (call.method.equals("is_bluetooth_on")) {
                             result.success(rfcomm_conn_mgr.is_bluetooth_on());
                         } else if (call.method.equals("is_ntrip_connected")) {
-                            result.success(m_service.is_ntrip_connected());
-                        } else if (call.method.equals("get_ntrip_cb_count")) {
+                            result.success(m_service != null && m_service.is_ntrip_connected());
+                        } else if (m_service != null && call.method.equals("get_ntrip_cb_count")) {
                             result.success(m_service.get_ntrip_cb_count());
                         } else if (call.method.equals("is_bt_connected")) {
                             result.success(mBound && m_service != null && m_service.is_bt_connected());
