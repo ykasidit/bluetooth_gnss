@@ -183,17 +183,9 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                         } else if (call.method.equals("get_ntrip_cb_count")) {
                             result.success(m_service.get_ntrip_cb_count());
                         } else if (call.method.equals("is_bt_connected")) {
-                            if (mBound && m_service != null && m_service.is_bt_connected()) {
-                                result.success(true);
-                            } else {
-                                result.success(false);
-                            }
+                            result.success(mBound && m_service != null && m_service.is_bt_connected());
                         } else if (call.method.equals("is_conn_thread_alive")) {
-                            if (mBound && m_service != null && m_service.is_trying_bt_connect()) {
-                                result.success(true);
-                            } else {
-                                result.success(false);
-                            }
+                            result.success(mBound && m_service != null && m_service.is_trying_bt_connect());
 
                         } else if (call.method.equals("open_phone_settings")) {
                             result.success(open_phone_settings());
