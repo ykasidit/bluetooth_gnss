@@ -22,6 +22,8 @@ import com.clearevo.libecodroidbluetooth.ntrip_conn_mgr;
 import com.clearevo.libecodroidbluetooth.rfcomm_conn_mgr;
 import com.clearevo.libecodroidgnss_parse.gnss_sentence_parser;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,15 +112,15 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         new MethodChannel(getFlutterView(), ENGINE_METHOD_CHANNEL).setMethodCallHandler(
                 new MethodCallHandler() {
                     @Override
-                    public void onMethodCall(MethodCall call, Result result) {
+                    public void onMethodCall(@NotNull MethodCall call, @NotNull Result result) {
 
                         if (call.method.equals("connect")) {
                             final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
                             gnssConnectionParams.setBdaddr(call.argument("bdaddr"));
-                            gnssConnectionParams.setSecure(call.argument("secure"));
-                            gnssConnectionParams.setReconnect(call.argument("reconnect"));
-                            gnssConnectionParams.setLogBtRx(call.argument("log_bt_rx"));
-                            gnssConnectionParams.setDisableNtrip(call.argument("disable_ntrip"));
+                            gnssConnectionParams.setSecure(Boolean.TRUE.equals(call.argument("secure")));
+                            gnssConnectionParams.setReconnect(Boolean.TRUE.equals(call.argument("reconnect")));
+                            gnssConnectionParams.setLogBtRx(Boolean.TRUE.equals(call.argument("log_bt_rx")));
+                            gnssConnectionParams.setDisableNtrip(Boolean.TRUE.equals(call.argument("disable_ntrip")));
 
                             for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
                                 gnssConnectionParams.getExtraParams().put(pk, call.argument(pk));
