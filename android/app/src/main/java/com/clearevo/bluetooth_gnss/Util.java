@@ -5,90 +5,59 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.Bundle;
 import android.util.Log;
 
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.Map;
-import java.util.Objects;
-
-import static android.content.Context.MODE_PRIVATE;
 
 public class Util {
 
     @NotNull
-    public static GnssConnection createGnssConnectionFromPreferences(SharedPreferences prefs) {
-        final GnssConnection gnssConnection = new GnssConnection();
-        gnssConnection.setBdaddr(prefs.getString("flutter.pref_target_bdaddr", null));
-        gnssConnection.setSecure(prefs.getBoolean("flutter.pref_secure", true));
-        gnssConnection.setReconnect(prefs.getBoolean("flutter.pref_reconnect", false));
-        gnssConnection.setLogBtRx(prefs.getBoolean("flutter.pref_log_bt_rx", false));
-        gnssConnection.setDisableNtrip(prefs.getBoolean("flutter.pref_disable_ntrip", false));
+    public static GnssConnectionParams createGnssConnectionFromPreferences(SharedPreferences prefs) {
+        final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
+        gnssConnectionParams.setBdaddr(prefs.getString("flutter.pref_target_bdaddr", null));
+        gnssConnectionParams.setSecure(prefs.getBoolean("flutter.pref_secure", true));
+        gnssConnectionParams.setReconnect(prefs.getBoolean("flutter.pref_reconnect", false));
+        gnssConnectionParams.setLogBtRx(prefs.getBoolean("flutter.pref_log_bt_rx", false));
+        gnssConnectionParams.setDisableNtrip(prefs.getBoolean("flutter.pref_disable_ntrip", false));
 
         for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
             final String value = prefs.getString("flutter.pref_" + pk, null);
-            if (value != null) gnssConnection.getExtraParams().put(pk, value);
+            if (value != null) gnssConnectionParams.getExtraParams().put(pk, value);
         }
 
-        return gnssConnection;
-    }
-
-
-    public static void overrideConnectionWithOptions(GnssConnection gnssConnection, String overriddenOptions) {
-        Objects.requireNonNull(gnssConnection, "GnssConnection must already been initialised");
-        if (overriddenOptions != null && !overriddenOptions.isEmpty()) {
-            try {
-                final JSONObject overrides = new JSONObject(overriddenOptions);
-                gnssConnection.setBdaddr(overrides.optString("bdaddr", gnssConnection.getBdaddr()));
-                gnssConnection.setSecure(overrides.optBoolean("secure", gnssConnection.isSecure()));
-                gnssConnection.setReconnect(overrides.optBoolean("reconnect", gnssConnection.isReconnect()));
-                gnssConnection.setLogBtRx(overrides.optBoolean("log_bt_rx", gnssConnection.isLogBtRx()));
-                gnssConnection.setDisableNtrip(overrides.optBoolean("disable_ntrip", gnssConnection.isDisableNtrip()));
-
-                final JSONObject overrides_extra_params = overrides.optJSONObject("extra");
-                if (overrides_extra_params != null) {
-                    for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-                        final String value = overrides_extra_params.optString(pk, gnssConnection.getExtraParams().get(pk));
-                        if (value != null) gnssConnection.getExtraParams().put(pk, value);
-                    }
-                }
-            } catch (JSONException e) {
-                Log.e(Util.class.getSimpleName(), e.getMessage(), e);
-            }
-        }
+        return gnssConnectionParams;
     }
 
     public static int connect(final String activityClassName,
                               final Context context,
-                              final GnssConnection gnssConnection) {
+                              final GnssConnectionParams gnssConnectionParams) {
 
-        Log.w(activityClassName, gnssConnection.toString() + ":");
-        for (Map.Entry<String, String> entry : gnssConnection.getExtraParams().entrySet()) {
+        Log.w(activityClassName, gnssConnectionParams.toString() + ":");
+        for (Map.Entry<String, String> entry : gnssConnectionParams.getExtraParams().entrySet()) {
             Log.w(activityClassName, "\t" + entry.getKey() + " = " + entry.getValue());
         }
 
-        if (gnssConnection.getBdaddr() == null || gnssConnection.getBdaddr().trim().isEmpty() || !gnssConnection.getBdaddr().matches("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$")) {
-            Log.e(activityClassName, "Invalid BT mac address: " + gnssConnection.getBdaddr());
+        if (gnssConnectionParams.getBdaddr() == null || gnssConnectionParams.getBdaddr().trim().isEmpty() || !gnssConnectionParams.getBdaddr().matches("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$")) {
+            Log.e(activityClassName, "Invalid BT mac address: " + gnssConnectionParams.getBdaddr());
             return -1;
         }
 
-        Log.d(activityClassName, "connect(): " + gnssConnection.getBdaddr());
+        Log.d(activityClassName, "connect(): " + gnssConnectionParams.getBdaddr());
         int ret = -1;
 
         Intent intent = new Intent(context, bluetooth_gnss_service.class);
-        intent.putExtra("bdaddr", gnssConnection.getBdaddr());
-        intent.putExtra("secure", gnssConnection.isSecure());
-        intent.putExtra("reconnect", gnssConnection.isReconnect());
-        intent.putExtra("log_bt_rx", gnssConnection.isLogBtRx());
-        intent.putExtra("disable_ntrip", gnssConnection.isDisableNtrip());
-        Log.d(activityClassName, "mainact extra_params: " + gnssConnection.getExtraParams());
-        for (String key : gnssConnection.getExtraParams().keySet()) {
-            String val = gnssConnection.getExtraParams().get(key);
+        intent.putExtra("bdaddr", gnssConnectionParams.getBdaddr());
+        intent.putExtra("secure", gnssConnectionParams.isSecure());
+        intent.putExtra("reconnect", gnssConnectionParams.isReconnect());
+        intent.putExtra("log_bt_rx", gnssConnectionParams.isLogBtRx());
+        intent.putExtra("disable_ntrip", gnssConnectionParams.isDisableNtrip());
+        Log.d(activityClassName, "mainact extra_params: " + gnssConnectionParams.getExtraParams());
+        for (String key : gnssConnectionParams.getExtraParams().keySet()) {
+            String val = gnssConnectionParams.getExtraParams().get(key);
             Log.d(activityClassName, "mainact extra_params key: " + key + " val: " + val);
             intent.putExtra(key, val);
         }
@@ -102,7 +71,7 @@ public class Util {
             ssret = context.startService(intent);
         }
 
-        Log.d(activityClassName, "MainActivity connect(): startservice ssret: " + ssret.flattenToString());
+        Log.d(activityClassName, "connect(): startservice ssret: " + ssret.flattenToString());
         return 0;
     }
 

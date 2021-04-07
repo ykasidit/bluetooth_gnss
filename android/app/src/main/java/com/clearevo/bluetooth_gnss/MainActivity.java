@@ -22,6 +22,8 @@ import com.clearevo.libecodroidbluetooth.ntrip_conn_mgr;
 import com.clearevo.libecodroidbluetooth.rfcomm_conn_mgr;
 import com.clearevo.libecodroidgnss_parse.gnss_sentence_parser;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,20 +112,20 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         new MethodChannel(getFlutterView(), ENGINE_METHOD_CHANNEL).setMethodCallHandler(
                 new MethodCallHandler() {
                     @Override
-                    public void onMethodCall(MethodCall call, Result result) {
+                    public void onMethodCall(@NotNull MethodCall call, @NotNull Result result) {
 
                         if (call.method.equals("connect")) {
-                            final GnssConnection gnssConnection = new GnssConnection();
-                            gnssConnection.setBdaddr(call.argument("bdaddr"));
-                            gnssConnection.setSecure(call.argument("secure"));
-                            gnssConnection.setReconnect(call.argument("reconnect"));
-                            gnssConnection.setLogBtRx(call.argument("log_bt_rx"));
-                            gnssConnection.setDisableNtrip(call.argument("disable_ntrip"));
+                            final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
+                            gnssConnectionParams.setBdaddr(call.argument("bdaddr"));
+                            gnssConnectionParams.setSecure(Boolean.TRUE.equals(call.argument("secure")));
+                            gnssConnectionParams.setReconnect(Boolean.TRUE.equals(call.argument("reconnect")));
+                            gnssConnectionParams.setLogBtRx(Boolean.TRUE.equals(call.argument("log_bt_rx")));
+                            gnssConnectionParams.setDisableNtrip(Boolean.TRUE.equals(call.argument("disable_ntrip")));
 
                             for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-                                gnssConnection.getExtraParams().put(pk, call.argument(pk));
+                                gnssConnectionParams.getExtraParams().put(pk, call.argument(pk));
                             }
-                            int ret = Util.connect(this.getClass().getName(), getApplicationContext(), gnssConnection);
+                            int ret = Util.connect(this.getClass().getName(), getApplicationContext(), gnssConnectionParams);
                             result.success(ret);
                         } else if (call.method.equals("get_mountpoint_list")) {
                             String host = call.argument("ntrip_host");
@@ -158,7 +160,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                         } else if (call.method.equals("disconnect")) {
                             try {
                                 Log.d(TAG, "disconnect0");
-                                if (mBound) {
+                                if (m_service != null && mBound) {
                                     Log.d(TAG, "disconnect1");
                                     m_service.close();
                                     result.success(true);
@@ -177,21 +179,13 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                         } else if (call.method.equals("is_bluetooth_on")) {
                             result.success(rfcomm_conn_mgr.is_bluetooth_on());
                         } else if (call.method.equals("is_ntrip_connected")) {
-                            result.success(m_service.is_ntrip_connected());
-                        } else if (call.method.equals("get_ntrip_cb_count")) {
+                            result.success(m_service != null && m_service.is_ntrip_connected());
+                        } else if (m_service != null && call.method.equals("get_ntrip_cb_count")) {
                             result.success(m_service.get_ntrip_cb_count());
                         } else if (call.method.equals("is_bt_connected")) {
-                            if (mBound && m_service != null && m_service.is_bt_connected()) {
-                                result.success(true);
-                            } else {
-                                result.success(false);
-                            }
+                            result.success(mBound && m_service != null && m_service.is_bt_connected());
                         } else if (call.method.equals("is_conn_thread_alive")) {
-                            if (mBound && m_service != null && m_service.is_trying_bt_connect()) {
-                                result.success(true);
-                            } else {
-                                result.success(false);
-                            }
+                            result.success(mBound && m_service != null && m_service.is_trying_bt_connect());
 
                         } else if (call.method.equals("open_phone_settings")) {
                             result.success(open_phone_settings());
