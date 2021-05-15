@@ -7,7 +7,7 @@ This is the UI part.
 
 The engine part is hosted at <https://github.com/ykasidit/libbluetooth_gnss>.
 
-Preparation
+Build instructions
 -----------
 
 * Download the [Flutter SDK](https://flutter.dev/docs/get-started/install) and add the path to `flutter/bin` to your $PATH
@@ -100,6 +100,10 @@ Special thanks
 
 - Thanks to [Auric Goldfinger](https://github.com/auricgoldfinger) for his great contribution in developing the auto connect on bluetooth feature and the detailed readme merged into above.
 
+Authors
+--------
+
+- Run `git shortlog -sne` in this git repo.
 
 Copyright and License
 ---------------------

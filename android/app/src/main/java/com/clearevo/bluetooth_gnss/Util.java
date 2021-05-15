@@ -41,10 +41,7 @@ public class Util {
             Log.w(activityClassName, "\t" + entry.getKey() + " = " + entry.getValue());
         }
 
-        if (gnssConnectionParams.getBdaddr() == null || gnssConnectionParams.getBdaddr().trim().isEmpty() || !gnssConnectionParams.getBdaddr().matches("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$")) {
-            Log.e(activityClassName, "Invalid BT mac address: " + gnssConnectionParams.getBdaddr());
-            return -1;
-        }
+
 
         Log.d(activityClassName, "connect(): " + gnssConnectionParams.getBdaddr());
         int ret = -1;
@@ -55,6 +52,8 @@ public class Util {
         intent.putExtra("reconnect", gnssConnectionParams.isReconnect());
         intent.putExtra("log_bt_rx", gnssConnectionParams.isLogBtRx());
         intent.putExtra("disable_ntrip", gnssConnectionParams.isDisableNtrip());
+        Log.d(activityClassName, "gnssConnectionParams.isGapMode(): "+ gnssConnectionParams.isGapMode());
+        intent.putExtra(bluetooth_gnss_service.BLE_GAP_SCAN_MODE, gnssConnectionParams.isGapMode());
         Log.d(activityClassName, "mainact extra_params: " + gnssConnectionParams.getExtraParams());
         for (String key : gnssConnectionParams.getExtraParams().keySet()) {
             String val = gnssConnectionParams.getExtraParams().get(key);
@@ -63,6 +62,15 @@ public class Util {
         }
         intent.putExtra("activity_class_name", activityClassName);
         intent.putExtra("activity_icon_id", R.mipmap.ic_launcher);
+
+        boolean gap_mode = intent.getBooleanExtra(bluetooth_gnss_service.BLE_GAP_SCAN_MODE, false);
+        Log.d(activityClassName, "util.connect() gap_mode: "+gap_mode);
+        if (!gap_mode) {
+            if (gnssConnectionParams.getBdaddr() == null || gnssConnectionParams.getBdaddr().trim().isEmpty() || !gnssConnectionParams.getBdaddr().matches("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$")) {
+                Log.e(activityClassName, "Invalid BT mac address: " + gnssConnectionParams.getBdaddr());
+                return -1;
+            }
+        }
 
         final ComponentName ssret;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

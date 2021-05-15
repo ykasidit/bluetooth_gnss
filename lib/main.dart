@@ -26,6 +26,7 @@ main() async {
             'check_settings_location': false,
             'log_bt_rx': false,
             'disable_ntrip': false,
+            'ble_gap_scan_mode': false,
           }
   );
   //PrefService.setString("target_bdaddr", null);
@@ -379,14 +380,13 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
             onPressed: () {
               check_and_update_selected_device(true, false).then(
                       (sw) {
+                        if (sw == null) {
+                          return;
+                        }
                         if (_is_bt_connected || _is_bt_conn_thread_alive_likely_connecting) {
                           toast("Please Disconnect first - cannot change settings during live connection...");
                           return;
-                        } else if (sw == null || sw.m_bdaddr_to_name_map == null) {
-                          toast("Please turn ON Bluetooth and pair your Bluetooth Device first...");
-                          return;
                         } else {
-
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) {
@@ -1068,13 +1068,14 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
   //return settings_widget that can be used to get selected bdaddr
   Future<settings_widget_state> check_and_update_selected_device([bool user_pressed_settings_take_action_and_ret_sw=false, bool user_pressed_connect_take_action_and_ret_sw=false]) async {
-
     _m_floating_button_icon = FLOATING_ICON_BLUETOOTH_SETTINGS;
 
     try {
       _is_bt_connected = await method_channel.invokeMethod('is_bt_connected');
-      _is_ntrip_connected = await method_channel.invokeMethod('is_ntrip_connected');
-      _ntrip_packets_count = await method_channel.invokeMethod('get_ntrip_cb_count');
+      _is_ntrip_connected =
+      await method_channel.invokeMethod('is_ntrip_connected');
+      _ntrip_packets_count =
+      await method_channel.invokeMethod('get_ntrip_cb_count');
 
 
       if (_is_bt_connected) {
@@ -1101,17 +1102,15 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
           } else {
             setState(() {
               _mock_location_set_status =
-                      secs_ago.toStringAsFixed(3) + " Seconds ago";
+                  secs_ago.toStringAsFixed(3) + " Seconds ago";
             });
           }
-
         } catch (e, trace) {
           print('get parsed param exception: $e $trace');
         }
 
         return null;
       }
-
     } on PlatformException catch (e) {
       toast("WARNING: check _is_bt_connected failed: $e");
       _is_bt_connected = false;
@@ -1119,99 +1118,112 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
     try {
       _is_bt_conn_thread_alive_likely_connecting = await method_channel.invokeMethod('is_conn_thread_alive');
-
+      print("_is_bt_conn_thread_alive_likely_connecting: $_is_bt_conn_thread_alive_likely_connecting");
       if (_is_bt_conn_thread_alive_likely_connecting) {
+        setState(() {
           _status = "Connecting...";
+        });
         return null;
       }
-      
     } on PlatformException catch (e) {
       toast("WARNING: check _is_connecting failed: $e");
       _is_bt_conn_thread_alive_likely_connecting = false;
     }
-    print('check_and_update_selected_device1');
+    //print('check_and_update_selected_device1');
 
     _check_state_map_icon.clear();
     _main_icon = ICON_FAIL;
     _main_state = "Not ready";
 
-    print('check_and_update_selected_device2');
+    //print('check_and_update_selected_device2');
 
-    if (! (await is_bluetooth_on())) {
+    if (!(await is_bluetooth_on())) {
       String msg = "Bluetooth is OFF - Please turn ON Bluetooth...";
       setState(() {
         _check_state_map_icon["Bluetooth is OFF"] = ICON_FAIL;
         _status = msg;
-
       });
-      print('check_and_update_selected_device4');
-      
-      if (user_pressed_connect_take_action_and_ret_sw || user_pressed_settings_take_action_and_ret_sw) {
+      //print('check_and_update_selected_device4');
+
+      if (user_pressed_connect_take_action_and_ret_sw ||
+          user_pressed_settings_take_action_and_ret_sw) {
         bool open_act_ret = false;
         try {
-          open_act_ret = await method_channel.invokeMethod('open_phone_blueooth_settings');
+          open_act_ret =
+          await method_channel.invokeMethod('open_phone_blueooth_settings');
           toast("Please turn ON Bluetooth...");
         } on PlatformException catch (e) {
-          print("Please open phone Settings and change first (can't redirect screen: $e)");
-        }
-      }      
-      return null;
-    }
-    
-    _check_state_map_icon["Bluetooth powered ON"] = ICON_OK;
-    print('check_and_update_selected_device5');
-
-    Map<dynamic, dynamic> bd_map = await get_bd_map();
-    if (bd_map.length == 0) {
-      String msg = "Please pair your Bluetooth GPS/GNSS Receiver in phone Settings > Bluetooth first.\n\nClick floating button to go there...";
-      setState(() {
-        _check_state_map_icon["No paired Bluetooth devices"] = ICON_FAIL;
-        _status = msg;
-        _selected_device = "No paired Bluetooth devices yet...";
-      });
-      print('check_and_update_selected_device6');
-      if (user_pressed_connect_take_action_and_ret_sw || user_pressed_settings_take_action_and_ret_sw) {
-        bool open_act_ret = false;
-        try {
-          open_act_ret = await method_channel.invokeMethod('open_phone_blueooth_settings');
-          toast("Please pair your Bluetooth GPS/GNSS Device...");
-        } on PlatformException catch (e) {
-          print("Please open phone Settings and change first (can't redirect screen: $e)");
+          //print("Please open phone Settings and change first (can't redirect screen: $e)");
         }
       }
       return null;
     }
-    print('check_and_update_selected_device7');
-    _check_state_map_icon["Found paired Bluetooth devices"] = ICON_OK;
 
-    print('check_and_update_selected_device8');
+    _check_state_map_icon["Bluetooth powered ON"] = ICON_OK;
+    //print('check_and_update_selected_device5');
+
+    Map<dynamic, dynamic> bd_map = await get_bd_map();
     settings_widget_state sw = settings_widget_state(bd_map);
     if (user_pressed_settings_take_action_and_ret_sw) {
       return sw;
     }
+    bool gap_mode = PrefService.getBool('ble_gap_scan_mode') ?? false;
+    if (gap_mode) {
+      //bt ble gap broadcast mode
+      _check_state_map_icon["EcoDroidGPS-Broadcast device mode"] = ICON_OK;
+    } else {
+      //bt connect mode
+      if (bd_map.length == 0) {
+        String msg = "Please pair your Bluetooth GPS/GNSS Receiver in phone Settings > Bluetooth first.\n\nClick floating button to go there...";
+        setState(() {
+          _check_state_map_icon["No paired Bluetooth devices"] = ICON_FAIL;
+          _status = msg;
+          _selected_device = "No paired Bluetooth devices yet...";
+        });
+        //print('check_and_update_selected_device6');
+        if (user_pressed_connect_take_action_and_ret_sw ||
+            user_pressed_settings_take_action_and_ret_sw) {
+          bool open_act_ret = false;
+          try {
+            open_act_ret =
+            await method_channel.invokeMethod('open_phone_blueooth_settings');
+            toast("Please pair your Bluetooth GPS/GNSS Device...");
+          } on PlatformException catch (e) {
+            //print("Please open phone Settings and change first (can't redirect screen: $e)");
+          }
+        }
+        return null;
+      }
+      //print('check_and_update_selected_device7');
+      _check_state_map_icon["Found paired Bluetooth devices"] = ICON_OK;
 
-    print('check_and_update_selected_device9');
+      //print('check_and_update_selected_device8');
 
-    if (sw.get_selected_bdaddr() == null || sw.get_selected_bdname() == null) {
-      String msg = "Please select your Bluetooth GPS/GNSS Receiver in Settings (the gear icon on top right)";
-      /*Fluttertoast.showToast(
-          msg: msg
-      );*/
-      setState(() {
-        _check_state_map_icon["No device selected\n(select in top-right settings/gear icon)"] = ICON_FAIL;
-        _selected_device = sw.get_selected_bd_summary();
-        _status = msg;
-      });
-      //print('check_and_update_selected_device10');
+      //print('check_and_update_selected_device9');
 
-      _main_icon = ICON_NOT_CONNECTED;
-      _main_state = "Not connected";
+      if ((sw.get_selected_bdaddr() == null ||
+          sw.get_selected_bdname() == null)) {
+        String msg = "Please select your Bluetooth GPS/GNSS Receiver in Settings (the gear icon on top right)";
+        /*Fluttertoast.showToast(
+            msg: msg
+        );*/
+        setState(() {
+          _check_state_map_icon["No device selected\n(select in top-right settings/gear icon)"] =
+              ICON_FAIL;
+          _selected_device = sw.get_selected_bd_summary();
+          _status = msg;
+        });
+        //print('check_and_update_selected_device10');
 
-      return null;
+        _main_icon = ICON_NOT_CONNECTED;
+        _main_state = "Not connected";
+
+        return null;
+      }
+      _check_state_map_icon["Target device selected"] = ICON_OK;
     }
-    _check_state_map_icon["Target device selected"] = ICON_OK;
 
-    print('check_and_update_selected_device11');
+    //print('check_and_update_selected_device11');
 
     bool check_location = PrefService.getBool('check_settings_location') ?? true;
 
@@ -1224,13 +1236,12 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
           _status = msg;
         });
 
-        print(
-            'pre calling open_phone_location_settings() user_pressed_connect_take_action_and_ret_sw $user_pressed_connect_take_action_and_ret_sw');
+        //print('pre calling open_phone_location_settings() user_pressed_connect_take_action_and_ret_sw $user_pressed_connect_take_action_and_ret_sw');
 
         if (user_pressed_connect_take_action_and_ret_sw) {
           bool open_act_ret = false;
           try {
-            print('calling open_phone_location_settings()');
+            //print('calling open_phone_location_settings()');
             open_act_ret =
             await method_channel.invokeMethod('open_phone_location_settings');
             toast("Please set Location ON and 'High Accuracy Mode'...");
@@ -1239,10 +1250,10 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                 "Please open phone Settings and change first (can't redirect screen: $e)");
           }
         }
-        print('check_and_update_selected_device12');
+        //print('check_and_update_selected_device12');
         return null;
       }
-      print('check_and_update_selected_device13');
+      //print('check_and_update_selected_device13');
       _check_state_map_icon["Location is on and 'High Accuracy'"] = ICON_OK;
     }
 
@@ -1252,7 +1263,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
         _check_state_map_icon["'Mock Location app' not 'Bluetooth GNSS'\n"] = ICON_FAIL;
         _status = msg;
       });
-      print('check_and_update_selected_device14');
+      //print('check_and_update_selected_device14');
       if (user_pressed_connect_take_action_and_ret_sw) {
         bool open_act_ret = false;
         try {
@@ -1264,7 +1275,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       }
       return null;
     }
-    print('check_and_update_selected_device15');
+    //print('check_and_update_selected_device15');
     _check_state_map_icon["'Mock Location app' is 'Bluetooth GNSS'\n"+note_how_to_disable_mock_location] = ICON_OK;
     _main_icon = ICON_OK;
 
@@ -1275,14 +1286,14 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
         _main_state = "Connecting...";
           _m_floating_button_icon = FLOATING_ICON_BLUETOOTH_CONNECTING;
       });
-      print('check_and_update_selected_device16');
+      //print('check_and_update_selected_device16');
     } else {
       //ok - ready to connect
       setState(() {
         _status = "Please press the floating button to connect...";
           _m_floating_button_icon = FLOATING_ICON_BLUETOOTH_CONNECT;
       });
-      print('check_and_update_selected_device17');
+      //print('check_and_update_selected_device17');
     }
 
     setState(() {
@@ -1290,7 +1301,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     });
 
     //setState((){});
-    print('check_and_update_selected_device18');
+    //print('check_and_update_selected_device18');
 
     return sw;
   }
@@ -1337,7 +1348,10 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
   Future<void> connect() async {
 
+    print("main.dart connect() start");
+
     bool log_bt_rx = PrefService.getBool('log_bt_rx') ?? false;
+    bool gap_mode = PrefService.getBool('ble_gap_scan_mode') ?? false;
 
     if (log_bt_rx) {
       bool write_enabled = false;
@@ -1382,31 +1396,37 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
 
     String bdaddr = sw.get_selected_bdaddr();
-    if (bdaddr == null || sw.get_selected_bdname() == null) {
-      toast(
-        "Please select your Bluetooth GPS/GNSS Receiver device...",
-      );
+    if (!gap_mode) {
+      if (bdaddr == null || sw.get_selected_bdname() == null) {
+        toast(
+          "Please select your Bluetooth GPS/GNSS Receiver device...",
+        );
 
-      Map<dynamic, dynamic> bdaddr_to_name_map = await get_bd_map();
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) {
-              return settings_widget(bdaddr_to_name_map);
-            }
-        ),
-      );
-      return;
+        Map<dynamic, dynamic> bdaddr_to_name_map = await get_bd_map();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) {
+                return settings_widget(bdaddr_to_name_map);
+              }
+          ),
+        );
+        return;
+      }
     }
+
+    print("main.dart connect() start1");
 
     _param_map = Map<dynamic, dynamic>(); //clear last conneciton params state...
     String status = "unknown";
     try {
-      final int ret = await method_channel.invokeMethod('connect',
+      print("main.dart connect() start connect start");
+      final bool ret = await method_channel.invokeMethod('connect',
               {
                 "bdaddr": bdaddr,
                 'secure': PrefService.getBool('secure') ?? true,
                 'reconnect' : PrefService.getBool('reconnect') ?? false,
+                'ble_gap_scan_mode':  gap_mode,
                 'log_bt_rx' : log_bt_rx,
                 'disable_ntrip' : PrefService.getBool('disable_ntrip') ?? false,
                 'ntrip_host': PrefService.getString('ntrip_host'),
@@ -1416,7 +1436,8 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                 'ntrip_pass': PrefService.getString('ntrip_pass'),
               }
       );
-      if (ret == 0) {
+      print("main.dart connect() start connect done");
+      if (ret) {
         status = "Starting connection to:\n"+sw.get_selected_bdname() ?? "(No name)";
       } else {
         status = "Failed to connect...";
@@ -1426,24 +1447,32 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
         });
       }
 
+      print("main.dart connect() start2");
+
     } on PlatformException catch (e) {
       status = "Failed to start connection: '${e.message}'.";
       print(status);
     }
 
+    print("main.dart connect() start3");
+
     setState(() {
       _status = status;
     });
+
+    print("main.dart connect() start4");
+
+    print("marin.dart connect() done");
   }
 
   Future<Map<dynamic, dynamic>> get_bd_map() async {
     Map<dynamic, dynamic> ret = null;
     try {
       ret = await method_channel.invokeMethod<Map<dynamic, dynamic>>('get_bd_map');
-      print("got bt_map: $ret");
+      //print("got bt_map: $ret");
     } on PlatformException catch (e) {
       String status = "get_bd_map exception: '${e.message}'.";
-      print(status);
+      //print(status);
     }
     return ret;
   }
@@ -1462,9 +1491,9 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   Future<bool> is_location_enabled() async {
     bool ret = false;
     try {
-      print("is_location_enabled try0");
+      //print("is_location_enabled try0");
       ret = await method_channel.invokeMethod<bool>('is_location_enabled');
-      print("is_location_enabled got ret: $ret");
+      //print("is_location_enabled got ret: $ret");
     } on PlatformException catch (e) {
       String status = "is_location_enabled exception: '${e.message}'.";
       print(status);
@@ -1476,9 +1505,9 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   Future<bool> is_mock_location_enabled() async {
     bool ret = false;
     try {
-      print("is_mock_location_enabled try0");
+      //print("is_mock_location_enabled try0");
       ret = await method_channel.invokeMethod<bool>('is_mock_location_enabled');
-      print("is_mock_location_enabled got ret $ret");
+      //print("is_mock_location_enabled got ret $ret");
     } on PlatformException catch (e) {
       String status = "is_mock_location_enabled exception: '${e.message}'.";
       print(status);
