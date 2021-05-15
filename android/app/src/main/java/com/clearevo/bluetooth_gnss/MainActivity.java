@@ -28,13 +28,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.flutter.app.FlutterActivity;
-import io.flutter.plugin.common.EventChannel;
-import io.flutter.plugin.common.MethodCall;
+
+import androidx.annotation.NonNull;
+import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
-import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugins.GeneratedPluginRegistrant;
+import io.flutter.plugin.common.EventChannel;
 
 
 public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks, EventChannel.StreamHandler {
@@ -53,11 +53,207 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
     final int MESSAGE_SETTINGS_MAP = 1;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate()");
-        super.onCreate(savedInstanceState);
-        GeneratedPluginRegistrant.registerWith(this);
+    public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
+        GeneratedPluginRegistrant.registerWith(flutterEngine);
 
+        new EventChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), ENGINE_EVENTS_CHANNEL).setStreamHandler(
+                MainActivity.this
+        );
+
+        new EventChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), SETTINGS_EVENTS_CHANNEL).setStreamHandler(
+                new EventChannel.StreamHandler() {
+                    @Override
+                    public void onListen(Object args, final EventChannel.EventSink events) {
+                        m_settings_events_sink = events;
+                        Log.d(TAG, "SETTINGS_EVENTS_CHANNEL added listener: " + events);
+                    }
+
+                    @Override
+                    public void onCancel(Object args) {
+                        m_settings_events_sink = null;
+                        Log.d(TAG, "SETTINGS_EVENTS_CHANNEL cancelled listener");
+                    }
+                }
+        );
+        new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), ENGINE_METHOD_CHANNEL)
+                .setMethodCallHandler(
+                        (call, result) -> {
+
+                            if (call.method.equals("connect")) {
+                                final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
+                                gnssConnectionParams.setBdaddr(call.argument("bdaddr"));
+                                gnssConnectionParams.setSecure(Boolean.TRUE.equals(call.argument("secure")));
+                                gnssConnectionParams.setReconnect(Boolean.TRUE.equals(call.argument("reconnect")));
+                                gnssConnectionParams.setLogBtRx(Boolean.TRUE.equals(call.argument("log_bt_rx")));
+                                gnssConnectionParams.setDisableNtrip(Boolean.TRUE.equals(call.argument("disable_ntrip")));
+                                gnssConnectionParams.setDisableNtrip(Boolean.TRUE.equals(call.argument("disable_ntrip")));
+                                gnssConnectionParams.setGapMode(Boolean.TRUE.equals(call.argument("ble_gap_scan_mode")));
+                                for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
+                                    gnssConnectionParams.getExtraParams().put(pk, call.argument(pk));
+                                }
+
+                                final Context context = getApplicationContext();
+
+                                new Thread() {
+                                    public void run() {
+                                        try {
+                                            Util.connect(this.getClass().getName(), context, gnssConnectionParams);
+                                        } catch (Throwable tr) {
+                                            Log.d(TAG, "connect() exception: "+Log.getStackTraceString(tr));
+                                        }
+                                    }
+                                }.start();
+
+                                int ret = 0;
+                                Log.d(TAG, "connect() ret: "+ret);
+                                result.success(true);
+                            } else if (call.method.equals("get_mountpoint_list")) {
+                                String host = call.argument("ntrip_host");
+                                String port = call.argument("ntrip_port");
+                                String user = call.argument("ntrip_user");
+                                String pass = call.argument("ntrip_pass");
+                                int ret_code = 0;
+                                new Thread() {
+                                    public void run() {
+                                        ArrayList<String> ret = new ArrayList<String>(); //init with empty list in case get fails
+                                        try {
+                                            ret = get_mountpoint_list(host, Integer.parseInt(port), user, pass);
+                                            if (ret == null) {
+                                                ret = new ArrayList<String>(); //init with empty list in case get fails - can't push null into concurrenthashmap
+                                            }
+                                            Log.d(TAG, "get_mountpoint_list ret: " + ret);
+                                        } catch (Exception e) {
+                                            Log.d(TAG, "on_updated_nmea_params sink update exception: " + Log.getStackTraceString(e));
+                                            toast("Get mountpoint_list fialed: " + e);
+                                        }
+                                        ConcurrentHashMap<String, Object> cbmap = new ConcurrentHashMap<String, Object>();
+                                        cbmap.put("callback_src", "get_mountpoint_list");
+                                        cbmap.put("callback_payload", ret);
+                                        Message msg = m_handler.obtainMessage(MESSAGE_SETTINGS_MAP, cbmap);
+                                        msg.sendToTarget();
+                                    }
+                                }.start();
+                                result.success(true);
+                            } else if (call.method.equals("toast")) {
+                                String msg = call.argument("msg");
+                                toast(msg);
+                            } else if (call.method.equals("disconnect")) {
+                                try {
+                                    Log.d(TAG, "disconnect0");
+                                    if (m_service != null && mBound) {
+                                        Log.d(TAG, "disconnect1");
+                                        m_service.close();
+                                        result.success(true);
+                                        Log.d(TAG, "disconnect2");
+                                    }
+                                    Log.d(TAG, "disconnect3");
+                                    Intent intent = new Intent(getApplicationContext(), bluetooth_gnss_service.class);
+                                    stopService(intent);
+                                    Log.d(TAG, "disconnect4");
+                                } catch (Exception e) {
+                                    Log.d(TAG, "disconnect exception: " + Log.getStackTraceString(e));
+                                }
+                                result.success(false);
+                            } else if (call.method.equals("get_bd_map")) {
+                                result.success(rfcomm_conn_mgr.get_bd_map());
+                            } else if (call.method.equals("is_bluetooth_on")) {
+                                result.success(rfcomm_conn_mgr.is_bluetooth_on());
+                            } else if (call.method.equals("is_ntrip_connected")) {
+                                result.success(m_service != null && m_service.is_ntrip_connected());
+                            } else if (m_service != null && call.method.equals("get_ntrip_cb_count")) {
+                                result.success(m_service.get_ntrip_cb_count());
+                            } else if (call.method.equals("is_bt_connected")) {
+                                result.success(mBound && m_service != null && m_service.is_bt_connected());
+                            } else if (call.method.equals("is_conn_thread_alive")) {
+                                result.success(mBound && m_service != null && m_service.is_trying_bt_connect());
+                            } else if (call.method.equals("open_phone_settings")) {
+                                result.success(open_phone_settings());
+                            } else if (call.method.equals("open_phone_developer_settings")) {
+                                result.success(open_phone_developer_settings());
+                            } else if (call.method.equals("open_phone_blueooth_settings")) {
+                                result.success(open_phone_bluetooth_settings());
+                            } else if (call.method.equals("open_phone_location_settings")) {
+                                result.success(open_phone_location_settings());
+                            } else if (call.method.equals("is_write_enabled")) {
+                                if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                                    result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
+                                } else {
+                                    Log.d(TAG, "is_write_enabled check write permission not granted yet so requesting permission now");
+                                    Toast.makeText(getApplicationContext(), "BluetoothGNSS needs external storage write permissions to log data - please allow...", Toast.LENGTH_LONG).show();
+                                    new Thread() {
+                                        public void run() {
+                                            try {
+                                                Thread.sleep(1000);
+                                            } catch (Exception e) {
+                                            }
+                                            m_handler.post(
+                                                    new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                                                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                                            }, 1);
+                                                        }
+                                                    }
+                                            );
+                                        }
+                                    }.start();
+                                    result.success(false);
+                                }
+                            } else if (call.method.equals("is_mock_location_enabled")) {
+                                result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
+                            } else if (call.method.equals("is_location_enabled")) {
+
+                                Log.d(TAG, "is_location_enabled 0");
+                                if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                                        ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                                ) {
+
+                                    Log.d(TAG, "is_location_enabled check locaiton permission already granted");
+
+                                    if (call.method.equals("is_location_enabled")) {
+                                        result.success(bluetooth_gnss_service.is_location_enabled(getApplicationContext()));
+                                    } else if (call.method.equals("is_mock_location_enabled")) {
+                                        result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
+                                    }
+                                } else {
+                                    Log.d(TAG, "is_location_enabled check locaiton permission not granted yet so requesting permission now");
+                                    Toast.makeText(getApplicationContext(), "BluetoothGNSS needs to check location settings - please allow...", Toast.LENGTH_LONG).show();
+
+                                    new Thread() {
+                                        public void run() {
+                                            try {
+                                                Thread.sleep(1000);
+                                            } catch (Exception e) {
+                                            }
+                                            m_handler.post(
+                                                    new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                                            }, 1);
+                                                        }
+                                                    }
+                                            );
+                                        }
+                                    }.start();
+                                    result.success(false);
+                                }
+
+                            } else {
+                                result.notImplemented();
+                            }
+                        }
+                );
+
+        create();
+    }
+
+    public void create() {
+        Log.d(TAG, "create()");
         m_handler = new Handler(getMainLooper()) {
             @Override
             public void handleMessage(Message inputMessage) {
@@ -108,190 +304,6 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                 }
             }
         };
-
-        new MethodChannel(getFlutterView(), ENGINE_METHOD_CHANNEL).setMethodCallHandler(
-                new MethodCallHandler() {
-                    @Override
-                    public void onMethodCall(@NotNull MethodCall call, @NotNull Result result) {
-
-                        if (call.method.equals("connect")) {
-                            final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
-                            gnssConnectionParams.setBdaddr(call.argument("bdaddr"));
-                            gnssConnectionParams.setSecure(Boolean.TRUE.equals(call.argument("secure")));
-                            gnssConnectionParams.setReconnect(Boolean.TRUE.equals(call.argument("reconnect")));
-                            gnssConnectionParams.setLogBtRx(Boolean.TRUE.equals(call.argument("log_bt_rx")));
-                            gnssConnectionParams.setDisableNtrip(Boolean.TRUE.equals(call.argument("disable_ntrip")));
-
-                            for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-                                gnssConnectionParams.getExtraParams().put(pk, call.argument(pk));
-                            }
-                            int ret = Util.connect(this.getClass().getName(), getApplicationContext(), gnssConnectionParams);
-                            result.success(ret);
-                        } else if (call.method.equals("get_mountpoint_list")) {
-                            String host = call.argument("ntrip_host");
-                            String port = call.argument("ntrip_port");
-                            String user = call.argument("ntrip_user");
-                            String pass = call.argument("ntrip_pass");
-                            int ret_code = 0;
-                            new Thread() {
-                                public void run() {
-                                    ArrayList<String> ret = new ArrayList<String>(); //init with empty list in case get fails
-                                    try {
-                                        ret = get_mountpoint_list(host, Integer.parseInt(port), user, pass);
-                                        if (ret == null) {
-                                            ret = new ArrayList<String>(); //init with empty list in case get fails - can't push null into concurrenthashmap
-                                        }
-                                        Log.d(TAG, "get_mountpoint_list ret: " + ret);
-                                    } catch (Exception e) {
-                                        Log.d(TAG, "on_updated_nmea_params sink update exception: " + Log.getStackTraceString(e));
-                                        toast("Get mountpoint_list fialed: " + e);
-                                    }
-                                    ConcurrentHashMap<String, Object> cbmap = new ConcurrentHashMap<String, Object>();
-                                    cbmap.put("callback_src", "get_mountpoint_list");
-                                    cbmap.put("callback_payload", ret);
-                                    Message msg = m_handler.obtainMessage(MESSAGE_SETTINGS_MAP, cbmap);
-                                    msg.sendToTarget();
-                                }
-                            }.start();
-                            result.success(ret_code);
-                        } else if (call.method.equals("toast")) {
-                            String msg = call.argument("msg");
-                            toast(msg);
-                        } else if (call.method.equals("disconnect")) {
-                            try {
-                                Log.d(TAG, "disconnect0");
-                                if (m_service != null && mBound) {
-                                    Log.d(TAG, "disconnect1");
-                                    m_service.close();
-                                    result.success(true);
-                                    Log.d(TAG, "disconnect2");
-                                }
-                                Log.d(TAG, "disconnect3");
-                                Intent intent = new Intent(getApplicationContext(), bluetooth_gnss_service.class);
-                                stopService(intent);
-                                Log.d(TAG, "disconnect4");
-                            } catch (Exception e) {
-                                Log.d(TAG, "disconnect exception: " + Log.getStackTraceString(e));
-                            }
-                            result.success(false);
-                        } else if (call.method.equals("get_bd_map")) {
-                            result.success(rfcomm_conn_mgr.get_bd_map());
-                        } else if (call.method.equals("is_bluetooth_on")) {
-                            result.success(rfcomm_conn_mgr.is_bluetooth_on());
-                        } else if (call.method.equals("is_ntrip_connected")) {
-                            result.success(m_service != null && m_service.is_ntrip_connected());
-                        } else if (m_service != null && call.method.equals("get_ntrip_cb_count")) {
-                            result.success(m_service.get_ntrip_cb_count());
-                        } else if (call.method.equals("is_bt_connected")) {
-                            result.success(mBound && m_service != null && m_service.is_bt_connected());
-                        } else if (call.method.equals("is_conn_thread_alive")) {
-                            result.success(mBound && m_service != null && m_service.is_trying_bt_connect());
-
-                        } else if (call.method.equals("open_phone_settings")) {
-                            result.success(open_phone_settings());
-                        } else if (call.method.equals("open_phone_developer_settings")) {
-                            result.success(open_phone_developer_settings());
-                        } else if (call.method.equals("open_phone_blueooth_settings")) {
-                            result.success(open_phone_bluetooth_settings());
-                        } else if (call.method.equals("open_phone_location_settings")) {
-                            result.success(open_phone_location_settings());
-                        } else if (call.method.equals("is_write_enabled")) {
-                            if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                                result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
-                            } else {
-                                Log.d(TAG, "is_write_enabled check write permission not granted yet so requesting permission now");
-                                Toast.makeText(getApplicationContext(), "BluetoothGNSS needs external storage write permissions to log data - please allow...", Toast.LENGTH_LONG).show();
-
-                                new Thread() {
-                                    public void run() {
-                                        try {
-                                            Thread.sleep(1000);
-                                        } catch (Exception e) {
-                                        }
-                                        m_handler.post(
-                                                new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                                                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                                        }, 1);
-                                                    }
-                                                }
-                                        );
-                                    }
-                                }.start();
-                                result.success(false);
-                            }
-                        } else if (call.method.equals("is_mock_location_enabled")) {
-                            result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
-                        } else if (call.method.equals("is_location_enabled")) {
-
-                            Log.d(TAG, "is_location_enabled 0");
-                            if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                                    ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                            ) {
-
-                                Log.d(TAG, "is_location_enabled check locaiton permission already granted");
-
-                                if (call.method.equals("is_location_enabled")) {
-                                    result.success(bluetooth_gnss_service.is_location_enabled(getApplicationContext()));
-                                } else if (call.method.equals("is_mock_location_enabled")) {
-                                    result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
-                                }
-                            } else {
-                                Log.d(TAG, "is_location_enabled check locaiton permission not granted yet so requesting permission now");
-                                Toast.makeText(getApplicationContext(), "BluetoothGNSS needs to check location settings - please allow...", Toast.LENGTH_LONG).show();
-
-                                new Thread() {
-                                    public void run() {
-                                        try {
-                                            Thread.sleep(1000);
-                                        } catch (Exception e) {
-                                        }
-                                        m_handler.post(
-                                                new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                                                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                                                Manifest.permission.ACCESS_COARSE_LOCATION,
-                                                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                                        }, 1);
-                                                    }
-                                                }
-                                        );
-                                    }
-                                }.start();
-                                result.success(false);
-                            }
-
-                        } else {
-                            result.notImplemented();
-                        }
-                    }
-                }
-        );
-
-        new EventChannel(getFlutterView(), ENGINE_EVENTS_CHANNEL).setStreamHandler(
-                MainActivity.this
-        );
-
-        new EventChannel(getFlutterView(), SETTINGS_EVENTS_CHANNEL).setStreamHandler(
-                new EventChannel.StreamHandler() {
-                    @Override
-                    public void onListen(Object args, final EventChannel.EventSink events) {
-                        m_settings_events_sink = events;
-                        Log.d(TAG, "SETTINGS_EVENTS_CHANNEL added listener: " + events);
-                    }
-
-                    @Override
-                    public void onCancel(Object args) {
-                        m_settings_events_sink = null;
-                        Log.d(TAG, "SETTINGS_EVENTS_CHANNEL cancelled listener");
-                    }
-
-                }
-        );
     }
 
     @Override

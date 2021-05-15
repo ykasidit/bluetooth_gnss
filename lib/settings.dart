@@ -22,7 +22,7 @@ class settings_widget extends StatefulWidget {
 class settings_widget_state extends State<settings_widget> {
 
   List<RadioPreference> _bd_dev_pref_list;
-  Map<dynamic, dynamic> m_bdaddr_to_name_map;
+  Map<dynamic, dynamic> m_bdaddr_to_name_map = new Map<dynamic, dynamic>();
   String _selected_dev = "Loading...";
   ProgressDialog m_pr;
 
@@ -62,7 +62,7 @@ class settings_widget_state extends State<settings_widget> {
               print("dismiss progress dialog now0");
               if (m_pr != null) {
                 print("dismiss progress dialog now...");
-                m_pr.dismiss();
+                m_pr.hide();
                 //new Future.delayed(const Duration(seconds: 1), () => (m_pr != null && m_pr.isShowing()) ? m_pr.dismiss() : null); //fast dismisses wont close the dialog like if no internet cases
               }
 
@@ -171,18 +171,18 @@ class settings_widget_state extends State<settings_widget> {
   String get_selected_bdname()
   {
     String bdaddr = get_selected_bdaddr();
-    print("get_selected_bdname: bdaddr: $bdaddr");
+    //print("get_selected_bdname: bdaddr: $bdaddr");
     if (bdaddr == null || !(m_bdaddr_to_name_map.containsKey(bdaddr)) )
-      return null;
+      return "";
     return m_bdaddr_to_name_map[bdaddr];
   }
 
   String get_selected_bd_summary()
   {
-    print("get_selected_bd_summary 0");
+    //print("get_selected_bd_summary 0");
     String ret = '';
     String bdaddr = get_selected_bdaddr();
-    print("get_selected_bd_summary selected bdaddr: $bdaddr");
+    //print("get_selected_bd_summary selected bdaddr: $bdaddr");
     String bdname = get_selected_bdname();
     if ( bdaddr == null || bdname == null) {
       ret += "No device selected";
@@ -190,7 +190,7 @@ class settings_widget_state extends State<settings_widget> {
       ret +=  bdname;
       ret += " ($bdaddr)";
     }
-    print("get_selected_bd_summary ret $ret");
+    //print("get_selected_bd_summary ret $ret");
     return ret;
   }
 
@@ -223,16 +223,29 @@ class settings_widget_state extends State<settings_widget> {
             onPop: () => setState(() {_selected_dev = get_selected_bd_summary();}),
           ),
           PreferenceTitle('Bluetooth Connection settings'),
+          CheckboxPreference("EcoDroidGPS-Broadcast device mode", 'ble_gap_scan_mode'),
+          PreferenceText(
+            "For use with 'EcoDroidGPS-Broadcast' device\nfrom www.ClearEvo.com\n(This device broadcasts GNSS location over BLE GAP\n to an any number of Android phones/tablets concurrently)",
+            style: Theme.of(context).textTheme.caption,
+          ),
           CheckboxPreference("Secure RFCOMM connection", 'secure'),
-          CheckboxPreference("Auto-reconnect mode (takes effect in next connection)", 'reconnect'),
+          CheckboxPreference("Auto-reconnect mode", 'reconnect'),
+          PreferenceText(
+            "Takes effect in next connection",
+            style: Theme.of(context).textTheme.caption,
+          ),
           CheckboxPreference("Check for Settings > 'Location' ON and 'High Accuracy'", 'check_settings_location'),
-          CheckboxPreference("Save all read data (NMEA/UBX/etc) to 'Internal Storage' > 'bluetooth_gnss_logs' folder", 'log_bt_rx'),
+          CheckboxPreference("Enable logging", 'log_bt_rx'),
+          PreferenceText(
+            "Save all read data (NMEA/UBX/etc) to\n'Internal Storage' > 'bluetooth_gnss_logs' folder",
+            style: Theme.of(context).textTheme.caption,
+          ),
           PreferenceTitle('RTK/NTRIP Server settings'),
-          CheckboxPreference("Disable NTRIP", 'disable_ntrip'),
           PreferenceText(
             "Set these if your Bluetooth GNSS device supports RTK,\n(Like EcoDroidGPS + Ardusimple U-Blox F9 etc)",
             style: Theme.of(context).textTheme.caption,
           ),
+          CheckboxPreference("Disable NTRIP", 'disable_ntrip'),
           TextFieldPreference('Host', 'ntrip_host',
               defaultVal: 'www.igs-ip.net', validator: (str) {
                 if (str == "") {
@@ -298,7 +311,7 @@ class settings_widget_state extends State<settings_widget> {
                   print("WARNING: Choose mount-point failed exception: $e");
                   try {
                     toast("List mount-points failed: $e");
-                    m_pr.dismiss();
+                    m_pr.hide();
                   } catch (e) {}
                 }
               },

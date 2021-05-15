@@ -16,5 +16,6 @@ public class GnssConnectionParams {
     private boolean reconnect;
     private boolean logBtRx;
     private boolean disableNtrip;
+    private boolean gapMode;
     private final Map<String, String> extraParams = new HashMap<>();
 }
