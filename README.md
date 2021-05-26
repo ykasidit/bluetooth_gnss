@@ -103,12 +103,14 @@ Special thanks
 Authors
 --------
 
-- Run `git shortlog -sne` in this git repo.
+- [Kasidit Yusuf](https://github.com/ykasidit)
+- [Auric Goldfinger](https://github.com/auricgoldfinger)
+- For the most up-to-date list, run `git shortlog -sne` in this git repo.
 
 Copyright and License
 ---------------------
 
-Copyright (C) 2019 Kasidit Yusuf <ykasidit@gmail.com> and all respective project source code contributors.
+Copyright (C) 2019 Kasidit Yusuf and all respective project source code contributors.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
