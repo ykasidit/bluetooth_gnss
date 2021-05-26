@@ -36,7 +36,6 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugins.GeneratedPluginRegistrant;
 import io.flutter.plugin.common.EventChannel;
 
-
 public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks, EventChannel.StreamHandler {
 
     private static final String ENGINE_METHOD_CHANNEL = "com.clearevo.bluetooth_gnss/engine";
@@ -97,7 +96,8 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                 new Thread() {
                                     public void run() {
                                         try {
-                                            Util.connect(this.getClass().getName(), context, gnssConnectionParams);
+                                            //getcanonicalname somehow returns null, getname() would return something with $ at the end so wont work to launch the activity from the service notification, so just use a string literal here
+                                            Util.connect("com.clearevo.bluetooth_gnss.MainActivity", context, gnssConnectionParams);
                                         } catch (Throwable tr) {
                                             Log.d(TAG, "connect() exception: "+Log.getStackTraceString(tr));
                                         }
@@ -276,8 +276,8 @@ D/btgnss_mainactvty(15208): 	at io.flutter.plugin.common.StandardMethodCodec.enc
 D/btgnss_mainactvty(15208): 	at io.flutter.plugin.common.EventChannel$IncomingStreamRequestHandler$EventSinkImplementation.success(EventChannel.java:226)
 D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handleMessage(MainActivity.java:64)
                         * */
-                                params_map = ((HashMap) params_map).clone();
-                                Log.d(TAG, "cloned HashMap to prevent ConcurrentModificationException...");
+                                //params_map = ((HashMap) params_map).clone();
+                                //Log.d(TAG, "cloned HashMap to prevent ConcurrentModificationException...");
                             }
                             Log.d(TAG, "sending params map to m_events_sink start");
                             m_events_sink.success(params_map);
