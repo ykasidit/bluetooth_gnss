@@ -368,6 +368,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   Widget build(BuildContext context) {
     final Color iconColor = Theme.of(context).accentColor;
 
+    bool gap_mode = PrefService.getBool('ble_gap_scan_mode') ?? false;
 
     _scaffold = Scaffold(
         key: _scaffoldKey,
@@ -1366,6 +1367,14 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       }
     }
 
+    if (gap_mode) {
+      bool coarse_location_enabled = await is_coarse_location_enabled();
+      if (coarse_location_enabled == false) {
+        toast("Coarse Locaiton permission required for BLE GAP mode...");
+        return;
+      }
+    }
+
     if (_is_bt_connected) {
       toast("Already connected...");
       return;
@@ -1496,6 +1505,19 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       //print("is_location_enabled got ret: $ret");
     } on PlatformException catch (e) {
       String status = "is_location_enabled exception: '${e.message}'.";
+      print(status);
+    }
+    return ret;
+  }
+
+  Future<bool> is_coarse_location_enabled() async {
+    bool ret = false;
+    try {
+      //print("is_coarse_location_enabled try0");
+      ret = await method_channel.invokeMethod<bool>('is_coarse_location_enabled');
+      //print("is_coarse_location_enabled got ret: $ret");
+    } on PlatformException catch (e) {
+      String status = "is_coarse_location_enabled exception: '${e.message}'.";
       print(status);
     }
     return ret;
