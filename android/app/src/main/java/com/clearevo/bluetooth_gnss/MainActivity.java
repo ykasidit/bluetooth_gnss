@@ -243,6 +243,40 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                     result.success(false);
                                 }
 
+                            } else if (call.method.equals("is_coarse_location_enabled")) {
+
+                                Log.d(TAG, "is_coarse_location_enabled 0");
+                                if (
+                                        ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                                ) {
+
+                                    Log.d(TAG, "is_coarse_location_enabled check locaiton permission already granted");
+                                    result.success(true);
+                                } else {
+                                    Log.d(TAG, "is_coarse_location_enabled check locaiton permission not granted yet so requesting permission now");
+                                    Toast.makeText(getApplicationContext(), "BluetoothGNSS needs to check coarse location settings - please allow...", Toast.LENGTH_LONG).show();
+
+                                    new Thread() {
+                                        public void run() {
+                                            try {
+                                                Thread.sleep(1000);
+                                            } catch (Exception e) {
+                                            }
+                                            m_handler.post(
+                                                    new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                            }, 1);
+                                                        }
+                                                    }
+                                            );
+                                        }
+                                    }.start();
+                                    result.success(false);
+                                }
+
                             } else {
                                 result.notImplemented();
                             }
