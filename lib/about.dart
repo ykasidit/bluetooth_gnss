@@ -82,6 +82,7 @@ This app's UI uses, and I would like to hereby say thanks all authors of, below 
 - package_info
 - share
 - url_launcher
+- geolocator
 
 
 Notices for engine part of this app

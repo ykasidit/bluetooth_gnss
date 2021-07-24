@@ -1339,7 +1339,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       if (_is_bt_connected) {
         toast("Disconnecting...");
       } else {
-        toast("Not connected...");
+        //toast("Not connected...");
       }
       //call it in any case just to be sure service it is stopped (.close()) method called
       await method_channel.invokeMethod('disconnect');
