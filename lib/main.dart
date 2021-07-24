@@ -27,6 +27,7 @@ main() async {
             'log_bt_rx': false,
             'disable_ntrip': false,
             'ble_gap_scan_mode': false,
+            'list_nearest_streams_first': true,
           }
   );
   //PrefService.setString("target_bdaddr", null);
