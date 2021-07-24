@@ -142,6 +142,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                     Log.d(TAG, "disconnect0");
                                     if (m_service != null && mBound) {
                                         Log.d(TAG, "disconnect1");
+                                        m_service.stop_auto_reconnect_thread();
                                         m_service.close();
                                         result.success(true);
                                         Log.d(TAG, "disconnect2");
