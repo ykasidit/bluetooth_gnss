@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:preferences/preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:progress_dialog/progress_dialog.dart';
+import 'package:geolocator/geolocator.dart';
+import 'dart:math' show cos, sqrt, asin;
 
 class settings_widget extends StatefulWidget {
 
@@ -89,7 +91,13 @@ class settings_widget_state extends State<settings_widget> {
               mount_point_str_list.sort();
               print("mount_point_str_list: $mount_point_str_list");
 
+
+
+              bool sort_by_nearest = PrefService.getBool('list_nearest_streams_first') ?? false;
+              print('sort_by_nearest: $sort_by_nearest');
+
               List<Map<String, String>> mount_point_map_list = new List<Map<String, String>>();
+
               for (String val in mount_point_str_list) {
                   List<String> parts = val.split(";");
                   //ref https://software.rtcm-ntrip.org/wiki/STR
@@ -98,8 +106,57 @@ class settings_widget_state extends State<settings_widget> {
                         {
                           "mountpoint": parts[0],
                           "identifier": parts[1],
+                          "lat": parts[8]??0,
+                          "lon": parts[9]??0,
+                          "distance_km": "0",
                         }
                     );
+                }
+              }
+
+              bool last_pos_valid = false;
+              if (sort_by_nearest) {
+                try {
+                  Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+                  last_pos_valid = position != null;
+                  double last_lat = 0;
+                  double last_lon = 0;
+                  if (position != null) {
+                    last_pos_valid = true;
+                    last_lat = position.latitude;
+                    last_lon = position.longitude;
+                  }
+
+                  print('last_pos_valid: $last_pos_valid $last_lat $last_lon');
+
+                  if (last_pos_valid) {
+
+                    //calc distance into the map in the list
+                    double distance_km = 999999;
+                    for (Map<String, String> vmap in mount_point_map_list) {
+                      try {
+                        double lat = double.parse(vmap["lat"]);
+                        double lon = double.parse(vmap["lon"]);
+                        distance_km =
+                            calculateDistance(last_lat, lat, last_lon, lon);
+                      } catch (e) {
+                        print('parse lat/lon exception: $e');
+                      }
+                      vmap["distance_km"] = distance_km.truncateToDouble().toString();
+                    }
+
+                    //sort the list according to distance: https://stackoverflow.com/questions/22177838/sort-a-list-of-maps-in-dart-second-level-sort-in-dart
+                    mount_point_map_list.sort((m1, m2) {
+                      return double.parse(m1["distance_km"]).compareTo(double.parse(m2["distance_km"]));
+                    });
+
+                  } else {
+                    toast("Sort by distance failed: failed to get last position");
+                  }
+
+                } catch (e) {
+                  print('sort_by_nearest exception: $e');
+                  toast("Sort by distance failed: $e");
                 }
               }
               //make dialog to choose from mount_point_map_list
@@ -112,7 +169,11 @@ class settings_widget_state extends State<settings_widget> {
                       title: const Text('Select stream:'),
                       children: mount_point_map_list.map(
                               (valmap) {
-                                String disp_text = "${valmap["mountpoint"]}: ${valmap["identifier"]}";
+                                String disp_text = "${valmap["mountpoint"]}: ${valmap["identifier"]} @ ${valmap["lat"]}, ${valmap["lon"]}";
+                                print("disp_text sort_by_nearest $sort_by_nearest last_pos_valid $last_pos_valid");
+                                if (sort_by_nearest && last_pos_valid) {
+                                  disp_text += ": ${valmap["distance_km"]} km";
+                                }
                             return SimpleDialogOption(
                                 onPressed: () {
                                   Navigator.pop(context, "${valmap["mountpoint"]}");
@@ -317,6 +378,7 @@ class settings_widget_state extends State<settings_widget> {
               },
             ),
           ),
+          CheckboxPreference("Try list nearest streams first", 'list_nearest_streams_first'),
           TextFieldPreference('Stream (mount-point)', 'ntrip_mountpoint',
               defaultVal: '', validator: (str) {
                 if (str == null) {
@@ -345,4 +407,14 @@ class settings_widget_state extends State<settings_widget> {
 int intParse(String input) {
   String source = input.trim();
   return int.tryParse(source);
+}
+
+//https://stackoverflow.com/questions/54138750/total-distance-calculation-from-latlng-list
+double calculateDistance(lat1, lon1, lat2, lon2){
+  var p = 0.017453292519943295;
+  var c = cos;
+  var a = 0.5 - c((lat2 - lat1) * p)/2 +
+      c(lat1 * p) * c(lat2 * p) *
+          (1 - c((lon2 - lon1) * p))/2;
+  return 12742 * asin(sqrt(a));
 }
