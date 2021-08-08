@@ -25,6 +25,7 @@ public class Util {
         gnssConnectionParams.setReconnect(prefs.getBoolean("flutter.pref_reconnect", false));
         gnssConnectionParams.setLogBtRx(prefs.getBoolean("flutter.pref_log_bt_rx", false));
         gnssConnectionParams.setDisableNtrip(prefs.getBoolean("flutter.pref_disable_ntrip", false));
+        gnssConnectionParams.setGapMode(prefs.getBoolean("flutter.pref_ble_gap_scan_mode", false));
 
         for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
             final String value = prefs.getString("flutter.pref_" + pk, null);
@@ -62,7 +63,7 @@ public class Util {
             Log.d(TAG, "mainact extra_params key: " + key + " val: " + val);
             intent.putExtra(key, val);
         }
-        intent.putExtra("activity_class_name", activityClassName);
+        intent.putExtra("activity_class_name", MainActivity.MAIN_ACTIVITY_CLASSNAME);
         intent.putExtra("activity_icon_id", R.mipmap.ic_launcher);
 
         boolean gap_mode = intent.getBooleanExtra(bluetooth_gnss_service.BLE_GAP_SCAN_MODE, false);

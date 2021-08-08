@@ -41,6 +41,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
     private static final String ENGINE_METHOD_CHANNEL = "com.clearevo.bluetooth_gnss/engine";
     private static final String ENGINE_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/engine_events";
     private static final String SETTINGS_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/settings_events";
+    public static final String MAIN_ACTIVITY_CLASSNAME = "com.clearevo.bluetooth_gnss.MainActivity";
     static final String TAG = "btgnss_mainactvty";
     EventChannel.EventSink m_events_sink;
     EventChannel.EventSink m_settings_events_sink;
@@ -97,7 +98,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                     public void run() {
                                         try {
                                             //getcanonicalname somehow returns null, getname() would return something with $ at the end so wont work to launch the activity from the service notification, so just use a string literal here
-                                            Util.connect("com.clearevo.bluetooth_gnss.MainActivity", context, gnssConnectionParams);
+                                            Util.connect(MAIN_ACTIVITY_CLASSNAME, context, gnssConnectionParams);
                                         } catch (Throwable tr) {
                                             Log.d(TAG, "connect() exception: "+Log.getStackTraceString(tr));
                                         }
