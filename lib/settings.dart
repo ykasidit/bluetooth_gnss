@@ -290,11 +290,8 @@ class settings_widget_state extends State<settings_widget> {
             style: Theme.of(context).textTheme.caption,
           ),
           CheckboxPreference("Secure RFCOMM connection", 'secure'),
-          CheckboxPreference("Auto-reconnect mode", 'reconnect'),
-          PreferenceText(
-            "Takes effect in next connection",
-            style: Theme.of(context).textTheme.caption,
-          ),
+          CheckboxPreference("Auto-reconnect (when disconnected)", 'reconnect'),
+          CheckboxPreference("Autostart (connect on phone boot)", 'autostart'),
           CheckboxPreference("Check for Settings > 'Location' ON and 'High Accuracy'", 'check_settings_location'),
           CheckboxPreference("Enable logging", 'log_bt_rx'),
           PreferenceText(

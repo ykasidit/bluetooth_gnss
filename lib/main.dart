@@ -27,6 +27,7 @@ main() async {
             'log_bt_rx': false,
             'disable_ntrip': false,
             'ble_gap_scan_mode': false,
+            'autostart': false,
             'list_nearest_streams_first': true,
           }
   );
@@ -457,51 +458,6 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                 rows = <Widget>[
                   Card(
                     child: Container(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              children: <Widget>[
-                                Text(
-                                  'Connected',
-                                  style: Theme.of(context).textTheme.headline.copyWith(
-                                          fontFamily: 'GoogleSans',
-                                          color: Colors.grey
-                                  ),
-                                ),
-
-                                Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                ),
-                                ICON_CONNECTED
-                                ,
-                                Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                ),
-                                Text(
-                                        '$_selected_device'
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                ),
-                                Text(
-                                    "- You can now use other apps like 'Waze' normally ('Maps' works upto Android 9.0).\n- Location is now from connected device\n- To stop, press the 'Disconnect' menu in top-right options.",
-                                    style: Theme.of(context).textTheme.body2
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                ),
-                                /*Text(
-                                        ""+note_how_to_disable_mock_location.toString(),
-                                        style: Theme.of(context).textTheme.caption
-                                ),*/
-                              ],
-                            )
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                  ),                  
-                  Card(
-                    child: Container(
                       padding: const EdgeInsets.all(10.0),
                       child: Column(
                         children: <Widget>[
@@ -512,35 +468,23 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                     color: Colors.blueGrey
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(5.0),
-                          ),
+
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                      'GNSS Time:',
-                                      style: Theme.of(context).textTheme.body2
-                              ),
-                              Text(
-                                      _param_map['GN_time'] ?? WAITING_DEV,
-                                      style: Theme.of(context).textTheme.body1
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                      'Lat, Lon:',
-                                      style: Theme.of(context).textTheme.body2
+                                  'Lat, Lon:',
+                                  style: Theme.of(context).textTheme.headline6
                               ),
                               Text(
                                   (_param_map['lat_double_07_str'] ?? WAITING_DEV) + ", " + (_param_map['lon_double_07_str'] ?? WAITING_DEV),
-                                      style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.headline5
                               ),
                             ],
                           ),
+
+
+
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
@@ -563,6 +507,19 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                 },
                                 child: const Icon(Icons.content_copy),
                               )
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'GNSS Time:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map['GN_time'] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
                             ],
                           ),
                           Row(
@@ -786,8 +743,51 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
                     ),
                   ),
-                  
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                  ),
+                  Card(
+                    child: Container(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: <Widget>[
+                            Text(
+                              'Connected',
+                              style: Theme.of(context).textTheme.headline.copyWith(
+                                  fontFamily: 'GoogleSans',
+                                  color: Colors.grey
+                              ),
+                            ),
 
+                            Padding(
+                              padding: const EdgeInsets.all(5.0),
+                            ),
+                            ICON_CONNECTED
+                            ,
+                            Padding(
+                              padding: const EdgeInsets.all(5.0),
+                            ),
+                            Text(
+                                '$_selected_device'
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(5.0),
+                            ),
+                            Text(
+                                "- You can now use other apps like 'Waze' normally.\n- Location is now from connected device\n- To stop, press the 'Disconnect' menu in top-right options.",
+                                style: Theme.of(context).textTheme.body2
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(5.0),
+                            ),
+                            /*Text(
+                                        ""+note_how_to_disable_mock_location.toString(),
+                                        style: Theme.of(context).textTheme.caption
+                                ),*/
+                          ],
+                        )
+                    ),
+                  ),
                 ];
 
               } else if (_is_bt_connected == false && _is_bt_conn_thread_alive_likely_connecting) {

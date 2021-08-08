@@ -16,7 +16,7 @@ import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 import static android.content.Context.MODE_PRIVATE;
 
 public class StartConnectionReceiver extends BroadcastReceiver {
-
+    public static final String TAG = "btgnss_scr";
     @Override
     public void onReceive(Context context, Intent intent) {
         if ("bluetooth.CONNECT".equals(intent.getAction())) {
@@ -33,8 +33,11 @@ public class StartConnectionReceiver extends BroadcastReceiver {
 
                 overrideConnectionWithOptions(gnssConnectionParams, configStr);
             }
-
-            Util.connect(this.getClass().getName(), context, gnssConnectionParams);
+            try {
+                Util.connect(MainActivity.MAIN_ACTIVITY_CLASSNAME, context, gnssConnectionParams);
+            } catch (Exception e) {
+                Log.d(TAG, "scr onreceive got exception: " +Log.getStackTraceString(e));
+            }
         }
     }
 
