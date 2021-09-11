@@ -13,9 +13,11 @@ import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
-
+import android.provider.DocumentsContract;
+import android.net.Uri;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.documentfile.provider.DocumentFile;
 
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 import com.clearevo.libecodroidbluetooth.ntrip_conn_mgr;
@@ -42,6 +44,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
     private static final String ENGINE_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/engine_events";
     private static final String SETTINGS_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/settings_events";
     public static final String MAIN_ACTIVITY_CLASSNAME = "com.clearevo.bluetooth_gnss.MainActivity";
+    private static final int CHOOSE_FOLDER = 1;
     static final String TAG = "btgnss_mainactvty";
     EventChannel.EventSink m_events_sink;
     EventChannel.EventSink m_settings_events_sink;
@@ -177,8 +180,17 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                             } else if (call.method.equals("open_phone_location_settings")) {
                                 result.success(open_phone_location_settings());
                             } else if (call.method.equals("is_write_enabled")) {
+                                Log.d(TAG, "is_write_enabled check start");
                                 if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                                    result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
+                                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+
+                                    // Optionally, specify a URI for the directory that should be opened in
+                                    // the system file picker when it loads.
+                                    //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Do);
+
+                                    startActivityForResult(intent, CHOOSE_FOLDER);
+
+                                    result.success(true);
                                 } else {
                                     Log.d(TAG, "is_write_enabled check write permission not granted yet so requesting permission now");
                                     Toast.makeText(getApplicationContext(), "BluetoothGNSS needs external storage write permissions to log data - please allow...", Toast.LENGTH_LONG).show();
@@ -235,7 +247,6 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                                             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                                                                     Manifest.permission.ACCESS_FINE_LOCATION,
                                                                     Manifest.permission.ACCESS_COARSE_LOCATION,
-                                                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
                                                             }, 1);
                                                         }
                                                     }
@@ -269,7 +280,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                                         @Override
                                                         public void run() {
                                                             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                                    Manifest.permission.ACCESS_COARSE_LOCATION,
                                                             }, 1);
                                                         }
                                                     }
@@ -286,6 +297,21 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                 );
 
         create();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode,
+                                 Intent resultData) {
+        if (requestCode == CHOOSE_FOLDER
+                && resultCode == this.RESULT_OK) {
+            Uri uri = null;
+            if (resultData != null) {
+                uri = resultData.getData();
+                if (uri != null) {
+                    m_service.set_log_folder(uri);
+                }
+            }
+        }
     }
 
     public void create() {

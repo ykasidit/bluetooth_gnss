@@ -295,7 +295,7 @@ class settings_widget_state extends State<settings_widget> {
           CheckboxPreference("Check for Settings > 'Location' ON and 'High Accuracy'", 'check_settings_location'),
           CheckboxPreference("Enable logging", 'log_bt_rx'),
           PreferenceText(
-            "Save all read data (NMEA/UBX/etc) to\n'Internal Storage' > 'bluetooth_gnss_logs' folder",
+            "Save all read data (NMEA/UBX/etc) to a file (folder to be selected).",
             style: Theme.of(context).textTheme.caption,
           ),
           PreferenceTitle('RTK/NTRIP Server settings'),
