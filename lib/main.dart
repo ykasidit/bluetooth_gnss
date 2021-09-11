@@ -473,11 +473,24 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                  'Lat, Lon:',
+                                  'Lat:',
                                   style: Theme.of(context).textTheme.headline6
                               ),
                               Text(
-                                  (_param_map['lat_double_07_str'] ?? WAITING_DEV) + ", " + (_param_map['lon_double_07_str'] ?? WAITING_DEV),
+                                  (_param_map['lat_double_07_str'] ?? WAITING_DEV),
+                                  style: Theme.of(context).textTheme.headline5
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'Lon:',
+                                  style: Theme.of(context).textTheme.headline6
+                              ),
+                              Text(
+                                  (_param_map['lon_double_07_str'] ?? WAITING_DEV),
                                   style: Theme.of(context).textTheme.headline5
                               ),
                             ],
@@ -733,6 +746,45 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               Text(
                                   _param_map["GN_RMC_count_str"] ?? _param_map["GP_RMC_count_str"] ?? WAITING_DEV,
                                       style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'Current log folder:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["logfile_folder"] ??WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'Current log name:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["logfile_name"] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'Current log size (MB):',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["logfile_n_bytes"] == null ? WAITING_DEV : (_param_map["logfile_n_bytes"] / 1000000).toString(),
+                                  style: Theme.of(context).textTheme.body1
                               ),
                             ],
                           ),
