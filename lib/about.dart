@@ -64,12 +64,25 @@ Use this app to get more accurate positioning data (latitude, longitude, elevati
 
 """+ScrollableTabsDemoState.note_how_to_disable_mock_location+"""
 
-This app is provided for free by [www.ClearEvo.com](http://www.clearevo.com) - home of the 'EcoDroidGPS' Bluetooth GPS Receiver for Android phones and Tablets.
+This free and open source app is provided for free by [www.ClearEvo.com](http://www.clearevo.com) - home of the 'EcoDroidGPS' Bluetooth GPS Receiver for Android phones and Tablets.
 
-Also, the source code of app 'bluetooth_gnss', amd its engine, named 'libbluetooth_gnss', is free software and released under the GNU GPL for anyone to study/use/modify/share freely at:
+This app 'bluetooth_gnss', amd its engine - 'libbluetooth_gnss', are free software and released under the GNU GPL for anyone to study/use/modify/share at:
 - <https://github.com/ykasidit/bluetooth_gnss>
 - <https://github.com/ykasidit/libbluetooth_gnss>
 
+Special thanks
+--------------
+
+- Thanks to 'Geoffrey Peck' from Australia for all his tests, observations and suggestions.
+- Thanks to [Auric Goldfinger](https://github.com/auricgoldfinger) for his great contribution in developing the auto connect on bluetooth feature and the detailed readme merged into above.
+- Thanks to everyone who provided comments/suggestions on the [bluetooth_gnss project issues page on github](https://github.com/ykasidit/bluetooth_gnss/issues).
+
+Authors
+--------
+
+- [Kasidit Yusuf](https://github.com/ykasidit)
+- [Auric Goldfinger](https://github.com/auricgoldfinger)
+- For the most up-to-date list, run `git shortlog -sne` in the respective cloned git repos.
 
 Notices for the UI part of this app
 -----------------------
