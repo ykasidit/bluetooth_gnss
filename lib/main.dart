@@ -11,7 +11,7 @@ import 'package:flutter/services.dart';
 
 import 'settings.dart';
 import 'dart:async';
-
+import 'package:url_launcher/url_launcher.dart';
 
 const Color _kFlutterBlue = Color(0xFF003D75);
 
@@ -412,7 +412,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             value: 'disconnect',
                     ),
                     new PopupMenuItem<String>(
-                            child: const Text('About'), value: 'about'),
+                        child: const Text('Issues/Suggestions'), value: 'issues'),
+                    new PopupMenuItem<String>(
+                        child: const Text('Project page'), value: 'project'),
+                    new PopupMenuItem<String>(
+                        child: const Text('About'), value: 'about'),
                   ],
                   onSelected: menu_selected,
           ),
@@ -1095,9 +1099,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
         await disconnect();
         break;
       case "about":
-
         PackageInfo packageInfo = await PackageInfo.fromPlatform();
-
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -1111,6 +1113,12 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
               }
           ),
         );
+        break;
+      case "issues":
+        launch("https://github.com/ykasidit/bluetooth_gnss/issues");
+        break;
+      case "project":
+        launch("https://github.com/ykasidit/bluetooth_gnss");
         break;
     }
   }
