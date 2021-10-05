@@ -91,9 +91,10 @@ class settings_widget_state extends State<settings_widget> {
               mount_point_str_list.sort();
               print("mount_point_str_list: $mount_point_str_list");
 
-
-
+              int nmpl = mount_point_str_list.length;
+              toast("Found $nmpl mountpoints...");
               bool sort_by_nearest = PrefService.getBool('list_nearest_streams_first') ?? false;
+              sort_by_nearest = false; //TODO: fix sort not working correctly then remove this line
               print('sort_by_nearest: $sort_by_nearest');
 
               List<Map<String, String>> mount_point_map_list = new List<Map<String, String>>();
@@ -375,7 +376,7 @@ class settings_widget_state extends State<settings_widget> {
               },
             ),
           ),
-          CheckboxPreference("Try list nearest streams first", 'list_nearest_streams_first'),
+          //TODO - fix and enable later - CheckboxPreference("Try list nearest streams first", 'list_nearest_streams_first'),
           TextFieldPreference('Stream (mount-point)', 'ntrip_mountpoint',
               defaultVal: '', validator: (str) {
                 if (str == null) {
