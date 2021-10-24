@@ -296,6 +296,16 @@ class settings_widget_state extends State<settings_widget> {
           CheckboxPreference(
               "Enable logging", 'log_bt_rx',
               onEnable: () async {
+                bool write_enabled = false;
+                try {
+                  write_enabled = await method_channel.invokeMethod('is_write_enabled');
+                } on PlatformException catch (e) {
+                  toast("WARNING: check _is_connecting failed: $e");
+                }
+                if (write_enabled == false) {
+                  toast("Write external storage permission required for data loggging...");
+                  return;
+                }
                 try {
                   await method_channel.invokeMethod('set_log_uri');
                 } on PlatformException catch (e) {
