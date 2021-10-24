@@ -17,8 +17,8 @@ public class Autostart extends BroadcastReceiver {
             try {
                 // defaults from preferences
                 final SharedPreferences prefs = context.getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
-                final GnssConnectionParams gnssConnectionParams = Util.createGnssConnectionFromPreferences(prefs);
                 boolean autostart = prefs.getBoolean("flutter.pref_autostart", false);
+                final GnssConnectionParams gnssConnectionParams = Util.createGnssConnectionFromPreferences(prefs);
                 Log.d(TAG, "pref autostart: " +autostart);
                 if (autostart) {
                     Util.connect(MainActivity.MAIN_ACTIVITY_CLASSNAME, context, gnssConnectionParams);

@@ -293,10 +293,18 @@ class settings_widget_state extends State<settings_widget> {
           CheckboxPreference("Auto-reconnect (when disconnected)", 'reconnect'),
           CheckboxPreference("Autostart (connect on phone boot)", 'autostart'),
           CheckboxPreference("Check for Settings > 'Location' ON and 'High Accuracy'", 'check_settings_location'),
-          CheckboxPreference("Enable logging", 'log_bt_rx'),
-          PreferenceText(
-            "Save all read data (NMEA/UBX/etc) to a file (folder to be selected).",
-            style: Theme.of(context).textTheme.caption,
+          CheckboxPreference(
+              "Enable logging", 'log_bt_rx',
+              onEnable: () async {
+                try {
+                  await method_channel.invokeMethod('set_log_uri');
+                } on PlatformException catch (e) {
+                  toast("WARNING: set_log_uri failed: $e");
+                }
+              },
+              onDisable: () async {
+                PrefService.setString('log_uri', null);
+              }
           ),
           PreferenceTitle('RTK/NTRIP Server settings'),
           PreferenceText(
