@@ -98,8 +98,9 @@ This will trigger the event only when my GPS receiver is connected. You can add 
 Special thanks
 --------------
 
-- Thanks to 'Geoffrey Peck' from Australia for all his tests, observations and suggestions.
-- Thanks to [Auric Goldfinger](https://github.com/auricgoldfinger) for his great contribution in developing the auto connect on bluetooth feature and the detailed readme merged into above.
+- Thanks to Geoffrey Peck from Australia for his tests, observations and suggestions.
+- Thanks to Peter Mousley from Australia for his expert advice, tests, code review and guidance.
+- Thanks to [Auric Goldfinger](https://github.com/auricgoldfinger) for his great contribution in developing the auto connect on boot feature and the detailed readme merged into above.
 - Thanks to everyone who provided comments/suggestions on the [bluetooth_gnss project issues page on github](https://github.com/ykasidit/bluetooth_gnss/issues).
 
 Authors

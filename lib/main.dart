@@ -543,11 +543,37 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                  'Altitude:',
+                                  'Ellipsoidal Height:',
                                   style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                  _param_map['alt_double_02_str'] ?? WAITING_DEV,
+                                  _param_map['GN_ellipsoidal_height_double_02_str'] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'Orthometric Height:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map['GN_gga_alt_double_02_str'] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'Geoidal Height:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map['GN_geoidal_height_double_02_str'] ?? WAITING_DEV,
                                   style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -643,19 +669,6 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               ),
                             ],
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                      'Location sent to Android:',
-                                      style: Theme.of(context).textTheme.body2
-                              ),
-                              Text(
-                                      '$_mock_location_set_status',
-                                      style: Theme.of(context).textTheme.body1
-                              ),
-                            ],
-                          ),
                           Padding(
                             padding: const EdgeInsets.all(5.0),
                           ),
@@ -726,6 +739,32 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                           ),
                           Padding(
                             padding: const EdgeInsets.all(5.0),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'Location sent to Android:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  '$_mock_location_set_status',
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'Alt type used:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["alt_type"] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
