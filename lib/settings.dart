@@ -304,13 +304,17 @@ class settings_widget_state extends State<settings_widget> {
                 }
                 if (write_enabled == false) {
                   toast("Write external storage permission required for data loggging...");
-                  return;
+                  PrefService.setBool('log_bt_rx', false);
+                  return false;
                 }
                 try {
                   await method_channel.invokeMethod('set_log_uri');
                 } on PlatformException catch (e) {
                   toast("WARNING: set_log_uri failed: $e");
+                  PrefService.setBool('log_bt_rx', false);
+                  return false;
                 }
+                return true;
               },
               onDisable: () async {
                 PrefService.setString('log_uri', null);
