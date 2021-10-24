@@ -37,6 +37,7 @@ import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugins.GeneratedPluginRegistrant;
 import io.flutter.plugin.common.EventChannel;
+import android.content.SharedPreferences;
 
 public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks, EventChannel.StreamHandler {
 
@@ -179,17 +180,15 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                 result.success(open_phone_bluetooth_settings());
                             } else if (call.method.equals("open_phone_location_settings")) {
                                 result.success(open_phone_location_settings());
+                            } else if (call.method.equals("set_log_uri")) {
+                                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                                // Optionally, specify a URI for the directory that should be opened in
+                                // the system file picker when it loads.
+                                //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Do);
+                                startActivityForResult(intent, CHOOSE_FOLDER);
                             } else if (call.method.equals("is_write_enabled")) {
                                 Log.d(TAG, "is_write_enabled check start");
                                 if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-
-                                    // Optionally, specify a URI for the directory that should be opened in
-                                    // the system file picker when it loads.
-                                    //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Do);
-
-                                    startActivityForResult(intent, CHOOSE_FOLDER);
-
                                     result.success(true);
                                 } else {
                                     Log.d(TAG, "is_write_enabled check write permission not granted yet so requesting permission now");
@@ -299,6 +298,8 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
         create();
     }
 
+    final String log_uri_pref_key = "flutter.pref_log_uri";
+
     @Override
     public void onActivityResult(int requestCode, int resultCode,
                                  Intent resultData) {
@@ -307,8 +308,13 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
             Uri uri = null;
             if (resultData != null) {
                 uri = resultData.getData();
-                if (uri != null) {
-                    m_service.set_log_folder(uri);
+                Context context = getApplicationContext();
+                if (uri != null && context != null) {
+                    final SharedPreferences prefs = context.getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString(log_uri_pref_key, uri.toString());
+                    editor.apply();
+                    Log.d(TAG, "set log uri: "+log_uri_pref_key+" val: "+prefs.getString(log_uri_pref_key,""));
                 }
             }
         }
