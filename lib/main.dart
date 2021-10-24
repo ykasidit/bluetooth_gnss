@@ -770,6 +770,22 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
+                                  'N satellites used:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  _param_map["n_sats_str"] ?? WAITING_DEV,
+                                  style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(5.0),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
                                       'Total GGA Count:',
                                       style: Theme.of(context).textTheme.body2
                               ),
