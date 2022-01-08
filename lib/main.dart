@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'settings.dart';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wakelock/wakelock.dart';
 
 const Color _kFlutterBlue = Color(0xFF003D75);
 
@@ -201,6 +202,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   String _main_state = "Loading...";
   static String WAITING_DEV = "No data";
   bool _is_bt_connected = false;
+  bool _wakelock_enabled = false;
   bool _is_ntrip_connected = false;
   int _ntrip_packets_count = 0;
   bool _is_bt_conn_thread_alive_likely_connecting = false;
@@ -217,6 +219,23 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   Timer timer;
   static String note_how_to_disable_mock_location = "";
   Map<dynamic, dynamic> _param_map = Map<dynamic, dynamic>();
+
+  void wakelock_enable() {
+    if (_wakelock_enabled == false) {
+      Wakelock
+          .enable(); //keep screen on for users to continuously monitor connection state
+      _wakelock_enabled = true;
+    }
+  }
+
+  void wakelock_disable() {
+    if (_wakelock_enabled == true) {
+      Wakelock
+          .disable(); //keep screen on for users to continuously monitor connection state
+      _wakelock_enabled = false;
+    }
+  }
+
 
   static void LogPrint(Object object) async {
     int defaultPrintLength = 1020;
@@ -1194,6 +1213,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       _ntrip_packets_count =
       await method_channel.invokeMethod('get_ntrip_cb_count');
 
+      if (_is_bt_connected) {
+        wakelock_enable();
+      } else {
+        wakelock_disable();
+      }
 
       if (_is_bt_connected) {
         _status = "Connected";
