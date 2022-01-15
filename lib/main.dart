@@ -210,7 +210,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
   int _mock_location_set_ts;
   String _mock_location_set_status = WAITING_DEV;
-  List<String> talker_ids = ["GP", "GL", "GA", "GB"];
+  List<String> talker_ids = ["GP", "GL", "GA", "GB", "GQ"];
 
   TabController _controller;
   TabsDemoStyle _demoStyle = TabsDemoStyle.iconsAndText;
@@ -699,7 +699,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                       style: Theme.of(context).textTheme.body2
                               ),
                               Text(
-                                  ((_param_map["GP_n_sats_used"] ?? 0) + (_param_map["GL_n_sats_used"] ?? 0) + (_param_map["GA_n_sats_used"] ?? 0) + (_param_map["GB_n_sats_used"] ?? 0)).toString(),
+                                  ((_param_map["GP_n_sats_used"] ?? 0) + (_param_map["GL_n_sats_used"] ?? 0) + (_param_map["GA_n_sats_used"] ?? 0) + (_param_map["GB_n_sats_used"] ?? 0) + (_param_map["GQ_n_sats_used"] ?? 0)).toString(),
                                       style: Theme.of(context).textTheme.body1
                               ),
                             ],
@@ -753,6 +753,19 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               Text(
                                   "${_param_map["GB_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GB_n_sats_in_view_str"] ?? WAITING_DEV}",
                                       style: Theme.of(context).textTheme.body1
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                  'N QZSS in use/view:',
+                                  style: Theme.of(context).textTheme.body2
+                              ),
+                              Text(
+                                  "${_param_map["GQ_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GQ_n_sats_in_view_str"] ?? WAITING_DEV}",
+                                  style: Theme.of(context).textTheme.body1
                               ),
                             ],
                           ),
