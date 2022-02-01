@@ -549,7 +549,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                  'GNSS Time:',
+                                  'Time from GNSS:',
                                   style: Theme.of(context).textTheme.body2
                               ),
                               Text(
@@ -575,7 +575,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                  'Orthometric Height:',
+                                  'Orthometric (MSL) Height:',
                                   style: Theme.of(context).textTheme.body2
                               ),
                               Text(
@@ -794,19 +794,6 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               ),
                               Text(
                                   _param_map["alt_type"] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                  'N satellites used:',
-                                  style: Theme.of(context).textTheme.body2
-                              ),
-                              Text(
-                                  _param_map["n_sats_str"] ?? WAITING_DEV,
                                   style: Theme.of(context).textTheme.body1
                               ),
                             ],
