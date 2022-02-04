@@ -72,7 +72,7 @@ ThemeData _buildLightTheme() {
 }
 TextTheme _buildTextTheme(TextTheme base) {
   return base.copyWith(
-    title: base.title.copyWith(
+    titleMedium: base.titleSmall.copyWith(
       fontFamily: 'GoogleSans',
     ),
   );
@@ -486,7 +486,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                         children: <Widget>[
                           Text(
                             'GNSS Device read stats',
-                            style: Theme.of(context).textTheme.subhead.copyWith(
+                            style: Theme.of(context).textTheme.subtitle1.copyWith(
                                     fontFamily: 'GoogleSans',
                                     color: Colors.blueGrey
                             ),
@@ -550,11 +550,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Time from GNSS:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                               Text(
                                   _param_map['GN_time'] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -563,11 +563,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Ellipsoidal Height:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map['GN_ellipsoidal_height_double_02_str'] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -576,11 +576,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Orthometric (MSL) Height:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map['GN_gga_alt_double_02_str'] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -589,11 +589,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Geoidal Height:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map['GN_geoidal_height_double_02_str'] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -602,11 +602,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Fix status:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   (_param_map["GN_status"] ?? _param_map["GP_status"] ?? "No data"),
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -615,11 +615,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Fix quality:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["GN_fix_quality"] ?? _param_map["GP_fix_quality"] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -628,11 +628,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'UBLOX Fix Type:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["UBX_POSITION_navStat"] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -641,11 +641,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'UBLOX XY Accuracy(m):',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["UBX_POSITION_hAcc"] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -654,11 +654,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'UBLOX Z Accuracy(m):',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["UBX_POSITION_vAcc"] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -667,11 +667,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'HDOP:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["hdop_str"] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -680,11 +680,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Course:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["course_str"] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -696,11 +696,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                       'N Sats used TOTAL:',
-                                      style: Theme.of(context).textTheme.body2
+                                      style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   ((_param_map["GP_n_sats_used"] ?? 0) + (_param_map["GL_n_sats_used"] ?? 0) + (_param_map["GA_n_sats_used"] ?? 0) + (_param_map["GB_n_sats_used"] ?? 0) + (_param_map["GQ_n_sats_used"] ?? 0)).toString(),
-                                      style: Theme.of(context).textTheme.body1
+                                      style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -709,11 +709,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                       'N Galileo in use/view:',
-                                      style: Theme.of(context).textTheme.body2
+                                      style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   "${_param_map["GA_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GA_n_sats_in_view_str"] ?? WAITING_DEV}",
-                                      style: Theme.of(context).textTheme.body1
+                                      style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -722,11 +722,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                       'N GPS in use/view:',
-                                      style: Theme.of(context).textTheme.body2
+                                      style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   "${_param_map["GP_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GP_n_sats_in_view_str"] ?? WAITING_DEV}",
-                                      style: Theme.of(context).textTheme.body1
+                                      style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -735,11 +735,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                       'N GLONASS in use/view:',
-                                      style: Theme.of(context).textTheme.body2
+                                      style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   "${_param_map["GL_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GL_n_sats_in_view_str"] ?? WAITING_DEV}",
-                                      style: Theme.of(context).textTheme.body1
+                                      style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -748,11 +748,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                       'N BeiDou in use/view:',
-                                      style: Theme.of(context).textTheme.body2
+                                      style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   "${_param_map["GB_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GB_n_sats_in_view_str"] ?? WAITING_DEV}",
-                                      style: Theme.of(context).textTheme.body1
+                                      style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -761,11 +761,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'N QZSS in use/view:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   "${_param_map["GQ_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GQ_n_sats_in_view_str"] ?? WAITING_DEV}",
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -777,11 +777,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Location sent to Android:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   '$_mock_location_set_status',
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -790,11 +790,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Alt type used:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["alt_type"] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -806,11 +806,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                       'Total GGA Count:',
-                                      style: Theme.of(context).textTheme.body2
+                                      style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                       _param_map["GN_GGA_count_str"] ?? _param_map["GP_GGA_count_str"] ?? WAITING_DEV,
-                                      style: Theme.of(context).textTheme.body1
+                                      style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -819,11 +819,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                       'Total RMC Count:',
-                                      style: Theme.of(context).textTheme.body2
+                                      style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["GN_RMC_count_str"] ?? _param_map["GP_RMC_count_str"] ?? WAITING_DEV,
-                                      style: Theme.of(context).textTheme.body1
+                                      style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -832,11 +832,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Current log folder:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["logfile_folder"] ??WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -845,11 +845,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Current log name:',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["logfile_name"] ?? WAITING_DEV,
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -858,11 +858,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             children: <Widget>[
                               Text(
                                   'Current log size (MB):',
-                                  style: Theme.of(context).textTheme.body2
+                                  style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
                                   _param_map["logfile_n_bytes"] == null ? WAITING_DEV : (_param_map["logfile_n_bytes"] / 1000000).toString(),
-                                  style: Theme.of(context).textTheme.body1
+                                  style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
                           ),
@@ -883,7 +883,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                           children: <Widget>[
                             Text(
                               'Connected',
-                              style: Theme.of(context).textTheme.headline.copyWith(
+                              style: Theme.of(context).textTheme.headline5.copyWith(
                                   fontFamily: 'GoogleSans',
                                   color: Colors.grey
                               ),
@@ -905,7 +905,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             ),
                             Text(
                                 "- You can now use other apps like 'Waze' normally.\n- Location is now from connected device\n- To stop, press the 'Disconnect' menu in top-right options.",
-                                style: Theme.of(context).textTheme.body2
+                                style: Theme.of(context).textTheme.bodyText2
                             ),
                             Padding(
                               padding: const EdgeInsets.all(5.0),
@@ -935,7 +935,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                   ),
                   Text(
                     '$_status',
-                    style: Theme.of(context).textTheme.headline,
+                    style: Theme.of(context).textTheme.headline5,
                   ),
                   Padding(
                     padding: const EdgeInsets.all(10.0),
@@ -957,7 +957,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                 rows = <Widget>[
                   Text(
                     'Pre-connect checklist',
-                    style: Theme.of(context).textTheme.headline.copyWith(
+                    style: Theme.of(context).textTheme.headline5.copyWith(
                       fontFamily: 'GoogleSans',
                       color: Colors.blueGrey
                     ),
@@ -979,7 +979,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                 padding: const EdgeInsets.all(8.0),
                                 child: Text(
                                   key,
-                                  style: Theme.of(context).textTheme.body1,
+                                  style: Theme.of(context).textTheme.bodyText1,
                                 )
                         ),
                       ]
@@ -1011,7 +1011,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                         ),
                         Text(
                           'Next step',
-                          style:  Theme.of(context).textTheme.headline.copyWith(
+                          style:  Theme.of(context).textTheme.headline5.copyWith(
                             fontFamily: 'GoogleSans',
                             color: Colors.blueGrey,
                           ),
@@ -1024,7 +1024,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
                           child: Text(
                             '$_status',
-                            style: Theme.of(context).textTheme.subhead,
+                            style: Theme.of(context).textTheme.subtitle1,
                           ),
                         ),
                       ],
@@ -1063,7 +1063,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                           children: [
                             Text(
                               "${_is_ntrip_connected?'NTRIP Connected':'NTRIP Not Connected'}",
-                              style:  Theme.of(context).textTheme.headline.copyWith(
+                              style:  Theme.of(context).textTheme.titleSmall.copyWith(
                                 fontFamily: 'GoogleSans',
                                 color: Colors.blueGrey,
                               ),
@@ -1076,7 +1076,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               children: <Widget>[
                                 Text(
                                     "NTRIP Server/Login filled:",
-                                    style: Theme.of(context).textTheme.body2
+                                    style: Theme.of(context).textTheme.bodyText2
                                 ),
                                 Text(
                                     (
@@ -1097,7 +1097,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                     ) ? (
                                         (PrefService.getBool('disable_ntrip') ?? false) ? "Yes but disabled": "Yes"
                                     ) : "No",
-                                    style: Theme.of(context).textTheme.body1
+                                    style: Theme.of(context).textTheme.bodyText1
                                 ),
                               ],
                             ),
@@ -1107,11 +1107,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               children: <Widget>[
                                 Text(
                                     "NTRIP Stream selected:",
-                                    style: Theme.of(context).textTheme.body2
+                                    style: Theme.of(context).textTheme.bodyText2
                                 ),
                                 Text(
                                     PrefService.getString('ntrip_mountpoint') ?? "None",
-                                    style: Theme.of(context).textTheme.body1
+                                    style: Theme.of(context).textTheme.bodyText1
                                 ),
                               ],
                             ),
@@ -1121,11 +1121,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               children: <Widget>[
                                 Text(
                                     "N NTRIP packets received:",
-                                    style: Theme.of(context).textTheme.body2
+                                    style: Theme.of(context).textTheme.bodyText2
                                 ),
                                 Text(
                                     "$_ntrip_packets_count",
-                                    style: Theme.of(context).textTheme.body1
+                                    style: Theme.of(context).textTheme.bodyText1
                                 ),
                               ],
                             ),
@@ -1146,7 +1146,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               children: [
                                 Text(
                                   "<UNDER DEVELOPMENT/>\n\nSorry, dev not done yet - please check again after next update...",
-                                  style:  Theme.of(context).textTheme.headline.copyWith(
+                                  style:  Theme.of(context).textTheme.titleSmall.copyWith(
                                     fontFamily: 'GoogleSans',
                                     color: Colors.blueGrey,
                                   ),
