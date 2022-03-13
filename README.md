@@ -23,7 +23,7 @@ Build instructions
 * If you don't already have an android signing key, create one as per:
 <https://docs.flutter.dev/deployment/android#create-an-upload-keystore>
 
-* Create the file `key.properties` and add your keystore information:
+* Create the file `key.properties` in this folder and add your keystore information:
 ```
 storeFile=/path/to/keystore.jks
 storePassword=*********
