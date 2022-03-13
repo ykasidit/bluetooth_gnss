@@ -15,10 +15,8 @@ These instructions are for Ubuntu GNU/Linux, it is similar in general for other 
 
 * Install the the [Flutter SDK](https://flutter.dev/docs/get-started/install) as per official instructions including the 'Android setup' part.
 
-* In this folder run:
+* Test the flutter sdk:
 `flutter sdk-path`
-
-* Test that it works:
 `flutter doctor`
 
 * In this folder run:
@@ -41,12 +39,12 @@ keyPassword=**********
 `flutter run`
 If all went well, you would see the app now run in your connected phone.
 
-* Build release android installer (apk) file:
+* Try build a release android installer (apk) file:
 `flutter build apk`
 If all went well, it would create the apk file in the folder:
 `build/app/outputs/flutter-apk/app-release.apk`
 
-* Finally, open android studio, and choose to 'Open' this folder and you can edit/run from there and use the previous command when you want to build an apk file.
+* Finally, open android studio, and choose 'Projects' > 'Open' to this folder (or File > Open... menu) and you can edit the source code then run 'main.dart' from there and use the previous command when you want to build an apk file.
 
 
 Initiate connection using external intent
