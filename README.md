@@ -43,8 +43,9 @@ If all went well, it would create the apk file in the folder:
 `build/app/outputs/flutter-apk/app-release.apk`
 
 * Develop in Android studio:
-  - Open android studio, and choose 'Projects' > 'Open' to this folder (or File > Open... menu) and you can edit the source code then run 'main.dart' from there. This is suitable for editing the dart files in the lib folder. UI changes to main.dart can be seen immediately (hot-reload) but function changes or java/engine part changes won't, you need to 'stop' then 'run' main.dart again for the changes to take effect.
-  - However, auto-completion of java code (in the android subfolder) and running of the java unit-tests won't work as this Android Studio is run in a 'flutter' project mode. To edit the engine part and run the java unit tests, simply open the 'android' subfolder of this folder in a new Android Studio instance: File > Open ... choose: bluetooth_gnss > android. After Android Studio is ready, then you can try run some tests like browse on the left panel to libecodroidgnss_parse > java > (test) and right click on 'test_nmea_parse' > Run.
+  - Open android studio, and choose 'Projects' > 'Open' to this folder (or File > Open... menu) and you can edit the source code then run 'main.dart' from there. This is suitable for editing the dart files in the lib folder.
+  - UI changes to main.dart can be seen immediately (hot-reload) on phone but function changes or java/engine part changes won't, you need to 'stop' then 'run' main.dart again for the changes to take effect.
+  - Auto-completion of java code (in the android subfolder) and running of the java unit-tests won't work as this Android Studio is run in a 'flutter' project mode. To edit the engine part and run the java unit tests, simply open the 'android' subfolder of this folder in a new Android Studio instance: File > Open ... choose: bluetooth_gnss > android. After Android Studio is ready, then you can try run some tests like browse on the left panel to libecodroidgnss_parse > java > (test) and right click on 'test_nmea_parse' > Run.
 
 * Use the `flutter build apk` command when you want to build a release apk file.
 
