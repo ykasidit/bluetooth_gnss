@@ -42,7 +42,11 @@ If all went well, you would see the app now run in your connected phone.
 If all went well, it would create the apk file in the folder:
 `build/app/outputs/flutter-apk/app-release.apk`
 
-* Finally, open android studio, and choose 'Projects' > 'Open' to this folder (or File > Open... menu) and you can edit the source code then run 'main.dart' from there and use the previous command when you want to build an apk file.
+* Develop in Android studio:
+  - Open android studio, and choose 'Projects' > 'Open' to this folder (or File > Open... menu) and you can edit the source code then run 'main.dart' from there. This is suitable for editing the dart files in the lib folder.
+  - However, auto-completion of java code (in the android subfolder) and running of the java unit-tests won't work as this Android Studio is run in a 'flutter' project mode. To edit the engine part and run the java unit tests, simply open the 'android' subfolder of this folder in a new Android Studio instance: File > Open ... choose: bluetooth_gnss > android
+
+* Use the `flutter build apk` command when you want to build a release apk file.
 
 
 Initiate connection using external intent
