@@ -1,35 +1,53 @@
 Bluetooth GNSS
 --------------
 
-This is the source code repo for the Bluetooth GNSS app. Connect your Android phone to external Bluetooth GPS, GLONASS, Galileo and BeiDou receivers and use their location.
+Connect your Android phone to external Bluetooth GPS, GLONASS, Galileo and BeiDou receivers and use the received location in your android phone via the mock location provider.
 
-This is the UI part.
-
-The engine part is hosted at <https://github.com/ykasidit/libbluetooth_gnss>.
+Official app is available on Google Play as [Bluetooth GNSS](https://play.google.com/store/apps/details?id=com.clearevo.bluetooth_gnss&hl=en&gl=US)
 
 Build instructions
 -----------
 
-* Download the [Flutter SDK](https://flutter.dev/docs/get-started/install) and add the path to `flutter/bin` to your $PATH
-* Add `flutter.sdk` to the `local.properties` file (not the bin folder)
- ```
- flutter.sdk=/path/to/flutter
- ```
-* Run `flutter pub get` in the *android* directory
-* Create the file `key.properties` and add your keystore information
+These instructions are for Ubuntu GNU/Linux, it is similar in general for other operating systems, please see example flutter command usage for each OS.
+
+* Make sure you have the Android SDK installed and the env $ANDROID_HOME set:
+`echo $ANDROID_HOME`
+
+* Install the the [Flutter SDK](https://flutter.dev/docs/get-started/install) as per official instructions including the 'Android setup' part.
+
+* In this folder run:
+`flutter sdk-path`
+
+* Test that it works:
+`flutter doctor`
+
+* In this folder run:
+`flutter pub get`
+
+* If you don't already have an android signing key, create one as per:
+<https://docs.flutter.dev/deployment/android#create-an-upload-keystore>
+
+* Create the file `key.properties` and add your keystore information:
 ```
 storeFile=/path/to/keystore.jks
 storePassword=*********
 keyAlias=bluetooth_gnss
 keyPassword=**********
 ``` 
-* Install the [Lombok plugin](https://projectlombok.org/setup/android) in Android Studio
-  * Go to `File > Settings > Plugins`
-  * Click on `Browse repositories...`
-  * Search for `Lombok Plugin`
-  * Click on `Install plugin`
-  * Restart Android Studio 
-* Resync project Gradle
+* Connect an android phone with adb working
+`adb devices`
+
+* Try build and run the app in debug mode:
+`flutter run`
+If all went well, you would see the app now run in your connected phone.
+
+* Build release android installer (apk) file:
+`flutter build apk`
+If all went well, it would create the apk file in the folder:
+`build/app/outputs/flutter-apk/app-release.apk`
+
+* Finally, open android studio, and choose to 'Open' this folder and you can edit/run from there and use the previous command when you want to build an apk file.
+
 
 Initiate connection using external intent
 -----------------------------------------
