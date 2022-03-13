@@ -8,9 +8,7 @@ Official app is available on Google Play as [Bluetooth GNSS](https://play.google
 Build instructions
 -----------
 
-These instructions are for Ubuntu GNU/Linux, it is similar in general for other operating systems, please see example flutter command usage for each OS.
-
-* Make sure you have the Android SDK installed and the env $ANDROID_HOME set:
+* Make sure you have the Android SDK installed and test that the env ANDROID_HOME set correctly:
 `echo $ANDROID_HOME`
 
 * Install the the [Flutter SDK](https://flutter.dev/docs/get-started/install) as per official instructions including the 'Android setup' part.
