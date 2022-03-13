@@ -1,0 +1,36 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.clearevo.libbluetooth_gnss_service"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+8-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml
+9        android:targetSdkVersion="30" />
+9-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml
+10
+11    <uses-permission android:name="android.permission.BLUETOOTH" />
+11-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:3:5-68
+11-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:3:22-65
+12    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+12-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:4:5-74
+12-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:4:22-71
+13    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+13-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:5:5-81
+13-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:5:22-78
+14>
+15    <application
+15-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:7:5-13:19
+16        android:allowBackup="true"
+16-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:8:9-35
+17        android:label="@string/app_name"
+17-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:9:9-41
+18        android:supportsRtl="true" >
+18-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:10:9-35
+19        <service android:name="com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service" />
+19-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:12:9-97
+19-->/home/kasidit/android_apps/libbluetooth_gnss/libbluetooth_gnss_service/src/main/AndroidManifest.xml:12:18-94
+20    </application>
+21
+22</manifest>
