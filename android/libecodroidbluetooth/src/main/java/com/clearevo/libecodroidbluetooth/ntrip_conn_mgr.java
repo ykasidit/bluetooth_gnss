@@ -25,7 +25,6 @@ public class ntrip_conn_mgr {
 
     static final String SOURCETABLE_STR = " 200 OK";
     static final String END_SOURCETABLE_STR = "ENDSOURCETABLE";
-    static final String ICY_STR = "ICY 200 OK";
     static final String HTTP_RESPONSE_HEADER_END_FLAG = "\r\n"; //CRLF on its own line signals end of header
     static final String HTTP_200_OK_STR = "200 OK";
     static final int MAX_HTTP_HEADER_LINES = 100;
@@ -150,7 +149,7 @@ public class ntrip_conn_mgr {
             String resp_header_first_line = http_response_header_lines.get(0);
 
             //handle the read http response headers...
-            boolean resp_header_first_line_says_ok = resp_header_first_line.contains(HTTP_200_OK_STR) || resp_header_first_line.contains(ICY_STR);
+            boolean resp_header_first_line_says_ok = resp_header_first_line.contains(HTTP_200_OK_STR);
             if (resp_header_first_line_says_ok) {
                 Log.d(TAG, "resp_header_first_line_says_ok");
             } else {
@@ -172,8 +171,8 @@ public class ntrip_conn_mgr {
             } else {
 
                 //follow through to start inputstream_to_queue_reader_thread which will return data buffers read via callbacks...
-                if (!resp_header_first_line.contains(ICY_STR))
-                    throw new Exception("connect to mount_point failed as server resp_header_first_line does not contain: ["+ICY_STR+"] - resp_header_first_line: " + resp_header_first_line);
+                if (!resp_header_first_line.contains(HTTP_200_OK_STR))
+                    throw new Exception("connect to mount_point failed as server resp_header_first_line does not contain: ["+HTTP_200_OK_STR+"] - resp_header_first_line: " + resp_header_first_line);
 
             }
 
