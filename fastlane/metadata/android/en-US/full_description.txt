@@ -1,0 +1,1 @@
+Connect your Android phone to external Bluetooth GPS, GLONASS, Galileo and BeiDou receivers and use the received location in your android phone via the mock location provider.
