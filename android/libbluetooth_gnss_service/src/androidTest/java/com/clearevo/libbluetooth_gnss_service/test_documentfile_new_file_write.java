@@ -1,7 +1,7 @@
 package com.clearevo.libbluetooth_gnss_service;
 
 import android.content.Context;
-import android.util.Log;
+
 
 import androidx.documentfile.provider.DocumentFile;
 import androidx.test.InstrumentationRegistry;
