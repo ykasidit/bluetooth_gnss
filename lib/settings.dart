@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:preferences/preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:progress_dialog/progress_dialog.dart';
-import 'package:geolocator/geolocator.dart';
 import 'dart:math' show cos, sqrt, asin;
 
 class settings_widget extends StatefulWidget {
@@ -117,16 +116,9 @@ class settings_widget_state extends State<settings_widget> {
               bool last_pos_valid = false;
               if (sort_by_nearest) {
                 try {
-                  Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-                  last_pos_valid = position != null;
+                  last_pos_valid = false;
                   double last_lat = 0;
                   double last_lon = 0;
-                  if (position != null) {
-                    last_pos_valid = true;
-                    last_lat = position.latitude;
-                    last_lon = position.longitude;
-                  }
-
                   print('last_pos_valid: $last_pos_valid $last_lat $last_lon');
 
                   if (last_pos_valid) {

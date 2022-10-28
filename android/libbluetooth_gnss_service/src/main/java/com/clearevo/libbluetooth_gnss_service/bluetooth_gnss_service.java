@@ -28,7 +28,7 @@ import android.os.IBinder;
 import android.os.ParcelUuid;
 
 
-import android.util.Log;
+
 import android.widget.Toast;
 import android.location.LocationManager;
 import android.location.LocationProvider;
@@ -39,12 +39,6 @@ import android.location.Location;
 import androidx.core.app.NotificationCompat;
 import androidx.documentfile.provider.DocumentFile;
 
-import com.clearevo.libecodroidbluetooth.ntrip_conn_callbacks;
-import com.clearevo.libecodroidbluetooth.ntrip_conn_mgr;
-import com.clearevo.libecodroidbluetooth.rfcomm_conn_callbacks;
-import com.clearevo.libecodroidbluetooth.rfcomm_conn_mgr;
-import com.clearevo.libecodroidgnss_parse.gnss_sentence_parser;
-
 import java.io.File;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
@@ -53,8 +47,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.clearevo.libecodroidgnss_parse.gnss_sentence_parser.fromHexString;
-import static com.clearevo.libecodroidgnss_parse.gnss_sentence_parser.toHexString;
+import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
+import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.toHexString;
 
 
 public class bluetooth_gnss_service extends Service implements rfcomm_conn_callbacks, gnss_sentence_parser.gnss_parser_callbacks, ntrip_conn_callbacks {
@@ -102,12 +96,15 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     boolean m_ble_gap_scan_mode = false;
     OutputStream m_log_bt_rx_fos = null;
     OutputStream m_log_bt_rx_csv_fos = null;
+    OutputStream m_log_operations_fos = null;
     long log_bt_rx_bytes_written = 0;
-
+    public static bluetooth_gnss_service curInstance = null;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // If we get killed, after returning from here, restart
-        Log.d(TAG, "onStartCommand");
+        log(TAG, "onStartCommand");
+
+        curInstance = this;
 
         if (intent != null) {
             try {
@@ -120,16 +117,16 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
                     m_log_bt_rx = intent.getBooleanExtra("log_bt_rx", false);
                     m_disable_ntrip = intent.getBooleanExtra("disable_ntrip", false);
-                    Log.d(TAG, "m_secure_rfcomm: " + m_secure_rfcomm);
-                    Log.d(TAG, "m_log_bt_rx: " + m_log_bt_rx);
-                    Log.d(TAG, "m_disable_ntrip: " + m_disable_ntrip);
+                    log(TAG, "m_secure_rfcomm: " + m_secure_rfcomm);
+                    log(TAG, "m_log_bt_rx: " + m_log_bt_rx);
+                    log(TAG, "m_disable_ntrip: " + m_disable_ntrip);
                     String cn = intent.getStringExtra("activity_class_name");
                     m_start_intent = intent;
                     if (cn == null) {
                         throw new Exception("activity_class_name not specified");
                     }
                     m_target_activity_class = Class.forName(cn);
-                    Log.d(TAG, "m_target_activity_class: "+m_target_activity_class.getCanonicalName());
+                    log(TAG, "m_target_activity_class: "+m_target_activity_class.getCanonicalName());
                     if (!intent.hasExtra("activity_icon_id")) {
                         throw new Exception("activity_icon_id not specified");
                     }
@@ -143,12 +140,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 }
             } catch (Exception e) {
                 String msg = "bluetooth_gnss_service: startservice: parse intent failed - cannot start... - exception: "+Log.getStackTraceString(e);
-                Log.d(TAG, msg);
+                log(TAG, msg);
             }
 
         } else {
             String msg = "bluetooth_gnss_service: startservice: null intent - cannot start...";
-            Log.d(TAG, msg);
+            log(TAG, msg);
             toast(msg);
         }
 
@@ -164,22 +161,22 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             try {
                 set_log_folder(Uri.parse(log_uri));
             } catch (Throwable tr) {
-                Log.d(TAG, "set_log_uri exception: "+Log.getStackTraceString(tr));
+                log(TAG, "set_log_uri exception: "+Log.getStackTraceString(tr));
             }
         }
 
         if (m_ble_gap_scan_mode) {
-            Log.d(TAG, "onStartCommand pre call start_forground m_ble_gap_scan_mode "+m_ble_gap_scan_mode);
+            log(TAG, "onStartCommand pre call start_forground m_ble_gap_scan_mode "+m_ble_gap_scan_mode);
             start_foreground("Scanning GPS broadcasts...", "", "");
-            Log.d(TAG, "onStartCommand post call start_forground m_ble_gap_scan_mode "+m_ble_gap_scan_mode);
+            log(TAG, "onStartCommand post call start_forground m_ble_gap_scan_mode "+m_ble_gap_scan_mode);
             handle_ble_gap_scan_enable_changed();
         } else {
             if (m_bdaddr == null) {
                 String msg = "bluetooth_gnss_service: startservice: Target Bluetooth device not specifed - cannot start...";
-                Log.d(TAG, msg);
+                log(TAG, msg);
                 toast(msg);
             } else {
-                Log.d(TAG, "onStartCommand got bdaddr");
+                log(TAG, "onStartCommand got bdaddr");
                 int start_ret = connect(m_bdaddr, m_secure_rfcomm, getApplicationContext());
                 if (start_ret == 0) {
                     start_foreground("Connecting...", "target device: " + m_bdaddr, "");
@@ -187,12 +184,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 m_all_ntrip_params_specified = true;
                 for (String key : REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
                     if (m_start_intent.getStringExtra(key) == null || m_start_intent.getStringExtra(key).length() == 0) {
-                        Log.d(TAG, "key: " + key + "got null or empty string so m_all_ntrip_params_specified false");
+                        log(TAG, "key: " + key + "got null or empty string so m_all_ntrip_params_specified false");
                         m_all_ntrip_params_specified = false;
                         break;
                     }
                 }
-                Log.d(TAG, "m_all_ntrip_params_specified: " + m_all_ntrip_params_specified);
+                log(TAG, "m_all_ntrip_params_specified: " + m_all_ntrip_params_specified);
                 //ntrip connection would start after we get next gga bashed on this m_all_ntrip_params_specified flag
             }
         }
@@ -210,7 +207,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             if (result == null) {
-                Log.d(TAG, "WARNING: onScanResult got null result");
+                log(TAG, "WARNING: onScanResult got null result");
                 return;
             }
             byte[] scan_record_bytes = null;
@@ -219,7 +216,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             if (scan_record_bytes == null) {
                 scan_record_bytes = new byte[0];
             }
-            Log.d(TAG, "onScanResult Device Name: " + result.getDevice().getName() + " rssi: " + result.getRssi() + " scanrecord bytes: " + toHexString(scan_record_bytes));
+            log(TAG, "onScanResult Device Name: " + result.getDevice().getName() + " rssi: " + result.getRssi() + " scanrecord bytes: " + toHexString(scan_record_bytes));
             //ex: 02 01 1A 04 09 45 44 47 03 03 AA FE 12 16 AA FE 30 00 E1 6A 6D FD 03 10 9B 91 3C 38 50 32 28 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
             parse_scan_record_bytes_and_set_location(scan_record_bytes);
             m_last_BLE_GAP_DEV_NAME = result.getDevice().getName();
@@ -246,7 +243,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         }
         try {
             ecodroidgps_gap_buffer_parser.ecodroidgps_broadcasted_location loc = ecodroidgps_gap_buffer_parser.parse(gap_buffer);
-            Log.d(TAG, "ECODROIDGPS_BROADCAST_MODE got broadcast: lat: "+loc.lat+" lon: "+loc.lon+" timestamp: "+loc.timestamp);
+            log(TAG, "ECODROIDGPS_BROADCAST_MODE got broadcast: lat: "+loc.lat+" lon: "+loc.lon+" timestamp: "+loc.timestamp);
 
             int n_sats = 0;
             double lat = loc.lat, lon = loc.lon, alt = 0.0, hdop = 0.0, speed = 0.0, bearing = 0.0/0.0;
@@ -260,31 +257,31 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             m_gnss_parser.put_param("", "lon", lon);
             m_gnss_parser.put_param("", "mock_location_set_ts", System.currentTimeMillis());
             HashMap<String, Object> param_map = m_gnss_parser.getM_parsed_params_hashmap();
-            Log.d(TAG, "ble gap lat: "+param_map.get("lat_double_07_str"));
-            Log.d(TAG, "ble gap lon: "+param_map.get("lon_double_07_str"));
+            log(TAG, "ble gap lat: "+param_map.get("lat_double_07_str"));
+            log(TAG, "ble gap lon: "+param_map.get("lon_double_07_str"));
             try {
                 if (m_activity_for_nmea_param_callbacks != null) {
                     m_activity_for_nmea_param_callbacks.on_updated_nmea_params(param_map);
                 }
             } catch (Exception e) {
-                Log.d(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: "+Log.getStackTraceString(e));
+                log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: "+Log.getStackTraceString(e));
             }
 
         } catch (Throwable tr) {
-            Log.d(TAG, "parse_scan_record_bytes_and_set_location exception: "+Log.getStackTraceString(tr));
+            log(TAG, "parse_scan_record_bytes_and_set_location exception: "+Log.getStackTraceString(tr));
         }
     }
 
     public void handle_ble_gap_scan_enable_changed() {
-        Log.d(TAG, "handle_ble_gap_scan_enable_changed() m_ble_gap_scan_mode "+ m_ble_gap_scan_mode);
+        log(TAG, "handle_ble_gap_scan_enable_changed() m_ble_gap_scan_mode "+ m_ble_gap_scan_mode);
         if (m_ble_gap_scan_mode) {
             if (is_ble_gap_scan_thread_running()) {
-                Log.d(TAG, "handle_ble_gap_scan_enable_changed() m_ble_gap_scan_mode "+ m_ble_gap_scan_mode+" already running so omit");
+                log(TAG, "handle_ble_gap_scan_enable_changed() m_ble_gap_scan_mode "+ m_ble_gap_scan_mode+" already running so omit");
             } else {
                 ble_gap_scan_thread = new Thread() {
                     public void run ()
                     {
-                        Log.d(TAG,"ble_gap_scan_thread START");
+                        log(TAG,"ble_gap_scan_thread START");
                         BluetoothLeScanner btLeScanner = null;
                         try {
 
@@ -303,13 +300,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             btLeScanner = btAdapter.getBluetoothLeScanner();
 
                             while (ble_gap_scan_thread == this) {
-                                Log.d(TAG, "btLeScanner.startScan(leScanCallback); START");
+                                log(TAG, "btLeScanner.startScan(leScanCallback); START");
                                 btLeScanner.startScan(filters, settings, leScanCallback);
-                                Log.d(TAG, "btLeScanner.startScan(leScanCallback); DONE");
+                                log(TAG, "btLeScanner.startScan(leScanCallback); DONE");
                                 Thread.sleep(BLE_GAP_SCAN_LOOP_DURAITON_MILLIS);
                             }
                         } catch (Throwable tr) {
-                            Log.d(TAG, "ble_gap_scan_thread hash "+this.hashCode()+ " failed with exception: "+Log.getStackTraceString(tr));
+                            log(TAG, "ble_gap_scan_thread hash "+this.hashCode()+ " failed with exception: "+Log.getStackTraceString(tr));
                         } finally {
                             try {
                                 if (btLeScanner != null) {
@@ -317,7 +314,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                 }
                             } catch (Throwable tr) {}
                         }
-                        Log.d(TAG,"ble_gap_scan_thread END");
+                        log(TAG,"ble_gap_scan_thread END");
                     }
                 };
                 ble_gap_scan_thread.start();
@@ -338,33 +335,33 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         }
 
         if (is_trying_ntrip_connect()) {
-            Log.d(TAG, "start_ntrip_conn_if_specified - ntrip already is_trying_ntrip_connect - omit this call");
+            log(TAG, "start_ntrip_conn_if_specified - ntrip already is_trying_ntrip_connect - omit this call");
             return;
         }
 
         if (is_ntrip_connected()) {
-            Log.d(TAG, "start_ntrip_conn_if_specified - ntrip already connected - omit this call");
+            log(TAG, "start_ntrip_conn_if_specified - ntrip already connected - omit this call");
             return;
         }
 
         try {
             if (System.currentTimeMillis() - last_ntrip_connect_retry > 10000) {
                 if (m_all_ntrip_params_specified) {
-                    Log.d(TAG, "start_ntrip_conn_if_specified call connect_ntrip() since m_all_ntrip_params_specified true");
+                    log(TAG, "start_ntrip_conn_if_specified call connect_ntrip() since m_all_ntrip_params_specified true");
                     int port = -1;
                     try {
                         port = Integer.parseInt(m_start_intent.getStringExtra("ntrip_port"));
                         connect_ntrip(m_start_intent.getStringExtra("ntrip_host"), port, m_start_intent.getStringExtra("ntrip_mountpoint"), m_start_intent.getStringExtra("ntrip_user"), m_start_intent.getStringExtra("ntrip_pass"));
                     } catch (Exception e) {
-                        Log.d(TAG, "call connect_ntrip exception: " + Log.getStackTraceString(e));
+                        log(TAG, "call connect_ntrip exception: " + Log.getStackTraceString(e));
                     }
                 } else {
-                    Log.d(TAG, "dont call connect_ntrip() since m_all_ntrip_params_specified false");
+                    log(TAG, "dont call connect_ntrip() since m_all_ntrip_params_specified false");
                 }
                 last_ntrip_connect_retry = System.currentTimeMillis();
             }
         } catch (Exception e) {
-            Log.d(TAG,"start_ntrip_conn_if_specified exception: "+Log.getStackTraceString(e));
+            log(TAG,"start_ntrip_conn_if_specified exception: "+Log.getStackTraceString(e));
         }
     }
 
@@ -399,19 +396,19 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     public void stop_auto_reconnect_thread() {
 
-        Log.d(TAG, "stop_auto_reconnect_thread start");
+        log(TAG, "stop_auto_reconnect_thread start");
         if (m_auto_reconnect_thread != null && m_auto_reconnect_thread.isAlive()) {
             //interrupt old thread so it will end...
-            Log.d(TAG, "stop_auto_reconnect_thread1.0");
+            log(TAG, "stop_auto_reconnect_thread1.0");
             try {
                 m_auto_reconnect_thread.interrupt();
-                Log.d(TAG, "stop_auto_reconnect_thread1.1");
+                log(TAG, "stop_auto_reconnect_thread1.1");
             } catch (Exception e) {
-                Log.d(TAG, "interrrupt old m_auto_reconnect_thread failed exception: "+Log.getStackTraceString(e));
+                log(TAG, "interrrupt old m_auto_reconnect_thread failed exception: "+Log.getStackTraceString(e));
             }
-            Log.d(TAG, "stop_auto_reconnect_thread1.2");
+            log(TAG, "stop_auto_reconnect_thread1.2");
         }
-        Log.d(TAG, "stop_auto_reconnect_thread end");
+        log(TAG, "stop_auto_reconnect_thread end");
     }
 
     void start_auto_reconnect_thread()
@@ -424,7 +421,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
                 public void run(){
 
-                    Log.d(TAG, "auto-reconnect thread: "+this.hashCode()+" START");
+                    log(TAG, "auto-reconnect thread: "+this.hashCode()+" START");
 
                     try {
 
@@ -432,7 +429,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
                             //connect() must be run from main service thread in case it needs to post
                             if (!is_bt_connected() && !is_trying_bt_connect()) {
-                                Log.d(TAG, "auto-reconnect thread - has target dev and not connected - try reconnect...");
+                                log(TAG, "auto-reconnect thread - has target dev and not connected - try reconnect...");
                                 m_handler.post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -441,23 +438,23 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                     }
                                 });
                             } else {
-                                Log.d(TAG, "auto-reconnect thread - likely already connecting or already connected or no target dev");
+                                log(TAG, "auto-reconnect thread - likely already connecting or already connected or no target dev");
                             }
 
                             try {
-                                Log.d(TAG, "auto-reconnect thread: " + this.hashCode() + " - start sleep");
+                                log(TAG, "auto-reconnect thread: " + this.hashCode() + " - start sleep");
                                 Thread.sleep(AUTO_RECONNECT_MILLIS);
                             } catch (InterruptedException e) {
-                                Log.d(TAG, "auto-reconnect thread: " + this.hashCode() + " - sleep interrupted likely by close() - break out of loop and end now");
+                                log(TAG, "auto-reconnect thread: " + this.hashCode() + " - sleep interrupted likely by close() - break out of loop and end now");
                                 break;
                             }
 
                         }
                     } catch (Throwable tr) {
-                        Log.d(TAG, "auto-reconnect thread exception: "+Log.getStackTraceString(tr));
+                        log(TAG, "auto-reconnect thread exception: "+Log.getStackTraceString(tr));
                     }
 
-                    Log.d(TAG, "auto-reconnect thread: "+this.hashCode()+" END");
+                    log(TAG, "auto-reconnect thread: "+this.hashCode()+" END");
                 }
 
             };
@@ -497,7 +494,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 } else {
                     //ok
                 }
-                Log.d(TAG, "using dev: " + dev.getAddress());
+                log(TAG, "using dev: " + dev.getAddress());
                 g_rfcomm_mgr = new rfcomm_conn_mgr(dev, secure, this, context);
 
                 start_connecting_thread();
@@ -505,7 +502,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             ret = 0;
         } catch (Exception e) {
             String emsg = Log.getStackTraceString(e);
-            Log.d(TAG, "connect() exception: "+emsg);
+            log(TAG, "connect() exception: "+emsg);
             toast("Connect failed: "+emsg);
         }
 
@@ -515,15 +512,15 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     public int connect_ntrip(String host, int port, String first_mount_point, String user, String pass)
     {
-        Log.d(TAG, "connect_ntrip set m_ntrip_conn_mgr start");
+        log(TAG, "connect_ntrip set m_ntrip_conn_mgr start");
 
         if (is_trying_ntrip_connect()) {
-            Log.d(TAG, "connect_ntrip - omit as already trying ntrip_connect");
+            log(TAG, "connect_ntrip - omit as already trying ntrip_connect");
             return 0;
         }
 
         if (is_ntrip_connected()) {
-            Log.d(TAG, "connect_ntrip - omit as already trying ntrip_connected");
+            log(TAG, "connect_ntrip - omit as already trying ntrip_connected");
             return 0;
         }
 
@@ -536,7 +533,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
         try {
             m_ntrip_conn_mgr = new ntrip_conn_mgr(host, port, first_mount_point, user, pass, this);
-            Log.d(TAG, "connect_ntrip set m_ntrip_conn_mgr done");
+            log(TAG, "connect_ntrip set m_ntrip_conn_mgr done");
             //need new thread here else will fail network on mainthread below...
             m_ntrip_connecting_thread = new Thread() {
                 public void run()
@@ -544,7 +541,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     try {
                         m_ntrip_conn_mgr.connect();
                     } catch (Exception e) {
-                        Log.d(TAG, "m_ntrip_conn_mgr.conenct() exception: "+Log.getStackTraceString(e));
+                        log(TAG, "m_ntrip_conn_mgr.conenct() exception: "+Log.getStackTraceString(e));
                         final Exception ex = e;
                         try {
                             m_handler.post(
@@ -562,7 +559,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             m_ntrip_connecting_thread.start();
             return 0;
         } catch (Exception e) {
-            Log.d(TAG, "connect_ntrip exception: "+Log.getStackTraceString(e));
+            log(TAG, "connect_ntrip exception: "+Log.getStackTraceString(e));
             m_ntrip_conn_mgr = null;
         }
         return -1;
@@ -581,12 +578,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public void on_read(byte[] read_buff) {
 
         try {
-            //Log.d(TAG, "ntrip on_read: "+read_buff.toString());
+            //log(TAG, "ntrip on_read: "+read_buff.toString());
             m_ntrip_cb_count += 1;
             g_rfcomm_mgr.add_send_buffer(read_buff);
 	    m_ntrip_cb_count_added_to_send_buffer += 1;
         } catch (Exception e) {
-            Log.d(TAG, "ntrip callback on_readline exception: "+ Log.getStackTraceString(e));
+            log(TAG, "ntrip callback on_readline exception: "+ Log.getStackTraceString(e));
         }
     }
     
@@ -594,7 +591,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     //return true if was connected
     public boolean close()
     {
-        Log.d(TAG, "close()0");
+        log(TAG, "close()0");
         deactivate_mock_location();
 
         if (is_ble_gap_scan_thread_running()) {
@@ -607,16 +604,16 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         boolean was_connected = false;
 
         if (g_rfcomm_mgr != null) {
-            Log.d(TAG, "close()3");
+            log(TAG, "close()3");
             was_connected = g_rfcomm_mgr.is_bt_connected();
             g_rfcomm_mgr.close();
-            Log.d(TAG, "close()4");
+            log(TAG, "close()4");
         }
 
-        Log.d(TAG, "close() m_ntrip_conn_mgr: "+m_ntrip_conn_mgr);
+        log(TAG, "close() m_ntrip_conn_mgr: "+m_ntrip_conn_mgr);
         if (m_ntrip_conn_mgr != null) {
             try {
-                Log.d(TAG, "close() m_ntrip_conn_mgr.close()");
+                log(TAG, "close() m_ntrip_conn_mgr.close()");
                 m_ntrip_conn_mgr.close();
             } catch (Exception e) {
             }
@@ -636,6 +633,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 m_log_bt_rx_csv_fos = null;
             }
         } catch (Exception e) {}
+        try {
+            if (m_log_operations_fos != null) {
+                m_log_operations_fos.close();
+                m_log_operations_fos = null;
+            }
+        } catch (Exception e) {}
         log_file_uri = null;
         log_folder_uri = null;
 
@@ -649,11 +652,11 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             try {
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
-                Log.d(TAG, "toast() exception: "+Log.getStackTraceString(e));
+                log(TAG, "toast() exception: "+Log.getStackTraceString(e));
             }
-            Log.d(TAG, "toast msg: "+msg);
+            log(TAG, "toast msg: "+msg);
         } else {
-            Log.d(TAG, "m_is_bound false so omit: toast msg: "+msg);
+            log(TAG, "m_is_bound false so omit: toast msg: "+msg);
         }
 
 
@@ -666,11 +669,11 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             try {
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
             } catch (Exception e) {
-                Log.d(TAG, "toast() exception: "+Log.getStackTraceString(e));
+                log(TAG, "toast() exception: "+Log.getStackTraceString(e));
             }
-            Log.d(TAG, "toast msg: "+msg);
+            log(TAG, "toast msg: "+msg);
         } else {
-            Log.d(TAG, "m_is_bound false so omit: toast msg: "+msg);
+            log(TAG, "m_is_bound false so omit: toast msg: "+msg);
         }
 
 
@@ -678,7 +681,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     public void on_rfcomm_connected()
     {
-        Log.d(TAG, "on_rfcomm_connected()");
+        log(TAG, "on_rfcomm_connected()");
         m_handler.post(
                 new Runnable() {
                     @Override
@@ -698,7 +701,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         g_rfcomm_mgr.add_send_buffer(fromHexString("B5 62 0A 04 00 00 0E 34"));  //poll ubx-mon-ver for hardware/firmware info of the receiver
                         g_rfcomm_mgr.add_send_buffer(fromHexString("B5 62 0A 28 00 00 32 A0"));  //poll ubx-mon-gnss default system-settings
                     } catch (Exception e) {
-                        Log.d(TAG, "m_ubx_send_enable_extra_used_packets exception: "+Log.getStackTraceString(e));
+                        log(TAG, "m_ubx_send_enable_extra_used_packets exception: "+Log.getStackTraceString(e));
                     }
                 }
             }.start();
@@ -709,7 +712,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     public void on_rfcomm_disconnected()
     {
-        Log.d(TAG, "on_rfcomm_disconnected() m_auto_reconnect: "+m_auto_reconnect);
+        log(TAG, "on_rfcomm_disconnected() m_auto_reconnect: "+m_auto_reconnect);
         m_handler.post(
                 new Runnable() {
                     @Override
@@ -739,7 +742,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                 }
                             }
                     );
-                    Log.d(TAG, "g_rfcomm_mgr connect exception: "+Log.getStackTraceString(e));
+                    log(TAG, "g_rfcomm_mgr connect exception: "+Log.getStackTraceString(e));
                 }
             }
         };
@@ -765,34 +768,53 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     if (m_log_bt_rx_fos == null) {
                         //ref: https://stackoverflow.com/questions/61118918/create-new-file-in-the-directory-returned-by-intent-action-open-document-tree
                         DocumentFile dd = DocumentFile.fromTreeUri(getApplicationContext(), log_folder_uri);
+                        DocumentFile lf = dd.createFile("text/plain", (log_name_sdf.format(new Date()) + "_operations_log.txt"));
                         DocumentFile df = dd.createFile("text/plain", (log_name_sdf.format(new Date()) + "_rx_log.txt"));
                         DocumentFile df_csv = dd.createFile("text/csv", (log_name_sdf.format(new Date()) + "_location_log.csv"));
                         log_file_uri = df.getUri();
-                        Log.d(TAG, "log_bt_rx: log_fp: " + df.getUri().toString());
+                        log(TAG, "log_bt_rx: log_fp: " + df.getUri().toString());
                         log_bt_rx_bytes_written = 0;
+                        m_log_operations_fos = getApplicationContext().getContentResolver().openOutputStream(lf.getUri());
                         m_log_bt_rx_fos = getApplicationContext().getContentResolver().openOutputStream(df.getUri());
                         m_log_bt_rx_csv_fos = getApplicationContext().getContentResolver().openOutputStream(df_csv.getUri());
                         m_log_bt_rx_csv_fos.write("time,lat,lon,alt\n".getBytes());
                         m_log_bt_rx_csv_fos.flush();
                         toast("Logging to: "+log_folder_uri.getPath());
-                        Log.d(TAG, "log_bt_rx: m_log_bt_rx_fos ready");
+                        log(TAG, "log_bt_rx: m_log_bt_rx_fos ready");
                     }
                     if (m_log_bt_rx_fos != null) {
                         m_log_bt_rx_fos.write(read_buf);
                         log_bt_rx_bytes_written += read_buf.length;
-                        //Log.d(TAG, "log_bt_rx: written n bytes: "+read_buf.length);
+                        //log(TAG, "log_bt_rx: written n bytes: "+read_buf.length);
                     }
                 }
             }
         } catch (Throwable tr) {
-            Log.d(TAG, "log_bt_rx exception: "+Log.getStackTraceString(tr));
+            log(TAG, "log_bt_rx exception: "+Log.getStackTraceString(tr));
+        }
+    }
+
+    public static void log(String msg)
+    {
+        log(TAG, msg);
+    }
+
+    public static void log(String tag, String msg)
+    {
+        Log.d(tag, msg);
+        if (curInstance != null) {
+            try {
+                curInstance.m_log_operations_fos.write(msg.getBytes());
+            } catch (Throwable tr) {
+                Log.d(tag, "WARNING: log curInstance failed exception: "+Log.getStackTraceString(tr));
+            }
         }
     }
 
     public void on_readline(byte[] readline)
     {
         try {
-            //Log.d(TAG, "rfcomm on_readline: "+new String(readline, "ascii"));
+            //log(TAG, "rfcomm on_readline: "+new String(readline, "ascii"));
             log_bt_rx(readline);
             String parsed_nmea = m_gnss_parser.parse(readline);
             if (parsed_nmea != null && parsed_nmea.length() > 6 && parsed_nmea.substring(3).startsWith("GGA")) {
@@ -801,13 +823,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     start_ntrip_conn_if_specified_but_not_connected();
                 }
                 if (m_send_gga_to_ntrip && is_ntrip_connected()) {
-                    Log.d(TAG, "consider send gga to ntrip if not sent since millis: " + SEND_GGA_TO_NTRIP_EVERY_MILLIS);
+                    log(TAG, "consider send gga to ntrip if not sent since millis: " + SEND_GGA_TO_NTRIP_EVERY_MILLIS);
                     long now = System.currentTimeMillis();
                     if (now >= m_last_ntrip_gga_send_ts) {
                         if (now - m_last_ntrip_gga_send_ts > SEND_GGA_TO_NTRIP_EVERY_MILLIS) {
                             m_last_ntrip_gga_send_ts = now;
                             String send_str = parsed_nmea.trim() + "\r\n";
-                            Log.d(TAG, "yes send to ntrip now: "+send_str);
+                            log(TAG, "yes send to ntrip now: "+send_str);
                             m_ntrip_conn_mgr.send_buff_to_server(send_str.getBytes("ascii"));
                         }
                     } else {
@@ -816,13 +838,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 }
             }
         } catch (Exception e) {
-            Log.d(TAG, "bluetooth_gnss_service on_readline parse exception: "+Log.getStackTraceString(e));
+            log(TAG, "bluetooth_gnss_service on_readline parse exception: "+Log.getStackTraceString(e));
         }
     }
 
     public void on_readline_stream_connected()
     {
-        Log.d(TAG, "on_readline_stream_connected()");
+        log(TAG, "on_readline_stream_connected()");
         m_handler.post(
                 new Runnable() {
                     @Override
@@ -836,7 +858,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     public void on_readline_stream_closed()
     {
-        Log.d(TAG, "on_readline_stream_closed()");
+        log(TAG, "on_readline_stream_closed()");
         m_handler.post(
                 new Runnable() {
                     @Override
@@ -849,25 +871,25 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
     public void on_target_tcp_connected() {
-        Log.d(TAG, "on_target_tcp_connected()");
+        log(TAG, "on_target_tcp_connected()");
         m_last_ntrip_gga_send_ts = 0;
     }
 
     public void on_target_tcp_disconnected(){
-        Log.d(TAG, "on_target_tcp_disconnected()");
+        log(TAG, "on_target_tcp_disconnected()");
     }
 
     @Override
     public void onCreate() {
-        Log.d(TAG, "onCreate()");
+        log(TAG, "onCreate()");
         super.onCreate();
     }
 
     void start_foreground(String title, String text, String ticker)
     {
-        Log.d(TAG, "start_forgroud 0");
+        log(TAG, "start_forgroud 0");
         startForeground(1, getMyActivityNotification(title, text, ticker));
-        Log.d(TAG, "start_forgroud end");
+        log(TAG, "start_forgroud end");
     }
 
     String notification_channel_id = "BLUETOOTH_GNSS_CHANNEL_ID";
@@ -919,22 +941,22 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     public static boolean is_location_enabled(Context context)
     {
-        Log.d(TAG, "is_location_enabled() 0");
+        log(TAG, "is_location_enabled() 0");
         LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         boolean gps_enabled = false;
 
         try {
-            Log.d(TAG, "is_location_enabled() getting providers");
+            log(TAG, "is_location_enabled() getting providers");
             List<String> providers = lm.getAllProviders();
             for (String p : providers) {
-                Log.d(TAG,"location provider enabled: "+p);
+                log(TAG,"location provider enabled: "+p);
             }
 
-            Log.d(TAG, "is_location_enabled() 1");
+            log(TAG, "is_location_enabled() 1");
 
             gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         } catch(Exception e) {
-            Log.d(TAG, "check gps_enabled exception: "+Log.getStackTraceString(e));
+            log(TAG, "check gps_enabled exception: "+Log.getStackTraceString(e));
         }
         return gps_enabled;
 
@@ -947,18 +969,18 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         try {
 
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                //Log.d(TAG,"is_mock_location_enabled Build.VERSION.SDK_INT >= Build.VERSION_CODES.M");
+                //log(TAG,"is_mock_location_enabled Build.VERSION.SDK_INT >= Build.VERSION_CODES.M");
                 AppOpsManager opsManager = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
                 mock_enabled = (opsManager.checkOp(AppOpsManager.OPSTR_MOCK_LOCATION, app_uid, app_id_string)== AppOpsManager.MODE_ALLOWED);
             } else {
                 // in marshmallow this will always return true
-                //Log.d(TAG,"is_mock_location_enabled older models");
+                //log(TAG,"is_mock_location_enabled older models");
                 mock_enabled = !android.provider.Settings.Secure.getString(context.getContentResolver(), "mock_location").equals("0");
             }
         } catch(Exception e) {
-            Log.d(TAG, "check mock_enabled exception: "+Log.getStackTraceString(e));
+            log(TAG, "check mock_enabled exception: "+Log.getStackTraceString(e));
         }
-        //Log.d(TAG,"is_mock_location_enabled ret "+mock_enabled);
+        //log(TAG,"is_mock_location_enabled ret "+mock_enabled);
         return mock_enabled;
     }
 
@@ -968,15 +990,15 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
         try {
             if (bt_gnss_test_debug_mock_location_1_1_mode_flag.isFile()) {
-                Log.d(TAG, "NOTE: bt_gnss_test_debug_mock_location_1_1_mode_flag exists - overriding lat, lon to 1, 1");
+                log(TAG, "NOTE: bt_gnss_test_debug_mock_location_1_1_mode_flag exists - overriding lat, lon to 1, 1");
                 latitude = 1;
                 longitude = 1;
             }
         } catch (Throwable tr) {
-            Log.d(TAG, "WARNING: check bt_gnss_test_debug_mock_location_1_1_mode_flag exception: "+Log.getStackTraceString(tr));
+            log(TAG, "WARNING: check bt_gnss_test_debug_mock_location_1_1_mode_flag exception: "+Log.getStackTraceString(tr));
         }
 
-        Log.d(TAG, "setMock accuracy_meters: "+accuracy);
+        log(TAG, "setMock accuracy_meters: "+accuracy);
 
         activate_mock_location(); //this will check a static flag and not re-activate if already active
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -990,7 +1012,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         if (!Double.isNaN(bearing))
             newLocation.setBearing(bearing);
         else {
-            //Log.d(TAG, "bearing is nan so not setting in newlocation");
+            //log(TAG, "bearing is nan so not setting in newlocation");
         }
         newLocation.setSpeed(speed);
         if (n_sats > 0) {
@@ -1005,18 +1027,18 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         locationManager.setTestProviderStatus(LocationManager.GPS_PROVIDER,
                 LocationProvider.AVAILABLE,
                 null,System.currentTimeMillis());
-        Log.d(TAG, "setMock lat: "+newLocation.getLatitude());
-        Log.d(TAG, "setMock lon: "+newLocation.getLongitude());
+        log(TAG, "setMock lat: "+newLocation.getLatitude());
+        log(TAG, "setMock lon: "+newLocation.getLongitude());
         if (newLocation.getExtras() != null) {
-            Log.d(TAG, "setMock satellites: " + newLocation.getExtras().getInt("satellites"));
+            log(TAG, "setMock satellites: " + newLocation.getExtras().getInt("satellites"));
         }
         locationManager.setTestProviderLocation(LocationManager.GPS_PROVIDER, newLocation);
     }
 
     private void deactivate_mock_location() {
-        Log.d(TAG, "deactivate_mock_location0");
+        log(TAG, "deactivate_mock_location0");
         if (is_mock_location_active()) {
-            Log.d(TAG, "deactivate_mock_location1");
+            log(TAG, "deactivate_mock_location1");
             try {
                 LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
                 locationManager.setTestProviderEnabled(LocationManager.GPS_PROVIDER, false);
@@ -1031,12 +1053,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             }
                         }
                 );
-                Log.d(TAG, "deactivate_mock_location success");
+                log(TAG, "deactivate_mock_location success");
             } catch (Exception e) {
-                Log.d(TAG, "deactivate_mock_location exception: " + Log.getStackTraceString(e));
+                log(TAG, "deactivate_mock_location exception: " + Log.getStackTraceString(e));
             }
         }
-        Log.d(TAG, "deactivate_mock_location return");
+        log(TAG, "deactivate_mock_location return");
     }
 
     private void activate_mock_location() {
@@ -1067,7 +1089,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             } catch (Exception e) {
                 String st = Log.getStackTraceString(e);
                 if (st.contains("already exists")) {
-                    Log.d(TAG, "activate_mock_location exception but already exits so set success flag");
+                    log(TAG, "activate_mock_location exception but already exits so set success flag");
                     g_mock_location_active = true;
                     m_handler.post(
                             new Runnable() {
@@ -1079,7 +1101,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             }
                     );
                 }
-                Log.d(TAG, "activate_mock_location exception: " + st);
+                log(TAG, "activate_mock_location exception: " + st);
 
             }
         }
@@ -1132,7 +1154,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     @Override
     public void on_updated_nmea_params(HashMap<String, Object> params_map) {
 
-        Log.d(TAG, "service: on_updated_nmea_params() start");
+        log(TAG, "service: on_updated_nmea_params() start");
         //try set_mock
         double lat = 0.0, lon = 0.0, alt = 0.0, hdop = 0.0, speed = 0.0, bearing = 0.0/0.0;
         int n_sats = 0;
@@ -1149,10 +1171,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         if (params_map.containsKey(ellips_height_key)) {
                             alt_is_ellipsoidal = true;
                             alt = (double) params_map.get(ellips_height_key);
-                            Log.d(TAG, "ellips_height_key valid");
+                            log(TAG, "ellips_height_key valid");
                         } else {
                             alt = (double) params_map.get(talker+"_alt");
-                            Log.d(TAG, "ellips_height_key not valid");
+                            log(TAG, "ellips_height_key not valid");
                         }
 
                         for (String sk : SATS_USED_KEYS) {
@@ -1173,12 +1195,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             } else if (params_map.containsKey(talker+"_course")) {  // value from RMC (RMC course = VTG true course)
                                 course = params_map.get(talker+"_course");
                             }
-                            Log.d(TAG, "course: "+course);
+                            log(TAG, "course: "+course);
                             if (course != null) {
                                 bearing = (double) course;
                             }
                         } catch (Exception e) {
-                            Log.d(TAG, "get course failed exception: "+Log.getStackTraceString(e));
+                            log(TAG, "get course failed exception: "+Log.getStackTraceString(e));
                         }
                         double accuracy = -1.0;
                         if (params_map.containsKey("UBX_POSITION_hAcc")) {
@@ -1205,7 +1227,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         m_gnss_parser.put_param("", "mock_location_set_ts", System.currentTimeMillis());
                         if (log_file_uri != null) {
                             m_gnss_parser.put_param("", "logfile_uri", log_file_uri.toString());
-                            Log.d(TAG, "log_file_uri.toString() "+log_file_uri.toString());
+                            log(TAG, "log_file_uri.toString() "+log_file_uri.toString());
                             String ls = log_file_uri.getLastPathSegment();
                             if (ls.contains("/")) {
                                 String[] parts = ls.split("/");
@@ -1222,7 +1244,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                 m_log_bt_rx_csv_fos.write(line.getBytes());
                                 m_log_bt_rx_csv_fos.flush();
                             } catch (Exception e) {
-                                Log.d(TAG, "WARNING: write csv exception: "+Log.getStackTraceString(e));
+                                log(TAG, "WARNING: write csv exception: "+Log.getStackTraceString(e));
                             }
                         }
                         if (m_log_bt_rx_fos != null) {
@@ -1234,11 +1256,11 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     }
                 }
             } catch (Exception e) {
-                Log.d(TAG, "bluetooth_gnss_service on_updated_nmea_params talker: "+talker+" exception: "+Log.getStackTraceString(e));
+                log(TAG, "bluetooth_gnss_service on_updated_nmea_params talker: "+talker+" exception: "+Log.getStackTraceString(e));
             }
         }
 
-        Log.d(TAG, "service: on_updated_nmea_params() act");
+        log(TAG, "service: on_updated_nmea_params() act");
 
         //report params to activity
         try {
@@ -1246,10 +1268,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 m_activity_for_nmea_param_callbacks.on_updated_nmea_params(params_map);
             }
         } catch (Exception e) {
-            Log.d(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: "+Log.getStackTraceString(e));
+            log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: "+Log.getStackTraceString(e));
         }
 
-        Log.d(TAG, "service: on_updated_nmea_params() done");
+        log(TAG, "service: on_updated_nmea_params() done");
 
     }
 
@@ -1280,13 +1302,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     @Override
     public IBinder onBind(Intent intent) {
         m_is_bound = true;
-        Log.d(TAG, "onBind()");
+        log(TAG, "onBind()");
         return m_binder;
     }
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "onDestroy()");
+        log(TAG, "onDestroy()");
         boolean was_connected = close();
         stop_auto_reconnect_thread();
         toast("Stopped Bluetooth GNSS Service...");

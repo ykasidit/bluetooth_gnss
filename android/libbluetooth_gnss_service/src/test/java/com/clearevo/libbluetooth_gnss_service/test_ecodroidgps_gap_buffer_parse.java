@@ -2,12 +2,10 @@ package com.clearevo.libbluetooth_gnss_service;
 
 import org.junit.Test;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 
-import static com.clearevo.libecodroidgnss_parse.gnss_sentence_parser.fromHexString;
+import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
 
 /**
  * Example local unit test, which will execute on the development machine (host).

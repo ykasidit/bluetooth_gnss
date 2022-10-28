@@ -6,25 +6,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
-import android.provider.DocumentsContract;
 import android.net.Uri;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.documentfile.provider.DocumentFile;
 
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
-import com.clearevo.libecodroidbluetooth.ntrip_conn_mgr;
-import com.clearevo.libecodroidbluetooth.rfcomm_conn_mgr;
-import com.clearevo.libecodroidgnss_parse.gnss_sentence_parser;
-
-import org.jetbrains.annotations.NotNull;
+import com.clearevo.libbluetooth_gnss_service.ntrip_conn_mgr;
+import com.clearevo.libbluetooth_gnss_service.rfcomm_conn_mgr;
+import com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser;
 
 import java.util.ArrayList;
 import java.util.HashMap;

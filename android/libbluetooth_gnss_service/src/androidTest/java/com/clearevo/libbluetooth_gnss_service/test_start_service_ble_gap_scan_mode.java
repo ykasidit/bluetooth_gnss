@@ -2,7 +2,7 @@ package com.clearevo.libbluetooth_gnss_service;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+
 
 import androidx.test.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
