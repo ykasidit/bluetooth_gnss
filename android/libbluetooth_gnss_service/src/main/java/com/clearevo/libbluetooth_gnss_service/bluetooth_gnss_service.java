@@ -802,11 +802,15 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static void log(String tag, String msg)
     {
         Log.d(tag, msg);
-        if (curInstance != null) {
+    }
+
+    public static void append_logfile(String tag, String msg)
+    {
+        if (curInstance != null && curInstance.m_log_operations_fos != null) {
             try {
                 curInstance.m_log_operations_fos.write(msg.getBytes());
             } catch (Throwable tr) {
-                Log.d(tag, "WARNING: log curInstance failed exception: "+Log.getStackTraceString(tr));
+                android.util.Log.d(tag, "WARNING: log curInstance failed exception: "+Log.getStackTraceString(tr));
             }
         }
     }
