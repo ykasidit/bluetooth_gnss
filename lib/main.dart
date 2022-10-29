@@ -29,7 +29,7 @@ main() async {
             'disable_ntrip': false,
             'ble_gap_scan_mode': false,
             'autostart': false,
-            'list_nearest_streams_first': true,
+            'list_nearest_streams_first': false,
           }
   );
   //PrefService.setString("target_bdaddr", null);
@@ -1499,10 +1499,22 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       try {
         write_enabled = await method_channel.invokeMethod('is_write_enabled');
       } on PlatformException catch (e) {
-        toast("WARNING: check _is_connecting failed: $e");
+        toast("WARNING: check write_enabled failed: $e");
       }
       if (write_enabled == false) {
         toast("Write external storage permission required for data loggging...");
+        return;
+      }
+
+      bool can_create_file = false;
+      try {
+        can_create_file = await method_channel.invokeMethod('test_can_create_file_in_chosen_folder');
+      } on PlatformException catch (e) {
+        toast("WARNING: check test_can_create_file_in_chosen_folder failed: $e");
+      }
+      if (can_create_file == false) {
+        //TODO: try req permission firstu
+        toast("Please go to Settings > re-tick 'Enable logging' (failed to access chosen log folder)");
         return;
       }
     }
