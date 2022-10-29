@@ -1,4 +1,4 @@
-import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:preferences/preferences.dart';
 import 'package:flutter/services.dart';
@@ -116,9 +116,20 @@ class settings_widget_state extends State<settings_widget> {
               bool last_pos_valid = false;
               if (sort_by_nearest) {
                 try {
-                  last_pos_valid = false;
                   double last_lat = 0;
                   double last_lon = 0;
+                  String ref_lat_lon = PrefService.getString('ref_lat_lon') ?? "";
+                  last_pos_valid = false;
+                  if (ref_lat_lon.contains(",")) {
+                    List<String> parts = ref_lat_lon.split(",");
+                    if (parts.length == 2) {
+                      try {
+                        last_lat = double.parse(parts[0]);
+                        last_lon = double.parse(parts[1]);
+                        last_pos_valid = true;
+                      } catch (e) {}
+                    }
+                  }
                   print('last_pos_valid: $last_pos_valid $last_lat $last_lon');
 
                   if (last_pos_valid) {
@@ -143,7 +154,7 @@ class settings_widget_state extends State<settings_widget> {
                     });
 
                   } else {
-                    toast("Sort by distance failed: failed to get last position");
+                    toast("Sort by distance failed: Invalid Ref lat,lon position");
                   }
 
                 } catch (e) {
@@ -286,7 +297,7 @@ class settings_widget_state extends State<settings_widget> {
           CheckboxPreference("Autostart (connect on phone boot)", 'autostart'),
           CheckboxPreference("Check for Settings > 'Location' ON and 'High Accuracy'", 'check_settings_location'),
           CheckboxPreference(
-              "Enable logging", 'log_bt_rx',
+              "Enable Logging (location/nmea/debug-trace)", 'log_bt_rx',
               onEnable: () async {
                 bool write_enabled = false;
                 try {
@@ -296,20 +307,17 @@ class settings_widget_state extends State<settings_widget> {
                 }
                 if (write_enabled == false) {
                   toast("Write external storage permission required for data loggging...");
-                  PrefService.setBool('log_bt_rx', false);
-                  return false;
                 }
                 try {
                   await method_channel.invokeMethod('set_log_uri');
                 } on PlatformException catch (e) {
                   toast("WARNING: set_log_uri failed: $e");
-                  PrefService.setBool('log_bt_rx', false);
-                  return false;
                 }
-                return true;
+                PrefService.setBool('log_bt_rx', false);//set by mainactivity on success only
+                return "";
               },
               onDisable: () async {
-                PrefService.setString('log_uri', null);
+                PrefService.setString('log_uri', "");
               }
           ),
           PreferenceTitle('RTK/NTRIP Server settings'),
@@ -389,7 +397,8 @@ class settings_widget_state extends State<settings_widget> {
               },
             ),
           ),
-          CheckboxPreference("Try list nearest streams first", 'list_nearest_streams_first'),
+          CheckboxPreference("Sort by nearest to to Ref lat,lon", 'list_nearest_streams_first'),
+          TextFieldPreference('Ref lat,lon', 'ref_lat_lon'),
           TextFieldPreference('Stream (mount-point)', 'ntrip_mountpoint',
               defaultVal: '', validator: (str) {
                 if (str == null) {

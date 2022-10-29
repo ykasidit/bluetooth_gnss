@@ -132,6 +132,14 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     }
                     m_icon_id = intent.getIntExtra("activity_icon_id", 0);
 
+                    if (m_log_bt_rx) {
+                        final SharedPreferences prefs = getApplicationContext().getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
+                        String log_uri = prefs.getString(log_uri_pref_key, "");
+                        if (!log_uri.isEmpty()) {
+                            curInstance.prepare_log_output_streams(log_uri);
+                        }
+                    }
+
                     if (m_auto_reconnect) {
                         start_auto_reconnect_thread();
                     } else {
@@ -155,16 +163,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String log_uri_pref_key = "flutter.pref_log_uri";
     void connect()
     {
-        final SharedPreferences prefs = getApplicationContext().getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
-        String log_uri = prefs.getString(log_uri_pref_key, "");
-        if (!log_uri.isEmpty()) {
-            try {
-                set_log_folder(Uri.parse(log_uri));
-            } catch (Throwable tr) {
-                log(TAG, "set_log_uri exception: "+Log.getStackTraceString(tr));
-            }
-        }
-
         if (m_ble_gap_scan_mode) {
             log(TAG, "onStartCommand pre call start_forground m_ble_gap_scan_mode "+m_ble_gap_scan_mode);
             start_foreground("Scanning GPS broadcasts...", "", "");
@@ -640,7 +638,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             }
         } catch (Exception e) {}
         log_file_uri = null;
-        log_folder_uri = null;
 
         return was_connected;
     }
@@ -651,7 +648,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         if (m_is_bound) {
             try {
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log(TAG, "toast() exception: "+Log.getStackTraceString(e));
             }
             log(TAG, "toast msg: "+msg);
@@ -749,13 +746,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
         m_connecting_thread.start();
     }
-
-    Uri log_folder_uri = null;
     Uri log_file_uri = null;
-    public void set_log_folder(Uri uri){
-        log_folder_uri = uri;
-    }
-
     SimpleDateFormat log_name_sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
     SimpleDateFormat csv_sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     public void log_bt_rx(byte[] read_buf)
@@ -763,25 +754,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         if (read_buf == null || read_buf.length == 0)
             return;
         try {
-            if (log_folder_uri != null) {
+            if (log_file_uri != null) {
                 if (m_log_bt_rx && read_buf != null) {
-                    if (m_log_bt_rx_fos == null) {
-                        //ref: https://stackoverflow.com/questions/61118918/create-new-file-in-the-directory-returned-by-intent-action-open-document-tree
-                        DocumentFile dd = DocumentFile.fromTreeUri(getApplicationContext(), log_folder_uri);
-                        DocumentFile lf = dd.createFile("text/plain", (log_name_sdf.format(new Date()) + "_operations_log.txt"));
-                        DocumentFile df = dd.createFile("text/plain", (log_name_sdf.format(new Date()) + "_rx_log.txt"));
-                        DocumentFile df_csv = dd.createFile("text/csv", (log_name_sdf.format(new Date()) + "_location_log.csv"));
-                        log_file_uri = df.getUri();
-                        log(TAG, "log_bt_rx: log_fp: " + df.getUri().toString());
-                        log_bt_rx_bytes_written = 0;
-                        m_log_operations_fos = getApplicationContext().getContentResolver().openOutputStream(lf.getUri());
-                        m_log_bt_rx_fos = getApplicationContext().getContentResolver().openOutputStream(df.getUri());
-                        m_log_bt_rx_csv_fos = getApplicationContext().getContentResolver().openOutputStream(df_csv.getUri());
-                        m_log_bt_rx_csv_fos.write("time,lat,lon,alt\n".getBytes());
-                        m_log_bt_rx_csv_fos.flush();
-                        toast("Logging to: "+log_folder_uri.getPath());
-                        log(TAG, "log_bt_rx: m_log_bt_rx_fos ready");
-                    }
                     if (m_log_bt_rx_fos != null) {
                         m_log_bt_rx_fos.write(read_buf);
                         log_bt_rx_bytes_written += read_buf.length;
@@ -804,11 +778,109 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         Log.d(tag, msg);
     }
 
+    public static boolean test_can_create_file_in_chosen_folder(Context context)
+    {
+        try {
+            final SharedPreferences prefs = context.getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
+            String log_uri = prefs.getString(log_uri_pref_key, "");
+            if (log_uri.isEmpty()) {
+                throw new Exception("folder not chosen yet - please tick enable logging in settings to choose");
+            }
+            return test_can_create_file(context, log_uri);
+        } catch (Throwable tr) {
+            String msg = "WARNING: test_can_create_file_in_chosen_folder failed exception: "+Log.getStackTraceString(tr);
+            android.util.Log.d(TAG, msg);
+            return false;
+        }
+    }
+
+
+    public static boolean test_can_create_file(Context context, String log_folder_uri_str)
+    {
+        try {
+            DocumentFile df = create_new_file(context, log_folder_uri_str, "text/plain", "test_folder_access");
+            if (df.exists()) {
+                df.delete();
+                return true;
+            }
+        } catch (Throwable tr) {
+            String msg = "WARNING: test_can_create_file failed exception: "+Log.getStackTraceString(tr);
+            android.util.Log.d(TAG, msg);
+            return false;
+        }
+        return false;
+    }
+
+    public static DocumentFile create_new_file(Context context, String log_folder_uri_str, String mime, String fname) throws Exception {
+        if (log_folder_uri_str == null) {
+            throw new Exception("no log folder set in settings");
+        }
+            Uri log_folder_uri = Uri.parse(log_folder_uri_str);
+            //ref: https://stackoverflow.com/questions/61118918/create-new-file-in-the-directory-returned-by-intent-action-open-document-tree
+            DocumentFile dd = DocumentFile.fromTreeUri(context, log_folder_uri);
+            if (dd == null) {
+                throw new Exception("Failed to access folder");
+            }
+            DocumentFile df = dd.createFile(mime, fname);
+            if (df == null) {
+                throw new Exception("Failed to create file in folder");
+            }
+            if (df.exists()) {
+                df.delete();
+            }
+            df = dd.createFile(mime, fname);
+            if (!df.exists()) {
+                throw new Exception("Failed to create file in folder after delete of old file");
+            }
+            return df;
+    }
+
+    public OutputStream get_df_os(DocumentFile df) throws Exception {
+        return getApplicationContext().getContentResolver().openOutputStream(df.getUri());
+    }
+
+    public boolean prepare_log_output_streams(String log_folder_uri_str) {
+        try {
+            if (log_folder_uri_str == null) {
+                throw new Exception("no log folder set in settings");
+            }
+            Uri log_folder_uri = Uri.parse(log_folder_uri_str);
+            //ref: https://stackoverflow.com/questions/61118918/create-new-file-in-the-directory-returned-by-intent-action-open-document-tree
+            DocumentFile dd = DocumentFile.fromTreeUri(getApplicationContext(), log_folder_uri);
+            if (dd == null) {
+                throw new Exception("Failed to access folder");
+            }
+
+            DocumentFile df = create_new_file(getApplicationContext(), log_folder_uri_str, "text/plain", (log_name_sdf.format(new Date()) + "_rx_log.txt"));
+            DocumentFile df_csv = create_new_file(getApplicationContext(), log_folder_uri_str, "text/csv", (log_name_sdf.format(new Date()) + "_location_log.csv"));
+            DocumentFile lf = create_new_file(getApplicationContext(), log_folder_uri_str, "text/plain", (log_name_sdf.format(new Date()) + "_operations_log.txt"));
+            if (df == null) {
+                throw new Exception("Failed to create file in folder");
+            }
+            log_file_uri = df.getUri();
+            log(TAG, "log_bt_rx: log_fp: " + df.getUri().toString());
+            log_bt_rx_bytes_written = 0;
+            m_log_bt_rx_fos = get_df_os(df);
+            m_log_bt_rx_csv_fos = get_df_os(df_csv);
+            m_log_operations_fos = get_df_os(lf);
+            m_log_bt_rx_csv_fos.write("time,lat,lon,alt\n".getBytes());
+            m_log_bt_rx_csv_fos.flush();
+            log(TAG, "log_bt_rx: m_log_bt_rx_fos ready");
+            return true;
+        } catch (Throwable tr) {
+            String msg = "WARNING: Logging failed - pls re-tick 'Settings' > 'Enable logging' - error:\n"+Log.getStackTraceString(tr);
+            toast(msg);
+            android.util.Log.d(TAG, msg);
+            return false;
+        }
+    }
+
     public static void append_logfile(String tag, String msg)
     {
         if (curInstance != null && curInstance.m_log_operations_fos != null) {
             try {
-                curInstance.m_log_operations_fos.write(msg.getBytes());
+                curInstance.m_log_operations_fos.write((msg+"\n").getBytes());
+                curInstance.m_log_operations_fos.flush();
             } catch (Throwable tr) {
                 android.util.Log.d(tag, "WARNING: log curInstance failed exception: "+Log.getStackTraceString(tr));
             }

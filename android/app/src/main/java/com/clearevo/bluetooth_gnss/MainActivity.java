@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -181,6 +182,8 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                 // the system file picker when it loads.
                                 //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Do);
                                 startActivityForResult(intent, CHOOSE_FOLDER);
+                            } else if (call.method.equals("test_can_create_file_in_chosen_folder")) {
+                                result.success(bluetooth_gnss_service.test_can_create_file_in_chosen_folder(getApplicationContext()));
                             } else if (call.method.equals("is_write_enabled")) {
                                 Log.d(TAG, "is_write_enabled check start");
                                 if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
@@ -294,23 +297,35 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
     }
 
     final String log_uri_pref_key = "flutter.pref_log_uri";
+    final String log_enabled_pref_key = "flutter.log_bt_rx";
 
     @Override
     public void onActivityResult(int requestCode, int resultCode,
                                  Intent resultData) {
-        if (requestCode == CHOOSE_FOLDER
-                && resultCode == this.RESULT_OK) {
-            Uri uri = null;
-            if (resultData != null) {
-                uri = resultData.getData();
-                Context context = getApplicationContext();
-                if (uri != null && context != null) {
-                    final SharedPreferences prefs = context.getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString(log_uri_pref_key, uri.toString());
-                    editor.apply();
-                    Log.d(TAG, "set log uri: "+log_uri_pref_key+" val: "+prefs.getString(log_uri_pref_key,""));
+        if (requestCode == CHOOSE_FOLDER) {
+            Context context = getApplicationContext();
+            final SharedPreferences prefs = context.getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
+            if (resultCode == this.RESULT_OK) {
+                Uri uri = null;
+                if (resultData != null) {
+                    uri = resultData.getData();
+                    if (uri != null && context != null) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                            getContext().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        }
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString(log_uri_pref_key, uri.toString());
+                        editor.putBoolean(log_enabled_pref_key, true);
+                        editor.apply();
+                        Log.d(TAG, "choose_folder ok so set log uri: " + log_uri_pref_key + " val: " + prefs.getString(log_uri_pref_key, ""));
+                    }
                 }
+            } else {
+                Log.d(TAG, "choose_folder not ok so disable log uri: " + log_uri_pref_key);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString(log_uri_pref_key, "");
+                editor.putBoolean(log_enabled_pref_key, false);
+                editor.apply();
             }
         }
     }
