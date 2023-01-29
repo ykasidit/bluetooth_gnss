@@ -13,6 +13,7 @@ Build instructions
 * Test the flutter sdk:
 `flutter sdk-path`
 `flutter doctor`
+`flutter downgrade v2.10.3`
 
 * In this folder run:
 `flutter pub get`
