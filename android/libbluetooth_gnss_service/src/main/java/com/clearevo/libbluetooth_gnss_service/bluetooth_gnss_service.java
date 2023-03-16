@@ -1064,6 +1064,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     File bt_gnss_test_debug_mock_location_1_1_mode_flag = new File("/sdcard/bt_gnss_test_debug_mock_location_1_1_mode_flag");
     public static final String POSITION_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE";
+    public static final String PARSED_NMEA_UPDATE_NTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.PARSED_NMEA_UPDATE";
+    public static final String INTENT_EXTRA_DATA_JSON_KEY = "data_json";
     private void setMock(double latitude, double longitude, double altitude, float accuracy, float bearing, float speed, boolean alt_is_elipsoidal, int n_sats) {
         long ts = System.currentTimeMillis();
 
@@ -1081,15 +1083,15 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             Intent intent = new Intent();
             intent.setAction(POSITION_UPDATE_INTENT_ACTION);
             JSONObject jo = new JSONObject();
-            jo.put("java_ts", ts);
-            jo.put("latitude", latitude);
-            jo.put("longitude", longitude);
-            jo.put("altitude", altitude);
-            //jo.put("accuracy", accuracy); test nan later
-            //jo.put("bearing", bearing);
-            //jo.put("speed", speed);
-            jo.put("n_sats", n_sats);
-            intent.putExtra("bluetooth_gnss_position_json", jo.toString());
+            try {jo.put("java_ts", ts);} catch (Exception e) {}
+            try {jo.put("latitude", latitude);} catch (Exception e) {}
+            try {jo.put("longitude", longitude);} catch (Exception e) {}
+            try {jo.put("altitude", altitude);} catch (Exception e) {}
+            try {jo.put("accuracy", accuracy);} catch (Exception e) {}
+            try {jo.put("bearing", bearing);} catch (Exception e) {}
+            try {jo.put("speed", speed);} catch (Exception e) {}
+            try {jo.put("n_sats", n_sats);} catch (Exception e) {}
+            intent.putExtra(INTENT_EXTRA_DATA_JSON_KEY, jo.toString());
             getApplicationContext().sendBroadcast(intent);
         } catch (Throwable tr) {
             log(TAG, "WARNING: broadcast position intent failed exception: "+ Log.getStackTraceString(tr));
@@ -1252,6 +1254,20 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public void on_updated_nmea_params(HashMap<String, Object> params_map) {
 
         log(TAG, "service: on_updated_nmea_params() start");
+        try {
+            Intent intent = new Intent();
+            intent.setAction(PARSED_NMEA_UPDATE_NTENT_ACTION);
+            JSONObject jo = new JSONObject();
+            for (String k :params_map.keySet()) {
+                try {
+                    jo.put(k, params_map.get(k));
+                } catch (Exception e) {}
+            }
+            intent.putExtra(INTENT_EXTRA_DATA_JSON_KEY, jo.toString());
+            getApplicationContext().sendBroadcast(intent);
+        } catch (Throwable tr) {
+            log(TAG, "WARNING: broadcast position intent failed exception: "+ Log.getStackTraceString(tr));
+        }
         //try set_mock
         double lat = 0.0, lon = 0.0, alt = 0.0, hdop = 0.0, speed = 0.0, bearing = 0.0/0.0;
         int n_sats = 0;
