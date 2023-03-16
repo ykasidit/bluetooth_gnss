@@ -28,7 +28,7 @@ import android.os.IBinder;
 import android.os.ParcelUuid;
 
 
-
+import android.util.Log;
 import android.widget.Toast;
 import android.location.LocationManager;
 import android.location.LocationProvider;
@@ -49,6 +49,8 @@ import java.util.List;
 
 import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
 import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.toHexString;
+
+import org.json.JSONObject;
 
 
 public class bluetooth_gnss_service extends Service implements rfcomm_conn_callbacks, gnss_sentence_parser.gnss_parser_callbacks, ntrip_conn_callbacks {
@@ -1061,8 +1063,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
     File bt_gnss_test_debug_mock_location_1_1_mode_flag = new File("/sdcard/bt_gnss_test_debug_mock_location_1_1_mode_flag");
-
+    public static final String POSITION_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE";
     private void setMock(double latitude, double longitude, double altitude, float accuracy, float bearing, float speed, boolean alt_is_elipsoidal, int n_sats) {
+        long ts = System.currentTimeMillis();
 
         try {
             if (bt_gnss_test_debug_mock_location_1_1_mode_flag.isFile()) {
@@ -1072,6 +1075,24 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             }
         } catch (Throwable tr) {
             log(TAG, "WARNING: check bt_gnss_test_debug_mock_location_1_1_mode_flag exception: "+Log.getStackTraceString(tr));
+        }
+
+        try {
+            Intent intent = new Intent();
+            intent.setAction(POSITION_UPDATE_INTENT_ACTION);
+            JSONObject jo = new JSONObject();
+            jo.put("java_ts", ts);
+            jo.put("latitude", latitude);
+            jo.put("longitude", longitude);
+            jo.put("altitude", altitude);
+            //jo.put("accuracy", accuracy); test nan later
+            //jo.put("bearing", bearing);
+            //jo.put("speed", speed);
+            jo.put("n_sats", n_sats);
+            intent.putExtra("bluetooth_gnss_position_json", jo.toString());
+            getApplicationContext().sendBroadcast(intent);
+        } catch (Throwable tr) {
+            log(TAG, "WARNING: broadcast position intent failed exception: "+ Log.getStackTraceString(tr));
         }
 
         log(TAG, "setMock accuracy_meters: "+accuracy);
