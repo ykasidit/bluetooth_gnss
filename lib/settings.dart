@@ -95,7 +95,7 @@ class settings_widget_state extends State<settings_widget> {
               bool sort_by_nearest = PrefService.getBool('list_nearest_streams_first') ?? false;
               print('sort_by_nearest: $sort_by_nearest');
 
-              List<Map<String, String>> mount_point_map_list = new List<Map<String, String>>();
+              List<Map<String, String>> mount_point_map_list = new List.empty(growable: true);
 
               for (String val in mount_point_str_list) {
                   List<String> parts = val.split(";");
@@ -216,7 +216,7 @@ class settings_widget_state extends State<settings_widget> {
     m_bdaddr_to_name_map = bdaddr_to_name_map;
 
     //create matching radiopreflist
-    List<RadioPreference> devlist = List<RadioPreference>();
+    List<RadioPreference> devlist = List.empty(growable: true);
     for (String bdaddr in bdaddr_to_name_map.keys) {
       devlist.add(
           RadioPreference(
@@ -345,7 +345,7 @@ class settings_widget_state extends State<settings_widget> {
           ),
           Padding(
             padding: const EdgeInsets.all(5.0),
-            child: RaisedButton(
+            child: ElevatedButton(
               child: Text(
                 'List streams from above server',
               ),

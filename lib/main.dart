@@ -4,7 +4,7 @@
 
 import 'package:bluetooth_gnss/about.dart';
 import 'package:flutter/material.dart';
-import 'package:preferences/preferences.dart';
+import 'package:pref/pref.dart';
 import 'package:package_info/package_info.dart';
 import 'package:share/share.dart';
 import 'package:flutter/services.dart';
@@ -19,8 +19,8 @@ const Color _kFlutterBlue = Color(0xFF003D75);
 
 main() async {
   WidgetsFlutterBinding.ensureInitialized(); //https://stackoverflow.com/questions/57689492/flutter-unhandled-exception-servicesbinding-defaultbinarymessenger-was-accesse
-  await PrefService.init(prefix: 'pref_');
-  PrefService.setDefaultValues(
+  final prefservice = await PrefServiceShared.init(prefix: "pref_");
+  prefservice.setDefaultValues(
           {
             'reconnect': false,
             'secure': true,
@@ -46,19 +46,19 @@ ThemeData _buildLightTheme() {
   );
   final ThemeData base = ThemeData(
     brightness: Brightness.light,
-    accentColorBrightness: Brightness.dark,
+    //accentColorBrightness: Brightness.dark,
     colorScheme: colorScheme,
     primaryColor: primaryColor,
-    buttonColor: primaryColor,
+    //buttonColor: primaryColor,
     indicatorColor: Colors.white,
     toggleableActiveColor: const Color(0xFF1E88E5),
     splashColor: Colors.white24,
     splashFactory: InkRipple.splashFactory,
-    accentColor: secondaryColor,
+    //accentColor: secondaryColor,
     canvasColor: Colors.white,
     scaffoldBackgroundColor: Colors.white,
-    backgroundColor: Colors.white,
-    errorColor: const Color(0xFFB00020),
+    //backgroundColor: Colors.white,
+    //errorColor: const Color(0xFFB00020),
     buttonTheme: ButtonThemeData(
       colorScheme: colorScheme,
       textTheme: ButtonTextTheme.primary,
@@ -67,7 +67,7 @@ ThemeData _buildLightTheme() {
   return base.copyWith(
     textTheme: _buildTextTheme(base.textTheme),
     primaryTextTheme: _buildTextTheme(base.primaryTextTheme),
-    accentTextTheme: _buildTextTheme(base.accentTextTheme),
+    //accentTextTheme: _buildTextTheme(base.accentTextTheme),
   );
 }
 TextTheme _buildTextTheme(TextTheme base) {
@@ -387,7 +387,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
-    final Color iconColor = Theme.of(context).accentColor;
+    final Color iconColor = Theme.of(context).hintColor;
 
     bool gap_mode = PrefService.getBool('ble_gap_scan_mode') ?? false;
 
@@ -524,7 +524,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
-                              RaisedButton(
+                              ElevatedButton(
                                 onPressed: () {
                                   String content = (_param_map['lat_double_07_str'] ?? WAITING_DEV) + "," /* no space here for sharing to gmaps */ + (_param_map['lon_double_07_str'] ?? WAITING_DEV);
                                   Share.share('https://www.google.com/maps/search/?api=1&query='+content).then((result) {
@@ -534,7 +534,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                 child: const Icon(Icons.share),
                               ),
                               Padding(padding: const EdgeInsets.all(2.0),),
-                              RaisedButton(
+                              ElevatedButton(
                                 onPressed: () {
                                   String content = (_param_map['lat_double_07_str'] ?? WAITING_DEV) + "," + (_param_map['lon_double_07_str'] ?? WAITING_DEV);
                                   Clipboard.setData(ClipboardData(text: content)).then((result) {
@@ -1466,7 +1466,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   {
     try {
       final snackBar = SnackBar(content: Text(msg));
-      _scaffoldKey.currentState.showSnackBar(snackBar);
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }  catch (e) {
       print("WARNING: snackbar failed exception: $e");
     }
