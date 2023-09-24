@@ -29,8 +29,8 @@ dependencies:
 
   url_launcher: 6.0.3
   wakelock: 0.5.6
-  shared_preferences:
   pref: ^2.7.1
+  modal_progress_hud_nsn: ^0.4.0
 
 
 dev_dependencies:
