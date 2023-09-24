@@ -1,18 +1,13 @@
 
 import 'package:flutter/material.dart';
-import 'package:preferences/preferences.dart';
+import 'package:pref/pref.dart';
 import 'package:flutter/services.dart';
-import 'package:progress_dialog/progress_dialog.dart';
 import 'dart:math' show cos, sqrt, asin;
 
 class settings_widget extends StatefulWidget {
 
-  settings_widget(Map<dynamic, dynamic> bdaddr_to_name_map) {
-    _bd_map = bdaddr_to_name_map;
-  }
-
+  settings_widget(Map<dynamic, dynamic> this._bd_map);
   Map<dynamic, dynamic> _bd_map;
-
   final String title = "Settings";
 
   @override
@@ -22,10 +17,8 @@ class settings_widget extends StatefulWidget {
 
 class settings_widget_state extends State<settings_widget> {
 
-  List<RadioPreference> _bd_dev_pref_list;
   Map<dynamic, dynamic> m_bdaddr_to_name_map = new Map<dynamic, dynamic>();
   String _selected_dev = "Loading...";
-  ProgressDialog m_pr;
 
   static const method_channel = MethodChannel("com.clearevo.bluetooth_gnss/engine");
   static const event_channel = EventChannel("com.clearevo.bluetooth_gnss/settings_events");
@@ -92,7 +85,7 @@ class settings_widget_state extends State<settings_widget> {
 
               int nmpl = mount_point_str_list.length;
               toast("Found $nmpl mountpoints...");
-              bool sort_by_nearest = PrefService.getBool('list_nearest_streams_first') ?? false;
+              bool sort_by_nearest = PrefService.of(context).get('list_nearest_streams_first') ?? false;
               print('sort_by_nearest: $sort_by_nearest');
 
               List<Map<String, String>> mount_point_map_list = new List.empty(growable: true);
@@ -105,8 +98,8 @@ class settings_widget_state extends State<settings_widget> {
                         {
                           "mountpoint": parts[0],
                           "identifier": parts[1],
-                          "lat": parts[8]??0,
-                          "lon": parts[9]??0,
+                          "lat": parts[8]??"0",
+                          "lon": parts[9]??"0",
                           "distance_km": "0",
                         }
                     );
@@ -118,7 +111,7 @@ class settings_widget_state extends State<settings_widget> {
                 try {
                   double last_lat = 0;
                   double last_lon = 0;
-                  String ref_lat_lon = PrefService.getString('ref_lat_lon') ?? "";
+                  String ref_lat_lon = PrefService.of(context).get('ref_lat_lon') ?? "";
                   last_pos_valid = false;
                   if (ref_lat_lon.contains(",")) {
                     List<String> parts = ref_lat_lon.split(",");
@@ -138,8 +131,8 @@ class settings_widget_state extends State<settings_widget> {
                     double distance_km = 999999;
                     for (Map<String, String> vmap in mount_point_map_list) {
                       try {
-                        double lat = double.parse(vmap["lat"]);
-                        double lon = double.parse(vmap["lon"]);
+                        double lat = double.parse(vmap["lat"].toString());
+                        double lon = double.parse(vmap["lon"].toString());
                         distance_km =
                             calculateDistance(last_lat, last_lon, lat, lon);
                       } catch (e) {
@@ -150,7 +143,7 @@ class settings_widget_state extends State<settings_widget> {
 
                     //sort the list according to distance: https://stackoverflow.com/questions/22177838/sort-a-list-of-maps-in-dart-second-level-sort-in-dart
                     mount_point_map_list.sort((m1, m2) {
-                      return double.parse(m1["distance_km"]).compareTo(double.parse(m2["distance_km"]));
+                      return double.parse(m1["distance_km"].toString()).compareTo(double.parse(m2["distance_km"].toString()));
                     });
 
                   } else {
@@ -164,7 +157,7 @@ class settings_widget_state extends State<settings_widget> {
               }
               //make dialog to choose from mount_point_map_list
 
-              String chosen_mountpoint = await showDialog<String>(
+              String? chosen_mountpoint = await showDialog<String>(
                   context: context,
                   barrierDismissible: true,
                   builder: (BuildContext context) {
@@ -190,7 +183,7 @@ class settings_widget_state extends State<settings_widget> {
               );
 
               print("chosen_mountpoint: $chosen_mountpoint");
-              PrefService.setString('ntrip_mountpoint', chosen_mountpoint);
+              PrefService.of(context).set('ntrip_mountpoint', chosen_mountpoint);
 
               //force re-load of selected ntrip_mountpoint
               Navigator.of(context).pushReplacement(
@@ -212,24 +205,12 @@ class settings_widget_state extends State<settings_widget> {
   }
 
   settings_widget_state(Map<dynamic, dynamic> bdaddr_to_name_map) {
-
     m_bdaddr_to_name_map = bdaddr_to_name_map;
-
-    //create matching radiopreflist
-    List<RadioPreference> devlist = List.empty(growable: true);
-    for (String bdaddr in bdaddr_to_name_map.keys) {
-      devlist.add(
-          RadioPreference(
-              bdaddr_to_name_map[bdaddr], bdaddr, "target_bdaddr")
-      );
-    }
-    _bd_dev_pref_list = devlist;
-
   }
 
   String get_selected_bdaddr()
   {
-    return PrefService.get("target_bdaddr");
+    return PrefService.of(context).get("target_bdaddr");
   }
 
   String get_selected_bdname()
@@ -262,6 +243,15 @@ class settings_widget_state extends State<settings_widget> {
 
   @override
   Widget build(BuildContext context) {
+//create matching radiopreflist
+    List<DropdownMenuItem> devlist = List.empty(growable: true);
+    for (String bdaddr in m_bdaddr_to_name_map.keys) {
+      devlist.add(
+          DropdownMenuItem(
+              value: bdaddr, child: Text(m_bdaddr_to_name_map[bdaddr].toString())
+          )
+      );
+    }
 
     return MaterialApp(
       title: 'EcoDroidGPS Settings',
@@ -269,63 +259,51 @@ class settings_widget_state extends State<settings_widget> {
         appBar: AppBar(
           title: Text('Settings'),
         ),
-        body: PreferencePage([
-          PreferenceTitle('Selected Target Bluetooth device:'),
-          PreferenceText(
-            "$_selected_dev",
+        body: PrefPage(children: [
+          PrefTitle(title: Text('Target device:')),
+          PrefText(
+            pref: "$_selected_dev",
             style: Theme.of(context).textTheme.caption,
           ),
-          PreferenceDialogLink(
-            "Select...",
-            dialog: PreferenceDialog(
-              _bd_dev_pref_list,
-              title: 'Select Bluetooth Device',
-              submitText: 'Save',
-              cancelText: 'Cancel',
-              onlySaveOnSubmit: true,
-            ),
-            onPop: () => setState(() {_selected_dev = get_selected_bd_summary();}),
-          ),
-          PreferenceTitle('Bluetooth Connection settings'),
-          CheckboxPreference("EcoDroidGPS-Broadcast device mode", 'ble_gap_scan_mode'),
-          PreferenceText(
-            "(Experimental) For use with 'EcoDroidGPS-Broadcast' device\nfrom www.ClearEvo.com\n(This device broadcasts GNSS location over BLE GAP\n to an any number of Android phones/tablets concurrently)",
-            style: Theme.of(context).textTheme.caption,
-          ),
-          CheckboxPreference("Secure RFCOMM connection", 'secure'),
-          CheckboxPreference("Auto-reconnect (when disconnected)", 'reconnect'),
-          CheckboxPreference("Autostart (connect on phone boot)", 'autostart'),
-          CheckboxPreference("Check for Settings > 'Location' ON and 'High Accuracy'", 'check_settings_location'),
-          CheckboxPreference(
-              "Enable Logging (location/nmea/debug-trace)", 'log_bt_rx',
-              onEnable: () async {
-                bool write_enabled = false;
-                try {
-                  write_enabled = await method_channel.invokeMethod('is_write_enabled');
-                } on PlatformException catch (e) {
-                  toast("WARNING: check _is_connecting failed: $e");
+          PrefDropdown(items: devlist, pref: 'target_bdaddr'),
+          PrefTitle(title: Text('Bluetooth Connection settings')),
+          PrefCheckbox(title: Text("Secure RFCOMM connection"), pref: 'secure'),
+      PrefCheckbox(title: Text("Auto-reconnect (when disconnected"), pref: 'reconnect'),
+        PrefCheckbox(title: Text("Autostart (connect on phone boot"),pref: 'autostart'),
+    PrefCheckbox(title: Text("Check for Settings > 'Location' ON and 'High Accuracy'"), pref: 'check_settings_location'),
+    PrefCheckbox(title: Text(
+              "Enable Logging (location/nmea/debug-trace)"), pref:'log_bt_rx',
+              onChange: (bool? _val) async {
+                bool enable = _val!;
+                if (enable) {
+                  bool write_enabled = false;
+                  try {
+                    write_enabled =
+                    await method_channel.invokeMethod('is_write_enabled');
+                  } on PlatformException catch (e) {
+                    toast("WARNING: check _is_connecting failed: $e");
+                  }
+                  if (write_enabled == false) {
+                    toast(
+                        "Write external storage permission required for data loggging...");
+                  }
+                  try {
+                    await method_channel.invokeMethod('set_log_uri');
+                  } on PlatformException catch (e) {
+                    toast("WARNING: set_log_uri failed: $e");
+                  }
+                  PrefService.of(context).set('log_bt_rx', false); //set by java-side mainactivity on success only
+                } else {
+                  PrefService.of(context).set('log_uri', "");
                 }
-                if (write_enabled == false) {
-                  toast("Write external storage permission required for data loggging...");
-                }
-                try {
-                  await method_channel.invokeMethod('set_log_uri');
-                } on PlatformException catch (e) {
-                  toast("WARNING: set_log_uri failed: $e");
-                }
-                PrefService.setBool('log_bt_rx', false);//set by mainactivity on success only
-                return "";
-              },
-              onDisable: () async {
-                PrefService.setString('log_uri', "");
               }
           ),
-          PreferenceTitle('RTK/NTRIP Server settings'),
-          PreferenceText(
+          PrefTitle(title: Text('RTK/NTRIP Server settings')),
+          Text(
             "Set these if your Bluetooth GNSS device supports RTK,\n(Like EcoDroidGPS + Ardusimple U-Blox F9 etc)",
             style: Theme.of(context).textTheme.caption,
           ),
-          CheckboxPreference("Disable NTRIP", 'disable_ntrip'),
+          PrefCheckbox(title: Text("Disable NTRIP"), pref: 'disable_ntrip'),
           TextFieldPreference('Host', 'ntrip_host',
               defaultVal: 'www.igs-ip.net', validator: (str) {
                 if (str == "") {
@@ -351,7 +329,7 @@ class settings_widget_state extends State<settings_widget> {
               ),
               onPressed: () async {
 
-                if (PrefService.getString('ntrip_host') == null || PrefService.getString('ntrip_host') == "" || PrefService.getString('ntrip_port') == null) {
+                if (PrefService.of(context).get('ntrip_host') == null || PrefService.of(context).getString('ntrip_host') == "" || PrefService.of(context).get('ntrip_port') == null) {
                   toast("Please specify the ntrip_host and ntrip_port first...");
                   return;
                 }
@@ -377,10 +355,10 @@ class settings_widget_state extends State<settings_widget> {
                     ret_code = await method_channel.invokeMethod(
                         "get_mountpoint_list",
                         {
-                          'ntrip_host': PrefService.getString('ntrip_host'),
-                          'ntrip_port': PrefService.getString('ntrip_port'),
-                          'ntrip_user': PrefService.getString('ntrip_user'),
-                          'ntrip_pass': PrefService.getString('ntrip_pass'),
+                          'ntrip_host': PrefService.of(context).get('ntrip_host'),
+                          'ntrip_port': PrefService.of(context).get('ntrip_port'),
+                          'ntrip_user': PrefService.of(context).get('ntrip_user'),
+                          'ntrip_pass': PrefService.of(context).get('ntrip_pass'),
                         }
                     );
                     print("get_mountpoint_list req waiting callback ret: $ret_code");

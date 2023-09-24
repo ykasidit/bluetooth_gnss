@@ -131,7 +131,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   return Markdown(
     selectable: true,
     onTapLink: (text, url, title){
-      launch(url);
+      url != null ? launch(url) : "";
     },
     data: md,
   );

@@ -72,7 +72,7 @@ ThemeData _buildLightTheme() {
 }
 TextTheme _buildTextTheme(TextTheme base) {
   return base.copyWith(
-    titleMedium: base.titleSmall.copyWith(
+    titleMedium: base.titleSmall!.copyWith(
       fontFamily: 'GoogleSans',
     ),
   );
@@ -83,7 +83,7 @@ TextTheme _buildTextTheme(TextTheme base) {
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
 
-  ScrollableTabsDemo m_widget;
+  ScrollableTabsDemo? m_widget;
 
   @override
   Widget build(BuildContext context) {
@@ -107,8 +107,8 @@ enum TabsDemoStyle {
 
 class _Page {
   const _Page({ this.icon, this.text });
-  final IconData icon;
-  final String text;
+  final IconData? icon;
+  final String? text;
 }
 
 const List<_Page> _allPages = <_Page>[
@@ -121,11 +121,11 @@ const List<_Page> _allPages = <_Page>[
 ];
 
 class ScrollableTabsDemo extends StatefulWidget {
-  ScrollableTabsDemoState m_state;
+  ScrollableTabsDemoState? m_state;
   @override
   ScrollableTabsDemoState createState() {
     m_state = ScrollableTabsDemoState();
-    return m_state;
+    return m_state!;
   }
 }
 
@@ -208,15 +208,15 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   bool _is_bt_conn_thread_alive_likely_connecting = false;
   String _location_from_talker = WAITING_DEV;
 
-  int _mock_location_set_ts;
+  int _mock_location_set_ts = 0;
   String _mock_location_set_status = WAITING_DEV;
   List<String> talker_ids = ["GP", "GL", "GA", "GB", "GQ"];
 
-  TabController _controller;
+  TabController? _controller;
   TabsDemoStyle _demoStyle = TabsDemoStyle.iconsAndText;
   bool _customIndicator = false;
 
-  Timer timer;
+  Timer? timer;
   static String note_how_to_disable_mock_location = "";
   Map<dynamic, dynamic> _param_map = Map<dynamic, dynamic>();
 
@@ -302,7 +302,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   {
     print('cleanup()');
     if (timer != null) {
-      timer.cancel();
+      timer!.cancel();
     }
   }
 
@@ -318,7 +318,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     print('dispose()');
     cleanup();
 
-    _controller.dispose();
+    _controller!.dispose();
     super.dispose();
   }
 
@@ -328,7 +328,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     });
   }
 
-  Decoration getIndicator() {
+  Decoration? getIndicator() {
     if (!_customIndicator)
       return const UnderlineTabIndicator();
 
@@ -383,13 +383,13 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     return null;
   }
 
-  Scaffold _scaffold;
+  Scaffold? _scaffold;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     final Color iconColor = Theme.of(context).hintColor;
 
-    bool gap_mode = PrefService.getBool('ble_gap_scan_mode') ?? false;
+    bool gap_mode =  PrefService.of(context).get('ble_gap_scan_mode') ?? false;
 
     _scaffold = Scaffold(
         key: _scaffoldKey,
@@ -452,9 +452,9 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
               case TabsDemoStyle.iconsOnly:
                 return Tab(icon: Icon(page.icon));
               case TabsDemoStyle.textOnly:
+              default:
                 return Tab(text: page.text);
             }
-            return null;
           }).toList(),
         ),
       ),
@@ -469,13 +469,13 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       body: new SafeArea(child: TabBarView(
         controller: _controller,
         children: _allPages.map<Widget>((_Page page) {
-          String pname = page.text;
+          String pname = page.text.toString();
           //print ("page: $pname");
 
           switch (pname) {
 
             case "Connect":
-              List<Widget> rows = null;
+              List<Widget> rows = List.empty();
               if (_is_bt_connected) {
 
                 rows = <Widget>[
@@ -486,7 +486,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                         children: <Widget>[
                           Text(
                             'GNSS Device read stats',
-                            style: Theme.of(context).textTheme.subtitle1.copyWith(
+                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
                                     fontFamily: 'GoogleSans',
                                     color: Colors.blueGrey
                             ),
@@ -883,7 +883,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                           children: <Widget>[
                             Text(
                               'Connected',
-                              style: Theme.of(context).textTheme.headline5.copyWith(
+                              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                                   fontFamily: 'GoogleSans',
                                   color: Colors.grey
                               ),
@@ -957,7 +957,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                 rows = <Widget>[
                   Text(
                     'Pre-connect checklist',
-                    style: Theme.of(context).textTheme.headline5.copyWith(
+                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
                       fontFamily: 'GoogleSans',
                       color: Colors.blueGrey
                     ),
@@ -974,7 +974,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                       mainAxisAlignment: MainAxisAlignment.start,
                       children:
                       [
-                        _check_state_map_icon[key],
+                        _check_state_map_icon[key]!,
                         new Container(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Text(
@@ -1011,7 +1011,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                         ),
                         Text(
                           'Next step',
-                          style:  Theme.of(context).textTheme.headline5.copyWith(
+                          style:  Theme.of(context).textTheme.titleSmall!.copyWith(
                             fontFamily: 'GoogleSans',
                             color: Colors.blueGrey,
                           ),
@@ -1024,7 +1024,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
                           child: Text(
                             '$_status',
-                            style: Theme.of(context).textTheme.subtitle1,
+                            style: Theme.of(context).textTheme.headlineSmall,
                           ),
                         ),
                       ],
@@ -1063,13 +1063,13 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                           children: [
                             Text(
                               "${_is_ntrip_connected?'NTRIP Connected':'NTRIP Not Connected'}",
-                              style:  Theme.of(context).textTheme.titleSmall.copyWith(
+                              style:  Theme.of(context).textTheme.titleSmall!.copyWith(
                                 fontFamily: 'GoogleSans',
                                 color: Colors.blueGrey,
                               ),
                             ),
                             Padding(padding: EdgeInsets.all(10.0)),
-                            Text("${(PrefService.getString('ntrip_host') != null && PrefService.getString('ntrip_host') != null) ? (PrefService.getString('ntrip_host'))+":"+PrefService.getString('ntrip_port') : ''}"),
+                            Text("${(PrefService.of(context).get('ntrip_host') != null && PrefService.of(context).get('ntrip_host') != null) ? (PrefService.of(context).get('ntrip_host'))+":"+PrefService.of(context).get('ntrip_port') : ''}"),
                             Padding(padding: EdgeInsets.all(10.0)),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1080,22 +1080,22 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                 ),
                                 Text(
                                     (
-                                        PrefService.getString('ntrip_host') != null &&
-                                            PrefService.getString('ntrip_host').toString().length > 0 &&
+                                        PrefService.of(context).get('ntrip_host') != null &&
+                                            PrefService.of(context).get('ntrip_host').toString().length > 0 &&
 
-                                            PrefService.getString('ntrip_port') != null &&
-                                            PrefService.getString('ntrip_port').toString().length > 0 &&
+                                            PrefService.of(context).get('ntrip_port') != null &&
+                                            PrefService.of(context).get('ntrip_port').toString().length > 0 &&
 
-                                            PrefService.getString('ntrip_mountpoint') != null &&
-                                            PrefService.getString('ntrip_mountpoint').toString().length > 0 &&
+                                            PrefService.of(context).get('ntrip_mountpoint') != null &&
+                                            PrefService.of(context).get('ntrip_mountpoint').toString().length > 0 &&
 
-                                            PrefService.getString('ntrip_user') != null &&
-                                            PrefService.getString('ntrip_user').toString().length > 0 &&
+                                            PrefService.of(context).get('ntrip_user') != null &&
+                                            PrefService.of(context).get('ntrip_user').toString().length > 0 &&
 
-                                            PrefService.getString('ntrip_pass') != null &&
-                                            PrefService.getString('ntrip_pass').toString().length > 0
+                                            PrefService.of(context).get('ntrip_pass') != null &&
+                                            PrefService.of(context).get('ntrip_pass').toString().length > 0
                                     ) ? (
-                                        (PrefService.getBool('disable_ntrip') ?? false) ? "Yes but disabled": "Yes"
+                                        (PrefService.of(context).get('disable_ntrip') ?? false) ? "Yes but disabled": "Yes"
                                     ) : "No",
                                     style: Theme.of(context).textTheme.bodyText1
                                 ),
@@ -1110,7 +1110,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                     style: Theme.of(context).textTheme.bodyText2
                                 ),
                                 Text(
-                                    PrefService.getString('ntrip_mountpoint') ?? "None",
+                                    PrefService.of(context).get('ntrip_mountpoint') ?? "None",
                                     style: Theme.of(context).textTheme.bodyText1
                                 ),
                               ],
@@ -1146,7 +1146,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               children: [
                                 Text(
                                   "<UNDER DEVELOPMENT/>\n\nSorry, dev not done yet - please check again after next update...",
-                                  style:  Theme.of(context).textTheme.titleSmall.copyWith(
+                                  style:  Theme.of(context).textTheme.titleSmall!.copyWith(
                                     fontFamily: 'GoogleSans',
                                     color: Colors.blueGrey,
                                   ),
@@ -1160,7 +1160,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       ),
     ));
 
-    return _scaffold;
+    return _scaffold!;
   }
 
 
@@ -1203,7 +1203,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   }
 
   //return settings_widget that can be used to get selected bdaddr
-  Future<settings_widget_state> check_and_update_selected_device([bool user_pressed_settings_take_action_and_ret_sw=false, bool user_pressed_connect_take_action_and_ret_sw=false]) async {
+  Future<settings_widget_state?> check_and_update_selected_device([bool user_pressed_settings_take_action_and_ret_sw=false, bool user_pressed_connect_take_action_and_ret_sw=false]) async {
     _m_floating_button_icon = FLOATING_ICON_BLUETOOTH_SETTINGS;
 
     try {
@@ -1308,7 +1308,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     if (user_pressed_settings_take_action_and_ret_sw) {
       return sw;
     }
-    bool gap_mode = PrefService.getBool('ble_gap_scan_mode') ?? false;
+    bool gap_mode = PrefService.of(context).get('ble_gap_scan_mode') ?? false;
     if (gap_mode) {
       //bt ble gap broadcast mode
       _check_state_map_icon["EcoDroidGPS-Broadcast device mode"] = ICON_OK;
@@ -1366,7 +1366,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
     //print('check_and_update_selected_device11');
 
-    bool check_location = PrefService.getBool('check_settings_location') ?? true;
+    bool check_location = PrefService.of(context).get('check_settings_location') ?? true;
 
     if (check_location) {
       if (!(await is_location_enabled())) {
@@ -1491,8 +1491,8 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
     print("main.dart connect() start");
 
-    bool log_bt_rx = PrefService.getBool('log_bt_rx') ?? false;
-    bool gap_mode = PrefService.getBool('ble_gap_scan_mode') ?? false;
+    bool log_bt_rx = PrefService.of(context).get('log_bt_rx') ?? false;
+    bool gap_mode = PrefService.of(context).get('ble_gap_scan_mode') ?? false;
 
     if (log_bt_rx) {
       bool write_enabled = false;
@@ -1537,7 +1537,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       return;
     }
 
-    settings_widget_state sw = await check_and_update_selected_device(false, true);
+    settings_widget_state? sw = await check_and_update_selected_device(false, true);
     if (sw == null) {
       //toast("Please see Pre-connect checklist...");
       return;
@@ -1585,16 +1585,16 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       final bool ret = await method_channel.invokeMethod('connect',
               {
                 "bdaddr": bdaddr,
-                'secure': PrefService.getBool('secure') ?? true,
-                'reconnect' : PrefService.getBool('reconnect') ?? false,
+                'secure': PrefService.of(context).get('secure') ?? true,
+                'reconnect' : PrefService.of(context).get('reconnect') ?? false,
                 'ble_gap_scan_mode':  gap_mode,
                 'log_bt_rx' : log_bt_rx,
-                'disable_ntrip' : PrefService.getBool('disable_ntrip') ?? false,
-                'ntrip_host': PrefService.getString('ntrip_host'),
-                'ntrip_port': PrefService.getString('ntrip_port'),
-                'ntrip_mountpoint': PrefService.getString('ntrip_mountpoint'),
-                'ntrip_user': PrefService.getString('ntrip_user'),
-                'ntrip_pass': PrefService.getString('ntrip_pass'),
+                'disable_ntrip' : PrefService.of(context).get('disable_ntrip') ?? false,
+                'ntrip_host': PrefService.of(context).get('ntrip_host'),
+                'ntrip_port': PrefService.of(context).get('ntrip_port'),
+                'ntrip_mountpoint': PrefService.of(context).get('ntrip_mountpoint'),
+                'ntrip_user': PrefService.of(context).get('ntrip_user'),
+                'ntrip_pass': PrefService.of(context).get('ntrip_pass'),
               }
       );
       print("main.dart connect() start connect done");
@@ -1627,7 +1627,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   }
 
   Future<Map<dynamic, dynamic>> get_bd_map() async {
-    Map<dynamic, dynamic> ret = null;
+    Map<dynamic, dynamic>? ret = null;
     try {
       ret = await method_channel.invokeMethod<Map<dynamic, dynamic>>('get_bd_map');
       //print("got bt_map: $ret");
@@ -1635,22 +1635,22 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       String status = "get_bd_map exception: '${e.message}'.";
       //print(status);
     }
-    return ret;
+    return ret!;
   }
 
   Future<bool> is_bluetooth_on() async {
-    bool ret = false;
+    bool? ret = false;
     try {
       ret = await method_channel.invokeMethod<bool>('is_bluetooth_on');
     } on PlatformException catch (e) {
       String status = "is_bluetooth_on error: '${e.message}'.";
       print(status);
     }
-    return ret;
+    return ret!;
   }
 
   Future<bool> is_location_enabled() async {
-    bool ret = false;
+    bool? ret = false;
     try {
       //print("is_location_enabled try0");
       ret = await method_channel.invokeMethod<bool>('is_location_enabled');
@@ -1659,11 +1659,11 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       String status = "is_location_enabled exception: '${e.message}'.";
       print(status);
     }
-    return ret;
+    return ret!;
   }
 
   Future<bool> is_coarse_location_enabled() async {
-    bool ret = false;
+    bool? ret = false;
     try {
       //print("is_coarse_location_enabled try0");
       ret = await method_channel.invokeMethod<bool>('is_coarse_location_enabled');
@@ -1672,12 +1672,12 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       String status = "is_coarse_location_enabled exception: '${e.message}'.";
       print(status);
     }
-    return ret;
+    return ret!;
   }
 
 
   Future<bool> is_mock_location_enabled() async {
-    bool ret = false;
+    bool? ret = false;
     try {
       //print("is_mock_location_enabled try0");
       ret = await method_channel.invokeMethod<bool>('is_mock_location_enabled');
@@ -1686,7 +1686,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       String status = "is_mock_location_enabled exception: '${e.message}'.";
       print(status);
     }
-    return ret;
+    return ret!;
   }
 
 }
