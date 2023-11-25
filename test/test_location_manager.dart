@@ -19,14 +19,6 @@ void main() {
                         MyApp app = MyApp();
                         await tester.pumpWidget(app);
 
-                        ScrollableTabsDemoState state = app.m_widget.m_state;
-
-                        final AutomatedTestWidgetsFlutterBinding binding = tester.binding;
-                        binding.addTime(const Duration(seconds: 3));
-
-                        bool ret = await state.is_location_enabled();
-                        print("is_location_enabled: $ret");
-                        //bool ret = await state.is_location_enabled();
-                  }
+                                       }
   );
 }
