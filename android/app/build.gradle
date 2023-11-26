@@ -29,7 +29,7 @@ def keystorePropertiesFile = rootProject.file('../key.properties')
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -46,7 +46,7 @@ android {
     defaultConfig {
         applicationId "com.clearevo.bluetooth_gnss"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -86,8 +86,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation group: 'net.sf.marineapi', name: 'marineapi', version: '0.11.0'
-    implementation project(':libecodroidbluetooth')
-    implementation project(':libecodroidgnss_parse')
     implementation project(':libbluetooth_gnss_service')
     compileOnly 'org.projectlombok:lombok:1.18.18'
     annotationProcessor 'org.projectlombok:lombok:1.18.18'
