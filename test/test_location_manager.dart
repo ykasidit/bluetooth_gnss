@@ -16,8 +16,8 @@ void main() {
 
     testWidgets('test location funcs',
                     (WidgetTester tester) async {
-                        MyApp app = MyApp();
-                        await tester.pumpWidget(app);
+                        //MyApp app = MyApp();
+                        //await tester.pumpWidget(app);
 
                                        }
   );

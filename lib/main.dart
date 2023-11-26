@@ -14,13 +14,11 @@ import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock/wakelock.dart';
 
-const Color _kFlutterBlue = Color(0xFF003D75);
 
-
-main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); //https://stackoverflow.com/questions/57689492/flutter-unhandled-exception-servicesbinding-defaultbinarymessenger-was-accesse
   final prefservice = await PrefServiceShared.init(prefix: "pref_");
-  prefservice.setDefaultValues(
+  await prefservice.setDefaultValues(
           {
             'reconnect': false,
             'secure': true,
@@ -32,69 +30,35 @@ main() async {
             'list_nearest_streams_first': false,
           }
   );
-  //PrefService.setString("target_bdaddr", null);
-  runApp(MyApp());
-}
 
-final ThemeData kLightGalleryTheme = _buildLightTheme();
-ThemeData _buildLightTheme() {
-  const Color primaryColor = Color(0xFF0175c2);
-  const Color secondaryColor = Color(0xFF13B9FD);
-  final ColorScheme colorScheme = const ColorScheme.light().copyWith(
-    primary: primaryColor,
-    secondary: secondaryColor,
-  );
-  final ThemeData base = ThemeData(
-    brightness: Brightness.light,
-    //accentColorBrightness: Brightness.dark,
-    colorScheme: colorScheme,
-    primaryColor: primaryColor,
-    //buttonColor: primaryColor,
-    indicatorColor: Colors.white,
-    toggleableActiveColor: const Color(0xFF1E88E5),
-    splashColor: Colors.white24,
-    splashFactory: InkRipple.splashFactory,
-    //accentColor: secondaryColor,
-    canvasColor: Colors.white,
-    scaffoldBackgroundColor: Colors.white,
-    //backgroundColor: Colors.white,
-    //errorColor: const Color(0xFFB00020),
-    buttonTheme: ButtonThemeData(
-      colorScheme: colorScheme,
-      textTheme: ButtonTextTheme.primary,
-    ),
-  );
-  return base.copyWith(
-    textTheme: _buildTextTheme(base.textTheme),
-    primaryTextTheme: _buildTextTheme(base.primaryTextTheme),
-    //accentTextTheme: _buildTextTheme(base.accentTextTheme),
-  );
-}
-TextTheme _buildTextTheme(TextTheme base) {
-  return base.copyWith(
-    titleMedium: base.titleSmall!.copyWith(
-      fontFamily: 'GoogleSans',
-    ),
-  );
+  runApp(MyApp(prefservice));
 }
 
 
-
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   // This widget is the root of your application.
+
+  MyApp(this.prev_service, {Key? key}) : super(key: key);
+  final BasePrefService prev_service;
+
+  @override
+  _MyAppState createState() => _MyAppState();
+
+
+}
+
+class _MyAppState extends State<MyApp> {
 
   ScrollableTabsDemo? m_widget;
 
-  @override
   Widget build(BuildContext context) {
-
-    m_widget = ScrollableTabsDemo();
-
-    return MaterialApp(
+    m_widget = ScrollableTabsDemo(widget.prev_service);
+    return PrefService(
+        service: widget.prev_service,
+        child: MaterialApp(
       title: 'Bluetooth GNSS',
-      theme: kLightGalleryTheme,
       home: m_widget,
-    );
+    ));
   }
 }
 
@@ -121,6 +85,8 @@ const List<_Page> _allPages = <_Page>[
 ];
 
 class ScrollableTabsDemo extends StatefulWidget {
+  ScrollableTabsDemo(this.pref_service, {Key? key}) : super(key: key);
+  final BasePrefService pref_service;
   ScrollableTabsDemoState? m_state;
   @override
   ScrollableTabsDemoState createState() {
@@ -389,7 +355,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   Widget build(BuildContext context) {
     final Color iconColor = Theme.of(context).hintColor;
 
-    bool gap_mode =  PrefService.of(context).get('ble_gap_scan_mode') ?? false;
+    bool gap_mode =  false;
 
     _scaffold = Scaffold(
         key: _scaffoldKey,
@@ -414,7 +380,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                             MaterialPageRoute(builder: (context) {
                               dynamic bdmap = sw.m_bdaddr_to_name_map;
                               print("sw.bdaddr_to_name_map: $bdmap");
-                              return settings_widget(bdmap);
+                              return settings_widget(widget.pref_service, bdmap);
                             }
                             ),
                           );
@@ -1342,8 +1308,8 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
       //print('check_and_update_selected_device9');
 
-      if ((sw.get_selected_bdaddr() == null ||
-          sw.get_selected_bdname() == null)) {
+      if ((sw.get_selected_bdaddr(widget.pref_service) == null ||
+          sw.get_selected_bdname(widget.pref_service) == null)) {
         String msg = "Please select your Bluetooth GPS/GNSS Receiver in Settings (the gear icon on top right)";
         /*Fluttertoast.showToast(
             msg: msg
@@ -1351,7 +1317,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
         setState(() {
           _check_state_map_icon["No device selected\n(select in top-right settings/gear icon)"] =
               ICON_FAIL;
-          _selected_device = sw.get_selected_bd_summary();
+          _selected_device = sw.get_selected_bd_summary(widget.pref_service) ?? "";
           _status = msg;
         });
         //print('check_and_update_selected_device10');
@@ -1438,7 +1404,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     }
 
     setState(() {
-      _selected_device = sw.get_selected_bd_summary();
+      _selected_device = sw.get_selected_bd_summary(widget.pref_service) ?? "";
     });
 
     //setState((){});
@@ -1556,9 +1522,9 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     }
 
 
-    String bdaddr = sw.get_selected_bdaddr();
+    String bdaddr = sw.get_selected_bdaddr(widget.pref_service) ?? "";
     if (!gap_mode) {
-      if (bdaddr == null || sw.get_selected_bdname() == null) {
+      if (bdaddr == null || sw.get_selected_bdname(widget.pref_service) == null) {
         toast(
           "Please select your Bluetooth GPS/GNSS Receiver device...",
         );
@@ -1568,7 +1534,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
           context,
           MaterialPageRoute(
               builder: (context) {
-                return settings_widget(bdaddr_to_name_map);
+                return settings_widget(widget.pref_service, bdaddr_to_name_map);
               }
           ),
         );
@@ -1599,7 +1565,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       );
       print("main.dart connect() start connect done");
       if (ret) {
-        status = "Starting connection to:\n"+sw.get_selected_bdname() ?? "(No name)";
+        status = "Starting connection to:\n"+(sw.get_selected_bdname(widget.pref_service)??"") ?? "(No name)";
       } else {
         status = "Failed to connect...";
         setState(() {
