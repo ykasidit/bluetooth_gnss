@@ -5,7 +5,8 @@ import 'dart:math' show cos, sqrt, asin;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
 class settings_widget extends StatefulWidget {
-  settings_widget(Map<dynamic, dynamic> this._bd_map);
+  settings_widget(this.pref_service, Map<dynamic, dynamic> this._bd_map);
+  final BasePrefService pref_service;
   Map<dynamic, dynamic> _bd_map;
   final String title = "Settings";
 
@@ -32,7 +33,7 @@ class settings_widget_state extends State<settings_widget> {
 
   @override
   void initState() {
-    _selected_dev = get_selected_bd_summary();
+    _selected_dev = get_selected_bd_summary(widget.pref_service) ?? "";
     event_channel.receiveBroadcastStream().listen((dynamic event) async {
       Map<dynamic, dynamic> event_map = event;
 
@@ -81,7 +82,7 @@ class settings_widget_state extends State<settings_widget> {
           int nmpl = mount_point_str_list.length;
           toast("Found $nmpl mountpoints...");
           bool sort_by_nearest =
-              PrefService.of(context).get('list_nearest_streams_first') ??
+              widget.pref_service.get('list_nearest_streams_first') ??
                   false;
           print('sort_by_nearest: $sort_by_nearest');
 
@@ -108,7 +109,7 @@ class settings_widget_state extends State<settings_widget> {
               double last_lat = 0;
               double last_lon = 0;
               String ref_lat_lon =
-                  PrefService.of(context).get('ref_lat_lon') ?? "";
+                  widget.pref_service.get('ref_lat_lon') ?? "";
               last_pos_valid = false;
               if (ref_lat_lon.contains(",")) {
                 List<String> parts = ref_lat_lon.split(",");
@@ -177,12 +178,12 @@ class settings_widget_state extends State<settings_widget> {
               });
 
           print("chosen_mountpoint: $chosen_mountpoint");
-          PrefService.of(context).set('ntrip_mountpoint', chosen_mountpoint);
+          widget.pref_service.set('ntrip_mountpoint', chosen_mountpoint);
 
           //force re-load of selected ntrip_mountpoint
           Navigator.of(context).pushReplacement(
               new MaterialPageRoute(builder: (BuildContext context) {
-            return new settings_widget(m_bdaddr_to_name_map);
+            return new settings_widget(widget.pref_service, m_bdaddr_to_name_map);
           }));
         }
       }
@@ -195,24 +196,24 @@ class settings_widget_state extends State<settings_widget> {
     m_bdaddr_to_name_map = bdaddr_to_name_map;
   }
 
-  String get_selected_bdaddr() {
-    return PrefService.of(context).get("target_bdaddr");
+  String get_selected_bdaddr(BasePrefService prefService) {
+    return prefService.get("target_bdaddr") ?? "";
   }
 
-  String get_selected_bdname() {
-    String bdaddr = get_selected_bdaddr();
+  String get_selected_bdname(BasePrefService prefService) {
+    String? bdaddr = get_selected_bdaddr(prefService);
     //print("get_selected_bdname: bdaddr: $bdaddr");
     if (bdaddr == null || !(m_bdaddr_to_name_map.containsKey(bdaddr)))
       return "";
     return m_bdaddr_to_name_map[bdaddr];
   }
 
-  String get_selected_bd_summary() {
+  String get_selected_bd_summary(BasePrefService prefService) {
     //print("get_selected_bd_summary 0");
     String ret = '';
-    String bdaddr = get_selected_bdaddr();
+    String? bdaddr = get_selected_bdaddr(prefService);
     //print("get_selected_bd_summary selected bdaddr: $bdaddr");
-    String bdname = get_selected_bdname();
+    String? bdname = get_selected_bdname(prefService);
     if (bdaddr == null || bdname == null) {
       ret += "No device selected";
     } else {
@@ -232,7 +233,9 @@ class settings_widget_state extends State<settings_widget> {
           value: bdaddr, child: Text(m_bdaddr_to_name_map[bdaddr].toString())));
     }
 
-    return MaterialApp(
+    return PrefService(
+        service: widget.pref_service,
+        child: MaterialApp(
       title: 'Settings',
       home: Scaffold(
           appBar: AppBar(
@@ -241,11 +244,7 @@ class settings_widget_state extends State<settings_widget> {
           body: ModalProgressHUD(
             child: PrefPage(children: [
               PrefTitle(title: Text('Target device:')),
-              PrefText(
-                pref: "$_selected_dev",
-                style: Theme.of(context).textTheme.caption,
-              ),
-              PrefDropdown(items: devlist, pref: 'target_bdaddr'),
+              PrefDropdown(title: Text("Select a paired bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)"), items: devlist, pref: 'target_bdaddr'),
               PrefTitle(title: Text('Bluetooth Connection settings')),
               PrefCheckbox(
                   title: Text("Secure RFCOMM connection"), pref: 'secure'),
@@ -281,10 +280,10 @@ class settings_widget_state extends State<settings_widget> {
                       } on PlatformException catch (e) {
                         toast("WARNING: set_log_uri failed: $e");
                       }
-                      PrefService.of(context).set('log_bt_rx',
+                      widget.pref_service.set('log_bt_rx',
                           false); //set by java-side mainactivity on success only
                     } else {
-                      PrefService.of(context).set('log_uri', "");
+                      widget.pref_service.set('log_uri', "");
                     }
                   }),
               PrefTitle(title: Text('RTK/NTRIP Server settings')),
@@ -314,6 +313,29 @@ class settings_widget_state extends State<settings_widget> {
                     }
                     return null;
                   }),
+              PrefText(label: "Ref lat,lon for sorting", pref: 'ref_lat_lon'),
+              PrefText(
+                  label: "Stream (mount-point)",
+                  pref: 'ntrip_mountpoint',
+                  validator: (str) {
+                    if (str == null) {
+                      return "Invalid mount-point";
+                    }
+                    return null;
+                  }),
+              PrefText(
+                  label: 'User',
+                  pref: 'ntrip_user',
+                  validator: (str) {
+                    return null;
+                  }),
+              PrefText(
+                  label: 'Password',
+                  pref: 'ntrip_pass',
+                  obscureText: true,
+                  validator: (str) {
+                    return null;
+                  }),
               Padding(
                 padding: const EdgeInsets.all(5.0),
                 child: ElevatedButton(
@@ -322,13 +344,13 @@ class settings_widget_state extends State<settings_widget> {
                   ),
                   onPressed: () async {
                     String host =
-                        PrefService.of(context).get('ntrip_host') ?? "";
+                        widget.pref_service.get('ntrip_host') ?? "";
                     String port =
-                        PrefService.of(context).get('ntrip_port') ?? "";
+                        widget.pref_service.get('ntrip_port') ?? "";
                     String user =
-                        PrefService.of(context).get('ntrip_user') ?? "";
+                        widget.pref_service.get('ntrip_user') ?? "";
                     String pass =
-                        PrefService.of(context).get('ntrip_pass') ?? "";
+                        widget.pref_service.get('ntrip_pass') ?? "";
                     if (host.isEmpty || port.isEmpty) {
                       toast(
                           "Please specify the ntrip_host and ntrip_port first...");
@@ -375,33 +397,10 @@ class settings_widget_state extends State<settings_widget> {
               PrefCheckbox(
                   title: Text("Sort by nearest to to Ref lat,lon"),
                   pref: 'list_nearest_streams_first'),
-              PrefText(label: "Ref lat,lon", pref: 'ref_lat_lon'),
-              PrefText(
-                  label: "Stream (mount-point)",
-                  pref: 'ntrip_mountpoint',
-                  validator: (str) {
-                    if (str == null) {
-                      return "Invalid mount-point";
-                    }
-                    return null;
-                  }),
-              PrefText(
-                  label: 'User',
-                  pref: 'ntrip_user',
-                  validator: (str) {
-                    return null;
-                  }),
-              PrefText(
-                  label: 'Password',
-                  pref: 'ntrip_pass',
-                  obscureText: true,
-                  validator: (str) {
-                    return null;
-                  }),
             ]),
             inAsyncCall: loading,
           )),
-    );
+    ));
   }
 }
 

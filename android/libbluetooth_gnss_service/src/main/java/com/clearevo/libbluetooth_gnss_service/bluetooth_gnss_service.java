@@ -95,7 +95,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String[] REQUIRED_INTENT_EXTRA_PARAM_KEYS = {"ntrip_host", "ntrip_port", "ntrip_mountpoint", "ntrip_user", "ntrip_pass"};
     boolean m_log_bt_rx = false;
     boolean m_disable_ntrip = false;
-    boolean m_ble_gap_scan_mode = false;
+    public static final boolean m_ble_gap_scan_mode = false; //disabled for now
     OutputStream m_log_bt_rx_fos = null;
     OutputStream m_log_bt_rx_csv_fos = null;
     OutputStream m_log_operations_fos = null;
@@ -110,7 +110,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
         if (intent != null) {
             try {
-                m_ble_gap_scan_mode = intent.getBooleanExtra(BLE_GAP_SCAN_MODE, false);
+                //disabled for now m_ble_gap_scan_mode = intent.getBooleanExtra(BLE_GAP_SCAN_MODE, false);
                 {
 
                     m_bdaddr = intent.getStringExtra("bdaddr");
