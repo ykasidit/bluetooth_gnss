@@ -33,7 +33,7 @@
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" android:exported="true">
 
             <!-- Specify that the launch screen should continue being displayed -->
             <!-- until Flutter renders its first frame. -->
@@ -52,7 +52,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <receiver android:name=".StartConnectionReceiver" >
+        <receiver android:name=".StartConnectionReceiver" android:exported="true" >
             <intent-filter>
                 <action android:name="bluetooth.CONNECT" />
                 <category android:name="android.intent.category.DEFAULT" />
