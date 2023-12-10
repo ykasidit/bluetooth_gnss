@@ -519,7 +519,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                   style: Theme.of(context).textTheme.bodyText1
                               ),
                               Text(
-                                  _param_map['GN_time'] ?? WAITING_DEV,
+                                  _param_map['GN_time'] ?? _param_map['GP_time'] ?? WAITING_DEV,
                                   style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
@@ -532,7 +532,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                   style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
-                                  _param_map['GN_ellipsoidal_height_double_02_str'] ?? WAITING_DEV,
+                                  _param_map['GN_ellipsoidal_height_double_02_str'] ?? _param_map['GP_ellipsoidal_height_double_02_str'] ?? WAITING_DEV,
                                   style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
@@ -545,7 +545,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                   style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
-                                  _param_map['GN_gga_alt_double_02_str'] ?? WAITING_DEV,
+                                  _param_map['GN_gga_alt_double_02_str'] ?? _param_map['GP_gga_alt_double_02_str'] ?? WAITING_DEV,
                                   style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],
@@ -558,7 +558,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                                   style: Theme.of(context).textTheme.bodyText2
                               ),
                               Text(
-                                  _param_map['GN_geoidal_height_double_02_str'] ?? WAITING_DEV,
+                                  _param_map['GN_geoidal_height_double_02_str'] ?? _param_map['GP_geoidal_height_double_02_str'] ?? WAITING_DEV,
                                   style: Theme.of(context).textTheme.bodyText1
                               ),
                             ],

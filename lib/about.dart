@@ -60,15 +60,12 @@ App version: """+version+ """
 Purpose
 ------
 
-Use this app to get more accurate positioning data (latitude, longitude, elevation...) from external 'Bluetooth GNSS Receivers' (like 'EcoDroidGPS', 'HOLUX', 'Garmin GLO' etc) and use it as the position for apps in this phone (like Waze, etc) via 'Mock location app' Android Developer Settings.
+Use this app to get more accurate positioning data (latitude, longitude, elevation...) from external 'Bluetooth GNSS Receivers' (like 'Bad Elf GPS PRO+', 'HOLUX', 'Garmin GLO' etc) and use it as the position for apps in this phone (like Waze, etc) via 'Mock location app' Android Developer Settings.
 
 """+ScrollableTabsDemoState.note_how_to_disable_mock_location+"""
 
-This free and open source app is provided for free by [www.ClearEvo.com](http://www.clearevo.com) - home of the 'EcoDroidGPS' Bluetooth GPS Receiver for Android phones and Tablets.
-
-This app 'bluetooth_gnss', amd its engine - 'libbluetooth_gnss', are free software and released under the GNU GPL for anyone to study/use/modify/share at:
+This app 'bluetooth_gnss' is free software and released under the GNU GPL for anyone to study/use/modify/share at:
 - <https://github.com/ykasidit/bluetooth_gnss>
-- <https://github.com/ykasidit/libbluetooth_gnss>
 
 Special thanks
 --------------
@@ -88,30 +85,21 @@ Authors
 Notices for the UI part of this app
 -----------------------
 
-This app's UI uses, and I would like to hereby say thanks all authors of, below flutter packages - their respective authors and licenses described on their pages under <https://pub.dev/packages>
-- preferences
-- flutter_gallery_assets
-- flutter_markdown
-- progress_dialog
-- package_info
-- share
-- url_launcher
-- geolocator
-
+This app's UI uses, and I would like to hereby say thanks all authors of, packages listed in below url - their respective authors and licenses described on their pages under <https://pub.dev/packages>
+- https://github.com/ykasidit/bluetooth_gnss/blob/master/pubspec.yaml
 
 Notices for engine part of this app
 -----------------------------------
 
-This 'libbluetooth_gnss' engine uses, and I would like to hereby say thanks all authors of, the 'Java Marine API' - NMEA 0183 library for Java - under the GNU LGPL - see the project page for more info:
+I would like to hereby say thanks all authors of, the 'Java Marine API' - NMEA 0183 library for Java - under the GNU LGPL - see the project page for more info:
 - <https://github.com/ktuukkan/marine-api>
-
 
 ---
 
 Copyright and License
 ---------------------
 
-Copyright (C) 2019 Kasidit Yusuf <ykasidit@gmail.com> and all respective project source code contributors.
+Copyright (C) 2019-2023 Kasidit Yusuf <ykasidit@gmail.com> and all respective project source code contributors.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
