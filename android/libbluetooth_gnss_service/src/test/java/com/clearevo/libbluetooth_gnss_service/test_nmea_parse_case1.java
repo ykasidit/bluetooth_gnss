@@ -23,11 +23,29 @@ import static org.junit.Assert.assertTrue;
 public class test_nmea_parse_case1 {
 
     @Test
+    public void test_badelf_gps_pro_plus() throws Exception {
+        String[] nmeas = {
+                "$GPRMC,074955.000,A,0641.0037,N,10139.4031,E,0.14,118.40,101223,,,D*60",
+        };
+
+        gnss_sentence_parser parser = new gnss_sentence_parser();
+        for (String nmea : nmeas) {
+            parser.parse(nmea.getBytes("ascii"));
+        }
+
+        HashMap<String, Object> params = parser.get_params();
+        for (String key : params.keySet()) {
+            System.out.println("param key: "+key+" val: "+params.get(key));
+        }
+
+
+    }
+    @Test
     public void test() throws Exception {
         String[] nmeas = {
                 "$GNGSA,A,3,26,31,10,32,14,16,25,20,18,22,41,,1.34,0.74,1.12*16\n",
                 "$GNGSA,A,3,73,80,70,,,,,,,,,,1.34,0.74,1.12*10",
-                "$GNRMC,020125.00,A,1845.82207,N,09859.94984,E,0.027,,101219,,,F,V*1A"
+                "$GNRMC,020125.00,A,1845.82207,N,09859.94984,E,0.027,,101219,,,F,V*1A",
         };
 
 

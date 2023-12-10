@@ -10,9 +10,9 @@ Build instructions
 
 * Install the the [Flutter SDK](https://flutter.dev/docs/get-started/install) as per official instructions including the 'Android setup' and make sure that the Android SDK is installed.
 
-* Downgrade the flutter sdk version to 2.10:
+* Make sure the flutter sdk version matches that of below:
 
-`flutter downgrade v2.10.3`
+`flutter downgrade v3.10.6`
 
 * In this folder run:
 `flutter pub get`
