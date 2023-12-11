@@ -1244,8 +1244,21 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
     //print('check_and_update_selected_device2');
 
+    List<String> not_granted_permissions = await check_permissions_not_granted();
+    if (not_granted_permissions.length > 0) {
+      String msg = "Please allow required app permissions... Re-install app if declined earlier and not seeing permission request pop-up: "+not_granted_permissions.toString();
+      setState(() {
+        _check_state_map_icon["App permissions"] = ICON_FAIL;
+        _status = msg;
+      });
+      return null;
+    }
+
+    _check_state_map_icon["App permissions"] = ICON_OK;
+
+
     if (!(await is_bluetooth_on())) {
-      String msg = "Bluetooth is OFF - Please turn ON Bluetooth...";
+      String msg = "Please turn ON Bluetooth...";
       setState(() {
         _check_state_map_icon["Bluetooth is OFF"] = ICON_FAIL;
         _status = msg;
@@ -1308,8 +1321,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
 
       //print('check_and_update_selected_device9');
 
-      if ((sw.get_selected_bdaddr(widget.pref_service) == null ||
-          sw.get_selected_bdname(widget.pref_service) == null)) {
+      if (sw.get_selected_bdaddr(widget.pref_service).isEmpty) {
         String msg = "Please select your Bluetooth GPS/GNSS Receiver in Settings (the gear icon on top right)";
         /*Fluttertoast.showToast(
             msg: msg
@@ -1601,7 +1613,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
       String status = "get_bd_map exception: '${e.message}'.";
       //print(status);
     }
-    return ret!;
+    return ret ?? Map();
   }
 
   Future<bool> is_bluetooth_on() async {
@@ -1614,6 +1626,22 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     }
     return ret!;
   }
+
+  Future<List<String>> check_permissions_not_granted() async {
+    List<String> ret = ['failed_to_list_ungranted_permissions'];
+    try {
+      List<Object?>? _ret = await method_channel.invokeMethod<List<Object?>>('check_permissions_not_granted');
+      ret.clear();
+      for (Object? o in _ret!) {
+        ret.add((o??"").toString());
+      }
+    } on PlatformException catch (e) {
+      String status = "check_permissions_not_granted error: '${e.message}'.";
+      print(status);
+    }
+    return ret;
+  }
+
 
   Future<bool> is_location_enabled() async {
     bool? ret = false;

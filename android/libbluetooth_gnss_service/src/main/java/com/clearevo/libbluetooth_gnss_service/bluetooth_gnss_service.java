@@ -1,6 +1,8 @@
 package com.clearevo.libbluetooth_gnss_service;
 
 
+import static android.app.PendingIntent.FLAG_IMMUTABLE;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AppOpsManager;
@@ -1014,7 +1016,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
         Intent notificationIntent = new Intent(this.getApplicationContext(), m_target_activity_class);
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(this.getApplicationContext(), 0, notificationIntent, 0);
+                PendingIntent.getActivity(this.getApplicationContext(), 0, notificationIntent, FLAG_IMMUTABLE);
 
 
         NotificationManager mNotificationManager =

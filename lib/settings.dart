@@ -211,10 +211,10 @@ class settings_widget_state extends State<settings_widget> {
   String get_selected_bd_summary(BasePrefService prefService) {
     //print("get_selected_bd_summary 0");
     String ret = '';
-    String? bdaddr = get_selected_bdaddr(prefService);
+    String bdaddr = get_selected_bdaddr(prefService);
     //print("get_selected_bd_summary selected bdaddr: $bdaddr");
-    String? bdname = get_selected_bdname(prefService);
-    if (bdaddr == null || bdname == null) {
+    String bdname = get_selected_bdname(prefService);
+    if (bdaddr.isEmpty) {
       ret += "No device selected";
     } else {
       ret += bdname;
@@ -249,10 +249,10 @@ class settings_widget_state extends State<settings_widget> {
               PrefCheckbox(
                   title: Text("Secure RFCOMM connection"), pref: 'secure'),
               PrefCheckbox(
-                  title: Text("Auto-reconnect (when disconnected"),
+                  title: Text("Auto-reconnect - when disconnected"),
                   pref: 'reconnect'),
               PrefCheckbox(
-                  title: Text("Autostart (connect on phone boot"),
+                  title: Text("Autostart - connect on phone boot"),
                   pref: 'autostart'),
               PrefCheckbox(
                   title: Text(

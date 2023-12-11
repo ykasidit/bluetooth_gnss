@@ -163,12 +163,10 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                 result.success(false);
                             } else if (call.method.equals("get_bd_map")) {
                                 result.success(get_bd_map());
-                            } else if (call.method.equals("is_bluetooth_on")) {
-                                if (check_permissions()) {
-                                    result.success(rfcomm_conn_mgr.is_bluetooth_on());
-                                } else {
-                                    result.success(false);
-                                }
+                            } else if (call.method.equals("check_permissions_not_granted")) {
+                                result.success(check_permissions_not_granted());
+                            }else if (call.method.equals("is_bluetooth_on")) {
+                                result.success(rfcomm_conn_mgr.is_bluetooth_on());
                             } else if (call.method.equals("is_ntrip_connected")) {
                                 result.success(m_service != null && m_service.is_ntrip_connected());
                             } else if (m_service != null && call.method.equals("get_ntrip_cb_count")) {
@@ -568,7 +566,9 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         }
     };
 
-    public boolean check_permissions()
+    static boolean already_asked_perm = false;
+
+    public List<String> check_permissions_not_granted()
     {
         {
             //check/ask manifest permissions
@@ -586,16 +586,25 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                 }
             }
             List<String> notGrantedPermission = getNotGrantedPermissions(needed);
-            if (notGrantedPermission.size() > 0) {
-                Log.d(TAG, "start_init_thread() should ask manifest perm notGrantedPermission: " + Arrays.toString(notGrantedPermission.toArray()));
-                isRequestingPermission = true;
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                        notGrantedPermission.get(0)
-                }, 1);
-                return false;
+            /*if (notGrantedPermission.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                notGrantedPermission.remove(Manifest.permission.WRITE_EXTERNAL_STORAGE); //not always required, only required if user enables logging
             }
+            if (notGrantedPermission.contains(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                notGrantedPermission.remove(Manifest.permission.READ_EXTERNAL_STORAGE); //not always required, only required if user enables logging
+            }*/
+            if (notGrantedPermission.size() > 0 && (!already_asked_perm)) {
+                Log.d(TAG, "should ask manifest perm notGrantedPermission: " + Arrays.toString(notGrantedPermission.toArray()));
+                already_asked_perm = true;
+                String[] perm_array = notGrantedPermission.toArray(new String[notGrantedPermission.size()]);
+                m_handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ActivityCompat.requestPermissions(MainActivity.this, perm_array, 1);
+                    }
+                });
+            }
+            return notGrantedPermission;
         }
-        return true;
     }
 
     boolean isRequestingPermission = false;
