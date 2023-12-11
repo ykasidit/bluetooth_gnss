@@ -70,6 +70,7 @@ This app 'bluetooth_gnss' is free software and released under the GNU GPL for an
 Special thanks
 --------------
 
+- Thanks to [Bad Elf](https://bad-elf.com) for providing a few of their devices to test with.  
 - Thanks to Geoffrey Peck from Australia for his tests, observations and suggestions.
 - Thanks to Peter Mousley from Australia for his expert advice, tests, code review and guidance.
 - Thanks to [Auric Goldfinger](https://github.com/auricgoldfinger) for his great contribution in developing the auto connect on bluetooth feature and the detailed readme merged into above.

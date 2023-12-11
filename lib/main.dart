@@ -28,6 +28,8 @@ Future<void> main() async {
             'ble_gap_scan_mode': false,
             'autostart': false,
             'list_nearest_streams_first': false,
+            'ntrip_host': "igs-ip.net",
+            'ntrip_port': "2101"
           }
   );
 
@@ -1035,7 +1037,7 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
                               ),
                             ),
                             Padding(padding: EdgeInsets.all(10.0)),
-                            Text("${(PrefService.of(context).get('ntrip_host') != null && PrefService.of(context).get('ntrip_host') != null) ? (PrefService.of(context).get('ntrip_host'))+":"+PrefService.of(context).get('ntrip_port') : ''}"),
+                            Text("${(PrefService.of(context).get('ntrip_host') != null && PrefService.of(context).get('ntrip_port') != null) ? (PrefService.of(context).get('ntrip_host').toString())+":"+PrefService.of(context).get('ntrip_port').toString() : ''}"),
                             Padding(padding: EdgeInsets.all(10.0)),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,

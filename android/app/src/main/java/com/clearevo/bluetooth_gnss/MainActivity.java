@@ -118,7 +118,6 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                 String port = call.argument("ntrip_port");
                                 String user = call.argument("ntrip_user");
                                 String pass = call.argument("ntrip_pass");
-                                int ret_code = 0;
                                 new Thread() {
                                     public void run() {
                                         ArrayList<String> ret = new ArrayList<String>(); //init with empty list in case get fails
@@ -139,7 +138,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                         msg.sendToTarget();
                                     }
                                 }.start();
-                                result.success(true);
+                                result.success(0);
                             } else if (call.method.equals("toast")) {
                                 String msg = call.argument("msg");
                                 toast(msg);
