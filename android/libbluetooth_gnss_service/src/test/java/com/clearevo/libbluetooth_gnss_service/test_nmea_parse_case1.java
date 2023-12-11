@@ -50,7 +50,7 @@ public class test_nmea_parse_case1 {
 
 
         gnss_sentence_parser parser = new gnss_sentence_parser();
-        String fp = "/home/kasidit/Downloads/2022-02-21_10-00-31_rx_log.txt";
+        String fp = "/home/kasidit/Downloads/2023-04-05_21-01-10_rx_log.txt";
         File f = new File(fp);
         if (f.exists()) {
             FileInputStream fin = new FileInputStream(f);

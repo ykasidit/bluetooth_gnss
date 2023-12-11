@@ -1,10 +1,13 @@
 package com.clearevo.bluetooth_gnss;
 
 import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
@@ -23,7 +26,10 @@ import com.clearevo.libbluetooth_gnss_service.rfcomm_conn_mgr;
 import com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -81,15 +87,14 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
 
                             if (call.method.equals("connect")) {
                                 final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
-                                gnssConnectionParams.setBdaddr(call.argument("bdaddr"));
-                                gnssConnectionParams.setSecure(Boolean.TRUE.equals(call.argument("secure")));
-                                gnssConnectionParams.setReconnect(Boolean.TRUE.equals(call.argument("reconnect")));
-                                gnssConnectionParams.setLogBtRx(Boolean.TRUE.equals(call.argument("log_bt_rx")));
-                                gnssConnectionParams.setDisableNtrip(Boolean.TRUE.equals(call.argument("disable_ntrip")));
-                                gnssConnectionParams.setDisableNtrip(Boolean.TRUE.equals(call.argument("disable_ntrip")));
-                                gnssConnectionParams.setGapMode(Boolean.TRUE.equals(call.argument("ble_gap_scan_mode")));
+                                gnssConnectionParams.bdaddr = call.argument("bdaddr");
+                                gnssConnectionParams.secure = (Boolean.TRUE.equals(call.argument("secure")));
+                                gnssConnectionParams.reconnect = (Boolean.TRUE.equals(call.argument("reconnect")));
+                                gnssConnectionParams.logBtRx = (Boolean.TRUE.equals(call.argument("log_bt_rx")));
+                                gnssConnectionParams.disableNtrip = (Boolean.TRUE.equals(call.argument("disable_ntrip")));
+                                gnssConnectionParams.gapMode = (Boolean.TRUE.equals(call.argument("ble_gap_scan_mode")));
                                 for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-                                    gnssConnectionParams.getExtraParams().put(pk, call.argument(pk));
+                                    gnssConnectionParams.extraParams.put(pk, call.argument(pk));
                                 }
 
                                 final Context context = getApplicationContext();
@@ -157,9 +162,13 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                 }
                                 result.success(false);
                             } else if (call.method.equals("get_bd_map")) {
-                                result.success(rfcomm_conn_mgr.get_bd_map());
+                                result.success(get_bd_map());
                             } else if (call.method.equals("is_bluetooth_on")) {
-                                result.success(rfcomm_conn_mgr.is_bluetooth_on());
+                                if (check_permissions()) {
+                                    result.success(rfcomm_conn_mgr.is_bluetooth_on());
+                                } else {
+                                    result.success(false);
+                                }
                             } else if (call.method.equals("is_ntrip_connected")) {
                                 result.success(m_service != null && m_service.is_ntrip_connected());
                             } else if (m_service != null && call.method.equals("get_ntrip_cb_count")) {
@@ -558,5 +567,107 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
             m_service.set_callback((gnss_sentence_parser.gnss_parser_callbacks) null);
         }
     };
+
+    public boolean check_permissions()
+    {
+        {
+            //check/ask manifest permissions
+            PackageInfo info = null;
+            try {
+                info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_PERMISSIONS);
+            } catch (PackageManager.NameNotFoundException e) { /* */ }
+            List<String> needed = new ArrayList<>();
+            if (info != null && info.requestedPermissions != null && info.requestedPermissionsFlags != null) {
+                for (int i = 0; i < info.requestedPermissions.length; i++) {
+                    int flags = info.requestedPermissionsFlags[i];
+                    if ((flags & PackageInfo.REQUESTED_PERMISSION_GRANTED) == 0) {
+                        needed.add(info.requestedPermissions[i]);
+                    }
+                }
+            }
+            List<String> notGrantedPermission = getNotGrantedPermissions(needed);
+            if (notGrantedPermission.size() > 0) {
+                Log.d(TAG, "start_init_thread() should ask manifest perm notGrantedPermission: " + Arrays.toString(notGrantedPermission.toArray()));
+                isRequestingPermission = true;
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                        notGrantedPermission.get(0)
+                }, 1);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    boolean isRequestingPermission = false;
+
+    public List<String> getNotGrantedPermissions(List<String> needed_ori) {
+        List<String> needed = new ArrayList<>(needed_ori); //make a copy as we need to mutate this list before return
+        List<String> noNeedToAskList = new ArrayList<>();
+        noNeedToAskList.addAll(
+                Arrays.asList(
+                        "android.permission.WRITE_SETTINGS",
+                        "android.permission.READ_LOGS",
+                        "android.permission.BATTERY_STATS",
+                        "android.permission.MODIFY_PHONE_STATE",
+                        "android.permission.READ_NETWORK_USAGE_HISTORY",
+                        "android.permission.READ_PRIVILEGED_PHONE_STATE",
+                        "android.permission.LOCAL_MAC_ADDRESS",
+                        "android.permission.SYSTEM_ALERT_WINDOW",
+                        "android.permission.ACCESS_MOCK_LOCATION",
+                        "android.permission.PACKAGE_USAGE_STATS"
+                )
+        );
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            noNeedToAskList.add("android.permission.ANSWER_PHONE_CALLS");
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            noNeedToAskList.add("android.permission.FOREGROUND_SERVICE");
+        }
+        if (Build.VERSION.SDK_INT < 31) {
+            noNeedToAskList.add("android.permission.BLUETOOTH_SCAN");
+            noNeedToAskList.add("android.permission.BLUETOOTH_ADVERTISE");
+            noNeedToAskList.add("android.permission.BLUETOOTH_CONNECT");
+        }
+        if (Build.VERSION.SDK_INT < 33) {
+            noNeedToAskList.add("android.permission.POST_NOTIFICATIONS");
+        }
+        List<String> removeList = new ArrayList<>();
+        for (String perm : needed) {
+            if (noNeedToAskList.contains(perm)) {
+                removeList.add(perm);
+            }
+        }
+        needed.removeAll(removeList);
+        return needed;
+    }
+    public HashMap<String, String> get_bd_map() {
+        HashMap<String, String> ret = new HashMap<String, String>();
+        try {
+            BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+            if (adapter != null) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    m_handler.post(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                                            Manifest.permission.BLUETOOTH_CONNECT
+                                    }, 1);
+                                }
+                            }
+                    );
+                }
+                Set<BluetoothDevice> bonded_devs = adapter.getBondedDevices();
+                for (BluetoothDevice bonded_dev : bonded_devs) {
+                    ret.put(bonded_dev.getAddress(), bonded_dev.getName());
+                }
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "CRITICAL WARNING: get_bd_map exception: "+Log.getStackTraceString(e));
+        }
+
+        return ret;
+    }
+
 
 }

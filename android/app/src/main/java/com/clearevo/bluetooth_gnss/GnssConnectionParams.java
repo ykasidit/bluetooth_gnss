@@ -11,11 +11,11 @@ import lombok.ToString;
 @Setter
 @ToString
 public class GnssConnectionParams {
-    private String bdaddr;
-    private boolean secure;
-    private boolean reconnect;
-    private boolean logBtRx;
-    private boolean disableNtrip;
-    private boolean gapMode;
-    private final Map<String, String> extraParams = new HashMap<>();
+    public String bdaddr;
+    public boolean secure;
+    public boolean reconnect;
+    public boolean logBtRx;
+    public boolean disableNtrip;
+    public boolean gapMode;
+    public final Map<String, String> extraParams = new HashMap<>();
 }

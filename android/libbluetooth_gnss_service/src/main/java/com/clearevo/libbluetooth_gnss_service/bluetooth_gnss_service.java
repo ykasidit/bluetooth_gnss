@@ -1,6 +1,8 @@
 package com.clearevo.libbluetooth_gnss_service;
 
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AppOpsManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -19,7 +21,9 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Criteria;
+import android.location.provider.ProviderProperties;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
@@ -36,6 +40,7 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.location.Location;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.documentfile.provider.DocumentFile;
 
@@ -91,7 +96,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     boolean m_send_gga_to_ntrip = true;
     boolean m_all_ntrip_params_specified = false;
     long m_last_ntrip_gga_send_ts = 0;
-    public static final long SEND_GGA_TO_NTRIP_EVERY_MILLIS = 29*1000;
+    public static final long SEND_GGA_TO_NTRIP_EVERY_MILLIS = 29 * 1000;
     public static final String[] REQUIRED_INTENT_EXTRA_PARAM_KEYS = {"ntrip_host", "ntrip_port", "ntrip_mountpoint", "ntrip_user", "ntrip_pass"};
     boolean m_log_bt_rx = false;
     boolean m_disable_ntrip = false;
@@ -101,6 +106,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     OutputStream m_log_operations_fos = null;
     long log_bt_rx_bytes_written = 0;
     public static bluetooth_gnss_service curInstance = null;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // If we get killed, after returning from here, restart
@@ -128,7 +134,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         throw new Exception("activity_class_name not specified");
                     }
                     m_target_activity_class = Class.forName(cn);
-                    log(TAG, "m_target_activity_class: "+m_target_activity_class.getCanonicalName());
+                    log(TAG, "m_target_activity_class: " + m_target_activity_class.getCanonicalName());
                     if (!intent.hasExtra("activity_icon_id")) {
                         throw new Exception("activity_icon_id not specified");
                     }
@@ -149,7 +155,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     }
                 }
             } catch (Exception e) {
-                String msg = "bluetooth_gnss_service: startservice: parse intent failed - cannot start... - exception: "+Log.getStackTraceString(e);
+                String msg = "bluetooth_gnss_service: startservice: parse intent failed - cannot start... - exception: " + Log.getStackTraceString(e);
                 log(TAG, msg);
             }
 
@@ -163,12 +169,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
     public static final String log_uri_pref_key = "flutter.pref_log_uri";
-    void connect()
-    {
+
+    void connect() {
         if (m_ble_gap_scan_mode) {
-            log(TAG, "onStartCommand pre call start_forground m_ble_gap_scan_mode "+m_ble_gap_scan_mode);
+            log(TAG, "onStartCommand pre call start_forground m_ble_gap_scan_mode " + m_ble_gap_scan_mode);
             start_foreground("Scanning GPS broadcasts...", "", "");
-            log(TAG, "onStartCommand post call start_forground m_ble_gap_scan_mode "+m_ble_gap_scan_mode);
+            log(TAG, "onStartCommand post call start_forground m_ble_gap_scan_mode " + m_ble_gap_scan_mode);
             handle_ble_gap_scan_enable_changed();
         } else {
             if (m_bdaddr == null) {
@@ -197,13 +203,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     Thread ble_gap_scan_thread = null;
 
-    public boolean is_ble_gap_scan_thread_running()
-    {
+    public boolean is_ble_gap_scan_thread_running() {
         return ble_gap_scan_thread != null && ble_gap_scan_thread.isAlive();
     }
 
     //credit to https://github.com/joelwass/Android-BLE-Scan-Example/blob/master/app/src/main/java/com/example/joelwasserman/androidbletutorial/MainActivity.java
     private ScanCallback leScanCallback = new ScanCallback() {
+
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             if (result == null) {
@@ -215,6 +221,16 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             scan_record_bytes = scanRecord.getBytes();
             if (scan_record_bytes == null) {
                 scan_record_bytes = new byte[0];
+            }
+            if (ActivityCompat.checkSelfPermission(bluetooth_gnss_service.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                m_handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        toast("onScanResult - BLUETOOTH_CONNECT permission not granted by user...");
+                        connect();
+                    }
+                });
+                return;
             }
             log(TAG, "onScanResult Device Name: " + result.getDevice().getName() + " rssi: " + result.getRssi() + " scanrecord bytes: " + toHexString(scan_record_bytes));
             //ex: 02 01 1A 04 09 45 44 47 03 03 AA FE 12 16 AA FE 30 00 E1 6A 6D FD 03 10 9B 91 3C 38 50 32 28 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -301,6 +317,16 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
                             while (ble_gap_scan_thread == this) {
                                 log(TAG, "btLeScanner.startScan(leScanCallback); START");
+                                if (ActivityCompat.checkSelfPermission(bluetooth_gnss_service.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                                    m_handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            toast("onScanResult - BLUETOOTH_CONNECT permission not granted by user...");
+                                            connect();
+                                        }
+                                    });
+                                    return;
+                                }
                                 btLeScanner.startScan(filters, settings, leScanCallback);
                                 log(TAG, "btLeScanner.startScan(leScanCallback); DONE");
                                 Thread.sleep(BLE_GAP_SCAN_LOOP_DURAITON_MILLIS);
@@ -484,6 +510,16 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 toast("connecting to: "+bdaddr);
                 if (g_rfcomm_mgr != null) {
                     g_rfcomm_mgr.close();
+                }
+                if (ActivityCompat.checkSelfPermission(bluetooth_gnss_service.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    m_handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            toast("onScanResult - BLUETOOTH_CONNECT permission not granted by user...");
+                            connect();
+                        }
+                    });
+                    return ret;
                 }
                 BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
                 BluetoothDevice dev = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(bdaddr);
@@ -731,13 +767,14 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             public void run() {
                 try {
                     g_rfcomm_mgr.connect();
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     m_handler.post(
                             new Runnable() {
                                 @Override
                                 public void run() {
-                                    toast("Connect failed... Please make sure your device is ready...");
-                                    updateNotification("Connect failed...", "Target device: "+m_bdaddr, "");
+                                    String emsg = "Connect failed: "+e.toString();
+                                    toast(emsg);
+                                    updateNotification("Connect failed: "+Log.getStackTraceString(e), "Target device: "+m_bdaddr, emsg);
                                 }
                             }
                     );
@@ -1172,8 +1209,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         /*boolean supportsAltitude*/ true,
                         /*boolean supportsSpeed*/ true,
                         /*boolean supportsBearing */ true,
-                        Criteria.POWER_LOW,
-                        Criteria.ACCURACY_MEDIUM);
+                        ProviderProperties.POWER_USAGE_LOW,
+                        ProviderProperties.ACCURACY_FINE);
                 locationManager.setTestProviderEnabled(LocationManager.GPS_PROVIDER, true);
                 m_handler.post(
                         new Runnable() {

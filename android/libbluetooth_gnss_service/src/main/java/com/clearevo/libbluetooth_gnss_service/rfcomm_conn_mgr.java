@@ -1,4 +1,7 @@
 package com.clearevo.libbluetooth_gnss_service;
+
+import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -6,9 +9,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.ParcelUuid;
 import android.os.Parcelable;
 
+
+import androidx.core.app.ActivityCompat;
 
 import java.io.Closeable;
 import java.io.InputStream;
@@ -63,7 +69,7 @@ public class rfcomm_conn_mgr {
                 Log.d(TAG, "broadcastreceiver: got BluetoothDevice.ACTION_UUID");
                 BluetoothDevice deviceExtra = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 Parcelable[] uuidExtra = intent.getParcelableArrayExtra(BluetoothDevice.EXTRA_UUID);
-                Log.d(TAG, "broadcastreceiver: DeviceExtra: " + deviceExtra + " uuidExtra: "+uuidExtra);
+                Log.d(TAG, "broadcastreceiver: DeviceExtra: " + deviceExtra + " uuidExtra: " + uuidExtra);
 
                 if (uuidExtra != null) {
                     for (Parcelable p : uuidExtra) {
@@ -78,52 +84,14 @@ public class rfcomm_conn_mgr {
     };
 
 
-    public static BluetoothDevice get_first_bonded_bt_device_where_name_contains(String contains) throws Exception
-    {
-        Set<BluetoothDevice> bonded_devs = BluetoothAdapter.getDefaultAdapter().getBondedDevices();
-        BluetoothDevice test_device = null;
-        Log.d(TAG,"n bonded_devs: "+bonded_devs.size());
+    public static boolean is_bluetooth_on() {
 
-        for (BluetoothDevice bonded_dev : bonded_devs) {
-            //Log.d(TAG,"bonded_dev: "+ bonded_dev.getName()+" bdaddr: "+bonded_dev.getAddress());
-            if (bonded_dev.getName().contains(contains)) {
-                String bt_dev_name = bonded_dev.getName();
-                Log.d(TAG,"get_first_bonded_bt_device_where_name_contains() using this dev: name: "+bt_dev_name+" bdaddr: "+bonded_dev.getAddress());
-                test_device = bonded_dev;
-                break;
-            }
-        }
-
-        if (test_device == null) {
-            throw new Exception("failed to find a matching bonded (bluetooth paired) device - ABORT");
-        }
-
-        return test_device;
-    }
-
-    public static boolean is_bluetooth_on()
-    {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter != null) {
             return adapter.isEnabled();
         }
 
         return false;
-    }
-
-    public static HashMap<String, String> get_bd_map()
-    {
-        HashMap<String, String> ret = new HashMap<String, String>();
-
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-        if (adapter != null) {
-            Set<BluetoothDevice> bonded_devs = adapter.getBondedDevices();
-            for (BluetoothDevice bonded_dev : bonded_devs) {
-                ret.put(bonded_dev.getAddress(), bonded_dev.getName());
-            }
-        }
-
-        return ret;
     }
 
 
@@ -139,8 +107,7 @@ public class rfcomm_conn_mgr {
         init(target_bt_server_dev, secure, tcp_server_host, tcp_server_port, cb, context);
     }
 
-    private void init(BluetoothDevice target_bt_server_dev, boolean secure, final String tcp_server_host, final int tcp_server_port, rfcomm_conn_callbacks cb, Context context) throws Exception
-    {
+    private void init(BluetoothDevice target_bt_server_dev, boolean secure, final String tcp_server_host, final int tcp_server_port, rfcomm_conn_callbacks cb, Context context) throws Exception {
         m_context = context;
         m_secure = secure;
         m_rfcomm_to_tcp_callbacks = cb;
@@ -175,13 +142,14 @@ public class rfcomm_conn_mgr {
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_UUID);
         m_context.registerReceiver(mReceiver, filter);
 
-        Log.d(TAG, "init() done m_readline_callback_mode: "+m_readline_callback_mode);
+        Log.d(TAG, "init() done m_readline_callback_mode: " + m_readline_callback_mode);
     }
 
 
-
-    public UUID fetch_dev_uuid_with_prefix(String uuid_prefix) throws Exception
-    {
+    public UUID fetch_dev_uuid_with_prefix(String uuid_prefix) throws Exception {
+        if (ActivityCompat.checkSelfPermission(m_context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            throw new Exception("BLUETOOTH_SCAN permission not granted");
+        }
         BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
 
         //always fetch fresh data from sdp - rfcomm channel numbers can change
@@ -197,14 +165,14 @@ public class rfcomm_conn_mgr {
         final int fetch_recheck_steps = 30;
         final int fetch_recheck_step_duration = total_wait_millis / fetch_recheck_steps;
 
-        for (int retry = 0; retry < fetch_recheck_steps; retry++){
+        for (int retry = 0; retry < fetch_recheck_steps; retry++) {
 
             if (m_fetched_uuids != null) {
-                Log.d(TAG, "fetch uuid complete at retry: "+retry);
+                Log.d(TAG, "fetch uuid complete at retry: " + retry);
                 break; //fetch uuid success
             }
             Thread.sleep(fetch_recheck_step_duration);
-            Log.d(TAG, "fetch uuid still not complete at retry: "+retry);
+            Log.d(TAG, "fetch uuid still not complete at retry: " + retry);
         }
 
 
@@ -242,11 +210,13 @@ public class rfcomm_conn_mgr {
     }
 
 
-    public void connect() throws Exception
-    {
+    public void connect() throws Exception {
         Log.d(TAG, "connect() start");
 
         try {
+            if (ActivityCompat.checkSelfPermission(m_context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                throw new Exception("BLUETOOTH_CONNECT permission not granted");
+            }
 
             try {
                 if (m_bluetooth_socket != null) {
@@ -258,6 +228,7 @@ public class rfcomm_conn_mgr {
             m_bluetooth_socket = null;
 
             try {
+
                 if (m_secure) {
                     Log.d(TAG, "createRfcommSocketToServiceRecord SPP_WELL_KNOWN_UUNID");
                     m_bluetooth_socket = m_target_bt_server_dev.createRfcommSocketToServiceRecord(SPP_WELL_KNOWN_UUNID);
