@@ -147,10 +147,7 @@ public class rfcomm_conn_mgr {
 
 
     public UUID fetch_dev_uuid_with_prefix(String uuid_prefix) throws Exception {
-        if (ActivityCompat.checkSelfPermission(m_context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            throw new Exception("BLUETOOTH_SCAN permission not granted");
-        }
-        BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+        //BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
 
         //always fetch fresh data from sdp - rfcomm channel numbers can change
         m_fetched_uuids = null;
@@ -204,7 +201,7 @@ public class rfcomm_conn_mgr {
         }
 
         Log.d(TAG, "found_spp_uuid: " + found_spp_uuid);
-        BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+        //BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
 
         return found_spp_uuid;
     }
@@ -214,9 +211,6 @@ public class rfcomm_conn_mgr {
         Log.d(TAG, "connect() start");
 
         try {
-            if (ActivityCompat.checkSelfPermission(m_context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                throw new Exception("BLUETOOTH_CONNECT permission not granted");
-            }
 
             try {
                 if (m_bluetooth_socket != null) {

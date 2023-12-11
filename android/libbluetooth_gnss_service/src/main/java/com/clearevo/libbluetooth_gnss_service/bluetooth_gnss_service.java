@@ -212,6 +212,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     //credit to https://github.com/joelwass/Android-BLE-Scan-Example/blob/master/app/src/main/java/com/example/joelwasserman/androidbletutorial/MainActivity.java
     private ScanCallback leScanCallback = new ScanCallback() {
 
+        @SuppressLint("MissingPermission") //we already have permissions if we have the scan result called back
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             if (result == null) {
@@ -223,16 +224,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             scan_record_bytes = scanRecord.getBytes();
             if (scan_record_bytes == null) {
                 scan_record_bytes = new byte[0];
-            }
-            if (ActivityCompat.checkSelfPermission(bluetooth_gnss_service.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                m_handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        toast("onScanResult - BLUETOOTH_CONNECT permission not granted by user...");
-                        connect();
-                    }
-                });
-                return;
             }
             log(TAG, "onScanResult Device Name: " + result.getDevice().getName() + " rssi: " + result.getRssi() + " scanrecord bytes: " + toHexString(scan_record_bytes));
             //ex: 02 01 1A 04 09 45 44 47 03 03 AA FE 12 16 AA FE 30 00 E1 6A 6D FD 03 10 9B 91 3C 38 50 32 28 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -319,16 +310,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
                             while (ble_gap_scan_thread == this) {
                                 log(TAG, "btLeScanner.startScan(leScanCallback); START");
-                                if (ActivityCompat.checkSelfPermission(bluetooth_gnss_service.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                                    m_handler.post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            toast("onScanResult - BLUETOOTH_CONNECT permission not granted by user...");
-                                            connect();
-                                        }
-                                    });
-                                    return;
-                                }
                                 btLeScanner.startScan(filters, settings, leScanCallback);
                                 log(TAG, "btLeScanner.startScan(leScanCallback); DONE");
                                 Thread.sleep(BLE_GAP_SCAN_LOOP_DURAITON_MILLIS);
@@ -513,16 +494,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 if (g_rfcomm_mgr != null) {
                     g_rfcomm_mgr.close();
                 }
-                if (ActivityCompat.checkSelfPermission(bluetooth_gnss_service.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    m_handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            toast("onScanResult - BLUETOOTH_CONNECT permission not granted by user...");
-                            connect();
-                        }
-                    });
-                    return ret;
-                }
+
                 BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
                 BluetoothDevice dev = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(bdaddr);
 

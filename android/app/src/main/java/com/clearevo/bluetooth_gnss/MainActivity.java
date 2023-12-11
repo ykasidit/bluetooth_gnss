@@ -210,7 +210,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                                         public void run() {
                                                             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                                                                     Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                                            }, 1);
+                                                            }, 2);
                                                         }
                                                     }
                                             );
@@ -586,12 +586,12 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                 }
             }
             List<String> notGrantedPermission = getNotGrantedPermissions(needed);
-            /*if (notGrantedPermission.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            if (notGrantedPermission.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 notGrantedPermission.remove(Manifest.permission.WRITE_EXTERNAL_STORAGE); //not always required, only required if user enables logging
             }
             if (notGrantedPermission.contains(Manifest.permission.READ_EXTERNAL_STORAGE)) {
                 notGrantedPermission.remove(Manifest.permission.READ_EXTERNAL_STORAGE); //not always required, only required if user enables logging
-            }*/
+            }
             if (notGrantedPermission.size() > 0 && (!already_asked_perm)) {
                 Log.d(TAG, "should ask manifest perm notGrantedPermission: " + Arrays.toString(notGrantedPermission.toArray()));
                 already_asked_perm = true;
@@ -632,7 +632,8 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             noNeedToAskList.add("android.permission.FOREGROUND_SERVICE");
         }
-        if (Build.VERSION.SDK_INT < 31) {
+        if (Build.VERSION.SDK_INT < 31) { //If your app targets Android 12 (API level 31) or higher, declare the following permissions in your app's manifest file:
+
             noNeedToAskList.add("android.permission.BLUETOOTH_SCAN");
             noNeedToAskList.add("android.permission.BLUETOOTH_ADVERTISE");
             noNeedToAskList.add("android.permission.BLUETOOTH_CONNECT");
