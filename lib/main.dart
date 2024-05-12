@@ -97,7 +97,7 @@ class ScrollableTabsDemo extends StatefulWidget {
   }
 }
 
-class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTickerProviderStateMixin {
+class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
 
   static const method_channel = MethodChannel("com.clearevo.bluetooth_gnss/engine");
   static const event_channel = EventChannel("com.clearevo.bluetooth_gnss/engine_events");
@@ -170,7 +170,6 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   String _main_state = "Loading...";
   static String WAITING_DEV = "No data";
   bool _is_bt_connected = false;
-  bool _wakelock_enabled = false;
   bool _is_ntrip_connected = false;
   int _ntrip_packets_count = 0;
   bool _is_bt_conn_thread_alive_likely_connecting = false;
@@ -188,19 +187,17 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   static String note_how_to_disable_mock_location = "";
   Map<dynamic, dynamic> _param_map = Map<dynamic, dynamic>();
 
-  void wakelock_enable() {
-    if (_wakelock_enabled == false) {
+  void wakelock_enable() async {
+    if (await Wakelock.enabled == false) {
       Wakelock
           .enable(); //keep screen on for users to continuously monitor connection state
-      _wakelock_enabled = true;
     }
   }
 
-  void wakelock_disable() {
-    if (_wakelock_enabled == true) {
+  void wakelock_disable() async {
+    if (await Wakelock.enabled == true) {
       Wakelock
           .disable(); //keep screen on for users to continuously monitor connection state
-      _wakelock_enabled = false;
     }
   }
 
@@ -227,10 +224,36 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     }
   }
 
+  bool m_is_background = false;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // These are the callbacks
+    switch (state) {
+      case AppLifecycleState.resumed:
+      // widget is resumed
+      m_is_background = false;
+        break;
+      case AppLifecycleState.inactive:
+        m_is_background = true;
+      // widget is inactive
+        break;
+      case AppLifecycleState.paused:
+      // widget is paused
+        m_is_background = true;
+        break;
+      case AppLifecycleState.detached:
+        m_is_background = true;
+      // widget is detached
+        break;
+    }
+  }
   @override
   void initState() {
     super.initState();
-
+    WidgetsBinding.instance!.addObserver(this);
     timer = Timer.periodic(Duration(seconds: 2), (Timer t) => check_and_update_selected_device());
 
     _controller = TabController(vsync: this, length: _allPages.length);
@@ -287,6 +310,9 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
     cleanup();
 
     _controller!.dispose();
+    // Remove the observer
+    WidgetsBinding.instance!.removeObserver(this);
+
     super.dispose();
   }
 
@@ -1174,6 +1200,10 @@ class ScrollableTabsDemoState extends State<ScrollableTabsDemo> with SingleTicke
   Future<settings_widget_state?> check_and_update_selected_device([bool user_pressed_settings_take_action_and_ret_sw=false, bool user_pressed_connect_take_action_and_ret_sw=false]) async {
     _m_floating_button_icon = FLOATING_ICON_BLUETOOTH_SETTINGS;
 
+    if (m_is_background) {
+      print('m_is_backgrund so not refreshing state...');
+      return null;
+    }
     try {
       _is_bt_connected = await method_channel.invokeMethod('is_bt_connected');
       _is_ntrip_connected =
