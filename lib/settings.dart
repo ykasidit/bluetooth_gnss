@@ -1,3 +1,4 @@
+import 'package:bluetooth_gnss/main.dart';
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
 import 'package:flutter/services.dart';
@@ -54,7 +55,7 @@ class settings_widget_state extends State<settings_widget> {
           //get list from native engine
           List<dynamic> ori_mpl = event_map["callback_payload"];
           print("got mpl: $ori_mpl");
-          if (ori_mpl == null || ori_mpl.length == 0) {
+          if (ori_mpl.length == 0) {
             toast("Failed to list mount-points list from server specified...");
             return;
           }
@@ -203,7 +204,7 @@ class settings_widget_state extends State<settings_widget> {
   String get_selected_bdname(BasePrefService prefService) {
     String? bdaddr = get_selected_bdaddr(prefService);
     //print("get_selected_bdname: bdaddr: $bdaddr");
-    if (bdaddr == null || !(m_bdaddr_to_name_map.containsKey(bdaddr)))
+    if (!(m_bdaddr_to_name_map.containsKey(bdaddr)))
       return "";
     return m_bdaddr_to_name_map[bdaddr];
   }
@@ -228,6 +229,11 @@ class settings_widget_state extends State<settings_widget> {
   Widget build(BuildContext context) {
 //create matching radiopreflist
     List<DropdownMenuItem> devlist = List.empty(growable: true);
+    devlist.add(
+        DropdownMenuItem(
+            value: BLE_QSTARTZ_MODE_KEY, child: Text("Qstarz BLE GPS")
+        )
+    );
     for (String bdaddr in m_bdaddr_to_name_map.keys) {
       devlist.add(DropdownMenuItem(
           value: bdaddr, child: Text(m_bdaddr_to_name_map[bdaddr].toString())));
@@ -244,7 +250,7 @@ class settings_widget_state extends State<settings_widget> {
           body: ModalProgressHUD(
             child: PrefPage(children: [
               PrefTitle(title: Text('Target device:')),
-              PrefDropdown(title: Text("Select a paired bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)"), items: devlist, pref: 'target_bdaddr'),
+              PrefDropdown(title: Text("Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)"), items: devlist, pref: 'target_bdaddr'),
               PrefTitle(title: Text('Bluetooth Connection settings')),
               PrefCheckbox(
                   title: Text("Secure RFCOMM connection"), pref: 'secure'),
@@ -289,7 +295,7 @@ class settings_widget_state extends State<settings_widget> {
               PrefTitle(title: Text('RTK/NTRIP Server settings')),
               Text(
                 "Set these if your Bluetooth GNSS device supports RTK,\n(Like Ardusimple U-Blox F9, etc)",
-                style: Theme.of(context).textTheme.caption,
+                style: Theme.of(context).textTheme.bodySmall,
               ),
               PrefCheckbox(title: Text("Disable NTRIP"), pref: 'disable_ntrip'),
               PrefText(

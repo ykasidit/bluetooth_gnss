@@ -1,5 +1,8 @@
 name: bluetooth_gnss
-description: Connect and get accurate location data from Bluetooth GPS, Galileo, GLONASS and BeiDou satnav receivers. Supports RTK NTRIP server connection and data relay over Bluetooth.
+description: "Connect to external Bluetooth GPS/GNSS devices"
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -8,30 +11,39 @@ description: Connect and get accurate location data from Bluetooth GPS, Galileo,
 # build by specifying --build-name and --build-number, respectively.
 # In Android, build-name is used as versionName while build-number used as versionCode.
 # Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.49+49
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.50+50
 
 environment:
-  sdk: '>=2.19.6 <3.0.0'  # dart ver
-  flutter: 3.10.2  # flutter ver
+  sdk: '>=3.4.4 <4.0.0'
+  flutter: 3.22.3
 
-
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
 dependencies:
   flutter:
     sdk: flutter
 
-  flutter_markdown: 0.6.15
-  share: 2.0.1
-  package_info: 2.0.0
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.6
+
+  flutter_markdown: ^0.7.3+1
+  share: ^2.0.4
+  package_info_plus: ^8.0.2
   flutter_gallery_assets: 1.0.2
-
-  url_launcher: 6.0.3
-  wakelock: 0.5.6
+  url_launcher: ^6.3.0
   pref: ^2.7.1
-  modal_progress_hud_nsn: ^0.4.0
-
+  modal_progress_hud_nsn: ^0.5.1
+  wakelock_plus: ^1.2.7
 
 dev_dependencies:
   flutter_test:
@@ -42,14 +54,12 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^1.0.0
-
-
+  flutter_lints: ^4.0.0
 
 # For information on the generic Dart part of this file, see the
-# following page: https://www.dartlang.org/tools/pub/pubspec
+# following page: https://dart.dev/tools/pub/pubspec
 
-# The following section is specific to Flutter.
+# The following section is specific to Flutter packages.
 flutter:
 
   # The following line ensures that the Material Icons font is
@@ -59,11 +69,11 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   # assets:
-  #  - images/a_dot_burr.jpeg
-  #  - images/a_dot_ham.jpeg
+  #   - images/a_dot_burr.jpeg
+  #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/assets-and-images/#resolution-aware.
+  # https://flutter.dev/assets-and-images/#resolution-aware
 
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/assets-and-images/#from-packages
@@ -87,23 +97,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
-  fonts:
-    - family: GoogleSans
-      fonts:
-        - asset: packages/flutter_gallery_assets/fonts/private/googlesans/GoogleSans-BoldItalic.ttf
-          weight: 700
-          style: italic
-        - asset: packages/flutter_gallery_assets/fonts/private/googlesans/GoogleSans-Bold.ttf
-          weight: 700
-        - asset: packages/flutter_gallery_assets/fonts/private/googlesans/GoogleSans-Italic.ttf
-          weight: 400
-          style: italic
-        - asset: packages/flutter_gallery_assets/fonts/private/googlesans/GoogleSans-MediumItalic.ttf
-          weight: 500
-          style: italic
-        - asset: packages/flutter_gallery_assets/fonts/private/googlesans/GoogleSans-Medium.ttf
-          weight: 500
-        - asset: packages/flutter_gallery_assets/fonts/private/googlesans/GoogleSans-Regular.ttf
-          weight: 400
-
-

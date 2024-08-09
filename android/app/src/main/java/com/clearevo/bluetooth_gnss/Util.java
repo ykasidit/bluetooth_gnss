@@ -20,16 +20,16 @@ public class Util {
     @NotNull
     public static GnssConnectionParams createGnssConnectionFromPreferences(SharedPreferences prefs) {
         final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
-        gnssConnectionParams.setBdaddr(prefs.getString("flutter.pref_target_bdaddr", null));
-        gnssConnectionParams.setSecure(prefs.getBoolean("flutter.pref_secure", true));
-        gnssConnectionParams.setReconnect(prefs.getBoolean("flutter.pref_reconnect", false));
-        gnssConnectionParams.setLogBtRx(prefs.getBoolean("flutter.pref_log_bt_rx", false));
-        gnssConnectionParams.setDisableNtrip(prefs.getBoolean("flutter.pref_disable_ntrip", false));
-        gnssConnectionParams.setGapMode(prefs.getBoolean("flutter.pref_ble_gap_scan_mode", false));
+        gnssConnectionParams.bdaddr = prefs.getString("flutter.pref_target_bdaddr", null);
+        gnssConnectionParams.secure = prefs.getBoolean("flutter.pref_secure", true);
+        gnssConnectionParams.reconnect = prefs.getBoolean("flutter.pref_reconnect", false);
+        gnssConnectionParams.logBtRx = prefs.getBoolean("flutter.pref_log_bt_rx", false);
+        gnssConnectionParams.disableNtrip = prefs.getBoolean("flutter.pref_disable_ntrip", false);
+        gnssConnectionParams.gapMode = prefs.getBoolean("flutter.pref_ble_gap_scan_mode", false);
 
         for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
             final String value = prefs.getString("flutter.pref_" + pk, null);
-            if (value != null) gnssConnectionParams.getExtraParams().put(pk, value);
+            if (value != null) gnssConnectionParams.extraParams.put(pk, value);
         }
 
         return gnssConnectionParams;
@@ -40,26 +40,26 @@ public class Util {
                               final GnssConnectionParams gnssConnectionParams) {
 
         Log.d(TAG, "activityClassName: "+activityClassName+" gnssConnectionParams: "+gnssConnectionParams.toString() + ":");
-        for (Map.Entry<String, String> entry : gnssConnectionParams.getExtraParams().entrySet()) {
+        for (Map.Entry<String, String> entry : gnssConnectionParams.extraParams.entrySet()) {
             Log.d(TAG, "\t" + entry.getKey() + " = " + entry.getValue());
         }
 
 
 
-        Log.d(TAG, "connect(): " + gnssConnectionParams.getBdaddr());
+        Log.d(TAG, "connect(): " + gnssConnectionParams.bdaddr);
         int ret = -1;
 
         Intent intent = new Intent(context, bluetooth_gnss_service.class);
-        intent.putExtra("bdaddr", gnssConnectionParams.getBdaddr());
-        intent.putExtra("secure", gnssConnectionParams.isSecure());
-        intent.putExtra("reconnect", gnssConnectionParams.isReconnect());
-        intent.putExtra("log_bt_rx", gnssConnectionParams.isLogBtRx());
-        intent.putExtra("disable_ntrip", gnssConnectionParams.isDisableNtrip());
-        Log.d(TAG, "gnssConnectionParams.isGapMode(): "+ gnssConnectionParams.isGapMode());
-        intent.putExtra(bluetooth_gnss_service.BLE_GAP_SCAN_MODE, gnssConnectionParams.isGapMode());
-        Log.d(TAG, "mainact extra_params: " + gnssConnectionParams.getExtraParams());
-        for (String key : gnssConnectionParams.getExtraParams().keySet()) {
-            String val = gnssConnectionParams.getExtraParams().get(key);
+        intent.putExtra("bdaddr", gnssConnectionParams.bdaddr);
+        intent.putExtra("secure", gnssConnectionParams.secure);
+        intent.putExtra("reconnect", gnssConnectionParams.reconnect);
+        intent.putExtra("log_bt_rx", gnssConnectionParams.logBtRx);
+        intent.putExtra("disable_ntrip", gnssConnectionParams.disableNtrip);
+        Log.d(TAG, "gnssConnectionParams.isGapMode(): "+ gnssConnectionParams.gapMode);
+        intent.putExtra(bluetooth_gnss_service.BLE_GAP_SCAN_MODE, gnssConnectionParams.gapMode);
+        Log.d(TAG, "mainact extra_params: " + gnssConnectionParams.extraParams);
+        for (String key : gnssConnectionParams.extraParams.keySet()) {
+            String val = gnssConnectionParams.extraParams.get(key);
             Log.d(TAG, "mainact extra_params key: " + key + " val: " + val);
             intent.putExtra(key, val);
         }
@@ -69,8 +69,8 @@ public class Util {
         boolean gap_mode = intent.getBooleanExtra(bluetooth_gnss_service.BLE_GAP_SCAN_MODE, false);
         Log.d(TAG, "util.connect() gap_mode: "+gap_mode);
         if (!gap_mode) {
-            if (gnssConnectionParams.getBdaddr() == null || gnssConnectionParams.getBdaddr().trim().isEmpty() || !gnssConnectionParams.getBdaddr().matches("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$")) {
-                Log.e(TAG, "Invalid BT mac address: " + gnssConnectionParams.getBdaddr());
+            if (gnssConnectionParams.bdaddr == null || gnssConnectionParams.bdaddr.trim().isEmpty() || !gnssConnectionParams.bdaddr.matches("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$")) {
+                Log.e(TAG, "Invalid BT mac address: " + gnssConnectionParams.bdaddr);
                 return -1;
             }
         }

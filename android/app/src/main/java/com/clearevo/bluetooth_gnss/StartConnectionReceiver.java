@@ -46,17 +46,17 @@ public class StartConnectionReceiver extends BroadcastReceiver {
         if (overriddenOptions != null && !overriddenOptions.isEmpty()) {
             try {
                 final JSONObject overrides = new JSONObject(overriddenOptions);
-                gnssConnectionParams.setBdaddr(overrides.optString("bdaddr", gnssConnectionParams.getBdaddr()));
-                gnssConnectionParams.setSecure(overrides.optBoolean("secure", gnssConnectionParams.isSecure()));
-                gnssConnectionParams.setReconnect(overrides.optBoolean("reconnect", gnssConnectionParams.isReconnect()));
-                gnssConnectionParams.setLogBtRx(overrides.optBoolean("log_bt_rx", gnssConnectionParams.isLogBtRx()));
-                gnssConnectionParams.setDisableNtrip(overrides.optBoolean("disable_ntrip", gnssConnectionParams.isDisableNtrip()));
+                gnssConnectionParams.bdaddr = overrides.optString("bdaddr", gnssConnectionParams.bdaddr);
+                gnssConnectionParams.secure = (overrides.optBoolean("secure", gnssConnectionParams.secure));
+                gnssConnectionParams.reconnect = (overrides.optBoolean("reconnect", gnssConnectionParams.secure));
+                gnssConnectionParams.logBtRx = (overrides.optBoolean("log_bt_rx", gnssConnectionParams.logBtRx));
+                gnssConnectionParams.disableNtrip = (overrides.optBoolean("disable_ntrip", gnssConnectionParams.disableNtrip));
 
                 final JSONObject overrides_extra_params = overrides.optJSONObject("extra");
                 if (overrides_extra_params != null) {
                     for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-                        final String value = overrides_extra_params.optString(pk, gnssConnectionParams.getExtraParams().get(pk));
-                        if (value != null) gnssConnectionParams.getExtraParams().put(pk, value);
+                        final String value = overrides_extra_params.optString(pk, gnssConnectionParams.extraParams.get(pk));
+                        if (value != null) gnssConnectionParams.extraParams.put(pk, value);
                     }
                 }
             } catch (JSONException e) {
