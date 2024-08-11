@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'main.dart';
+import 'tabs.dart';
 
 const String _markdownData = """# Markdown Example
 Markdown allows you to easily include formatted text, images, and even formatted Dart code in your app.
@@ -50,20 +50,17 @@ Enjoy!
 """;
 
 Widget get_about_view(String version) {
-  String md = """
-  
+  String md = """  
 Bluetooth GNSS
 ==============
-App version: """+version+ """
-
+App version: $version
   
 Purpose
 ------
 
 Use this app to get more accurate positioning data (latitude, longitude, elevation...) from external 'Bluetooth GNSS Receivers' (like 'Bad Elf GPS PRO+', 'HOLUX', 'Garmin GLO' etc) and use it as the position for apps in this phone (like Waze, etc) via 'Mock location app' Android Developer Settings.
 
-"""+ScrollableTabsDemoState.note_how_to_disable_mock_location+"""
-
+${TabsState.note_how_to_disable_mock_location}
 This app 'bluetooth_gnss' is free software and released under the GNU GPL for anyone to study/use/modify/share at:
 - <https://github.com/ykasidit/bluetooth_gnss>
 

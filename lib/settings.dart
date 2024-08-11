@@ -6,9 +6,9 @@ import 'dart:math' show cos, sqrt, asin;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
 class settings_widget extends StatefulWidget {
-  settings_widget(this.pref_service, Map<dynamic, dynamic> this._bd_map);
+  const settings_widget(this.pref_service, this._bd_map, {super.key});
   final BasePrefService pref_service;
-  Map<dynamic, dynamic> _bd_map;
+  final Map<dynamic, dynamic> _bd_map;
   final String title = "Settings";
 
   @override
@@ -16,7 +16,7 @@ class settings_widget extends StatefulWidget {
 }
 
 class settings_widget_state extends State<settings_widget> {
-  Map<dynamic, dynamic> m_bdaddr_to_name_map = new Map<dynamic, dynamic>();
+  Map<dynamic, dynamic> m_bdaddr_to_name_map = <dynamic, dynamic>{};
   String _selected_dev = "Loading...";
   bool loading = false;
 
@@ -36,16 +36,16 @@ class settings_widget_state extends State<settings_widget> {
   void initState() {
     _selected_dev = get_selected_bd_summary(widget.pref_service) ?? "";
     event_channel.receiveBroadcastStream().listen((dynamic event) async {
-      Map<dynamic, dynamic> event_map = event;
+      Map<dynamic, dynamic> eventMap = event;
 
-      if (event_map.containsKey('callback_src')) {
+      if (eventMap.containsKey('callback_src')) {
         try {
-          print("settings got callback event: $event_map");
+          print("settings got callback event: $eventMap");
         } catch (e) {
           print('parse event_map exception: $e');
         }
 
-        if (event_map["callback_src"] == "get_mountpoint_list") {
+        if (eventMap["callback_src"] == "get_mountpoint_list") {
           print("dismiss progress dialog now0");
 
           setState(() {
@@ -53,48 +53,48 @@ class settings_widget_state extends State<settings_widget> {
           });
 
           //get list from native engine
-          List<dynamic> ori_mpl = event_map["callback_payload"];
-          print("got mpl: $ori_mpl");
-          if (ori_mpl.length == 0) {
+          List<dynamic> oriMpl = eventMap["callback_payload"];
+          print("got mpl: $oriMpl");
+          if (oriMpl.isEmpty) {
             toast("Failed to list mount-points list from server specified...");
             return;
           }
 
           //conv to List<String> and sort
-          List<String> mount_point_str_list =
-              List<String>.generate(ori_mpl.length, (i) => "${ori_mpl[i]}");
+          List<String> mountPointStrList =
+              List<String>.generate(oriMpl.length, (i) => "${oriMpl[i]}");
 
           //filter startswith STR;
-          mount_point_str_list =
-              mount_point_str_list.where((s) => s.startsWith('STR;')).toList();
+          mountPointStrList =
+              mountPointStrList.where((s) => s.startsWith('STR;')).toList();
 
           //remove starting STR; to sort by mountpoint name
-          mount_point_str_list = List<String>.generate(
-              mount_point_str_list.length,
-              (i) => "${mount_point_str_list[i].substring(4)}");
+          mountPointStrList = List<String>.generate(
+              mountPointStrList.length,
+              (i) => mountPointStrList[i].substring(4));
 
           //filter for that contains ; so wont have errors for split further below
-          mount_point_str_list =
-              mount_point_str_list.where((s) => s.contains(';')).toList();
+          mountPointStrList =
+              mountPointStrList.where((s) => s.contains(';')).toList();
 
-          mount_point_str_list.sort();
-          print("mount_point_str_list: $mount_point_str_list");
+          mountPointStrList.sort();
+          print("mount_point_str_list: $mountPointStrList");
 
-          int nmpl = mount_point_str_list.length;
+          int nmpl = mountPointStrList.length;
           toast("Found $nmpl mountpoints...");
-          bool sort_by_nearest =
+          bool sortByNearest =
               widget.pref_service.get('list_nearest_streams_first') ??
                   false;
-          print('sort_by_nearest: $sort_by_nearest');
+          print('sort_by_nearest: $sortByNearest');
 
-          List<Map<String, String>> mount_point_map_list =
-              new List.empty(growable: true);
+          List<Map<String, String>> mountPointMapList =
+              List.empty(growable: true);
 
-          for (String val in mount_point_str_list) {
+          for (String val in mountPointStrList) {
             List<String> parts = val.split(";");
             //ref https://software.rtcm-ntrip.org/wiki/STR
             if (parts.length > 4) {
-              mount_point_map_list.add({
+              mountPointMapList.add({
                 "mountpoint": parts[0],
                 "identifier": parts[1],
                 "lat": parts[8] ?? "0",
@@ -104,44 +104,44 @@ class settings_widget_state extends State<settings_widget> {
             }
           }
 
-          bool last_pos_valid = false;
-          if (sort_by_nearest) {
+          bool lastPosValid = false;
+          if (sortByNearest) {
             try {
-              double last_lat = 0;
-              double last_lon = 0;
-              String ref_lat_lon =
+              double lastLat = 0;
+              double lastLon = 0;
+              String refLatLon =
                   widget.pref_service.get('ref_lat_lon') ?? "";
-              last_pos_valid = false;
-              if (ref_lat_lon.contains(",")) {
-                List<String> parts = ref_lat_lon.split(",");
+              lastPosValid = false;
+              if (refLatLon.contains(",")) {
+                List<String> parts = refLatLon.split(",");
                 if (parts.length == 2) {
                   try {
-                    last_lat = double.parse(parts[0]);
-                    last_lon = double.parse(parts[1]);
-                    last_pos_valid = true;
+                    lastLat = double.parse(parts[0]);
+                    lastLon = double.parse(parts[1]);
+                    lastPosValid = true;
                   } catch (e) {}
                 }
               }
-              print('last_pos_valid: $last_pos_valid $last_lat $last_lon');
+              print('last_pos_valid: $lastPosValid $lastLat $lastLon');
 
-              if (last_pos_valid) {
+              if (lastPosValid) {
                 //calc distance into the map in the list
-                double distance_km = 999999;
-                for (Map<String, String> vmap in mount_point_map_list) {
+                double distanceKm = 999999;
+                for (Map<String, String> vmap in mountPointMapList) {
                   try {
                     double lat = double.parse(vmap["lat"].toString());
                     double lon = double.parse(vmap["lon"].toString());
-                    distance_km =
-                        calculateDistance(last_lat, last_lon, lat, lon);
+                    distanceKm =
+                        calculateDistance(lastLat, lastLon, lat, lon);
                   } catch (e) {
                     print('parse lat/lon exception: $e');
                   }
                   vmap["distance_km"] =
-                      distance_km.truncateToDouble().toString();
+                      distanceKm.truncateToDouble().toString();
                 }
 
                 //sort the list according to distance: https://stackoverflow.com/questions/22177838/sort-a-list-of-maps-in-dart-second-level-sort-in-dart
-                mount_point_map_list.sort((m1, m2) {
+                mountPointMapList.sort((m1, m2) {
                   return double.parse(m1["distance_km"].toString())
                       .compareTo(double.parse(m2["distance_km"].toString()));
                 });
@@ -155,36 +155,36 @@ class settings_widget_state extends State<settings_widget> {
           }
           //make dialog to choose from mount_point_map_list
 
-          String? chosen_mountpoint = await showDialog<String>(
+          String? chosenMountpoint = await showDialog<String>(
               context: context,
               barrierDismissible: true,
               builder: (BuildContext context) {
                 return SimpleDialog(
                   title: const Text('Select stream:'),
-                  children: mount_point_map_list.map((valmap) {
-                    String disp_text =
+                  children: mountPointMapList.map((valmap) {
+                    String dispText =
                         "${valmap["mountpoint"]}: ${valmap["identifier"]} @ ${valmap["lat"]}, ${valmap["lon"]}";
                     print(
-                        "disp_text sort_by_nearest $sort_by_nearest last_pos_valid $last_pos_valid");
-                    if (sort_by_nearest && last_pos_valid) {
-                      disp_text += ": ${valmap["distance_km"]} km";
+                        "disp_text sort_by_nearest $sortByNearest last_pos_valid $lastPosValid");
+                    if (sortByNearest && lastPosValid) {
+                      dispText += ": ${valmap["distance_km"]} km";
                     }
                     return SimpleDialogOption(
                         onPressed: () {
                           Navigator.pop(context, "${valmap["mountpoint"]}");
                         },
-                        child: Text(disp_text));
+                        child: Text(dispText));
                   }).toList(),
                 );
               });
 
-          print("chosen_mountpoint: $chosen_mountpoint");
-          widget.pref_service.set('ntrip_mountpoint', chosen_mountpoint);
+          print("chosen_mountpoint: $chosenMountpoint");
+          widget.pref_service.set('ntrip_mountpoint', chosenMountpoint);
 
           //force re-load of selected ntrip_mountpoint
           Navigator.of(context).pushReplacement(
-              new MaterialPageRoute(builder: (BuildContext context) {
-            return new settings_widget(widget.pref_service, m_bdaddr_to_name_map);
+              MaterialPageRoute(builder: (BuildContext context) {
+            return settings_widget(widget.pref_service, m_bdaddr_to_name_map);
           }));
         }
       }
@@ -204,8 +204,9 @@ class settings_widget_state extends State<settings_widget> {
   String get_selected_bdname(BasePrefService prefService) {
     String? bdaddr = get_selected_bdaddr(prefService);
     //print("get_selected_bdname: bdaddr: $bdaddr");
-    if (!(m_bdaddr_to_name_map.containsKey(bdaddr)))
+    if (!(m_bdaddr_to_name_map.containsKey(bdaddr))) {
       return "";
+    }
     return m_bdaddr_to_name_map[bdaddr];
   }
 
@@ -230,7 +231,7 @@ class settings_widget_state extends State<settings_widget> {
 //create matching radiopreflist
     List<DropdownMenuItem> devlist = List.empty(growable: true);
     devlist.add(
-        DropdownMenuItem(
+        const DropdownMenuItem(
             value: BLE_QSTARTZ_MODE_KEY, child: Text("Qstarz BLE GPS")
         )
     );
@@ -245,39 +246,40 @@ class settings_widget_state extends State<settings_widget> {
       title: 'Settings',
       home: Scaffold(
           appBar: AppBar(
-            title: Text('Settings'),
+            title: const Text('Settings'),
           ),
           body: ModalProgressHUD(
+            inAsyncCall: loading,
             child: PrefPage(children: [
-              PrefTitle(title: Text('Target device:')),
-              PrefDropdown(title: Text("Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)"), items: devlist, pref: 'target_bdaddr'),
-              PrefTitle(title: Text('Bluetooth Connection settings')),
-              PrefCheckbox(
+              const PrefTitle(title: Text('Target device:')),
+              PrefDropdown(title: const Text("Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)"), items: devlist, pref: 'target_bdaddr'),
+              const PrefTitle(title: Text('Bluetooth Connection settings')),
+              const PrefCheckbox(
                   title: Text("Secure RFCOMM connection"), pref: 'secure'),
-              PrefCheckbox(
+              const PrefCheckbox(
                   title: Text("Auto-reconnect - when disconnected"),
                   pref: 'reconnect'),
-              PrefCheckbox(
+              const PrefCheckbox(
                   title: Text("Autostart - connect on phone boot"),
                   pref: 'autostart'),
-              PrefCheckbox(
+              const PrefCheckbox(
                   title: Text(
                       "Check for Settings > 'Location' ON and 'High Accuracy'"),
                   pref: 'check_settings_location'),
               PrefCheckbox(
-                  title: Text("Enable Logging (location/nmea/debug-trace)"),
+                  title: const Text("Enable Logging (location/nmea/debug-trace)"),
                   pref: 'log_bt_rx',
-                  onChange: (bool? _val) async {
-                    bool enable = _val!;
+                  onChange: (bool? val) async {
+                    bool enable = val!;
                     if (enable) {
-                      bool write_enabled = false;
+                      bool writeEnabled = false;
                       try {
-                        write_enabled = await method_channel
+                        writeEnabled = await method_channel
                             .invokeMethod('is_write_enabled');
                       } on PlatformException catch (e) {
                         toast("WARNING: check _is_connecting failed: $e");
                       }
-                      if (write_enabled == false) {
+                      if (writeEnabled == false) {
                         toast(
                             "Write external storage permission required for data loggging...");
                       }
@@ -292,12 +294,12 @@ class settings_widget_state extends State<settings_widget> {
                       widget.pref_service.set('log_uri', "");
                     }
                   }),
-              PrefTitle(title: Text('RTK/NTRIP Server settings')),
+              const PrefTitle(title: Text('RTK/NTRIP Server settings')),
               Text(
                 "Set these if your Bluetooth GNSS device supports RTK,\n(Like Ardusimple U-Blox F9, etc)",
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-              PrefCheckbox(title: Text("Disable NTRIP"), pref: 'disable_ntrip'),
+              const PrefCheckbox(title: Text("Disable NTRIP"), pref: 'disable_ntrip'),
               PrefText(
                   label: 'Host',
                   pref: 'ntrip_host',
@@ -319,7 +321,7 @@ class settings_widget_state extends State<settings_widget> {
                     }
                     return null;
                   }),
-              PrefText(label: "Ref lat,lon for sorting", pref: 'ref_lat_lon'),
+              const PrefText(label: "Ref lat,lon for sorting", pref: 'ref_lat_lon'),
               PrefText(
                   label: "Stream (mount-point)",
                   pref: 'ntrip_mountpoint',
@@ -345,7 +347,7 @@ class settings_widget_state extends State<settings_widget> {
               Padding(
                 padding: const EdgeInsets.all(5.0),
                 child: ElevatedButton(
-                  child: Text(
+                  child: const Text(
                     'List streams from above server',
                   ),
                   onPressed: () async {
@@ -363,16 +365,16 @@ class settings_widget_state extends State<settings_widget> {
                       return;
                     }
 
-                    int ret_code = -1;
+                    int retCode = -1;
 
                     try {
                       setState(() {
                         loading = true;
                       });
                       //make sure dialog shows first otherwise if no internet the .dismoiss wont work if immediate fail and progress dialog would block forever
-                      new Future.delayed(const Duration(seconds: 0), () async {
+                      Future.delayed(const Duration(seconds: 0), () async {
                         try {
-                          ret_code = await method_channel
+                          retCode = await method_channel
                               .invokeMethod("get_mountpoint_list", {
                             'ntrip_host': host,
                             'ntrip_port': port,
@@ -380,7 +382,7 @@ class settings_widget_state extends State<settings_widget> {
                             'ntrip_pass': pass,
                           });
                           print(
-                              "get_mountpoint_list req waiting callback ret: $ret_code");
+                              "get_mountpoint_list req waiting callback ret: $retCode");
                         } catch (e) {
                           setState(() {
                             loading = false;
@@ -400,11 +402,10 @@ class settings_widget_state extends State<settings_widget> {
                   },
                 ),
               ),
-              PrefCheckbox(
+              const PrefCheckbox(
                   title: Text("Sort by nearest to to Ref lat,lon"),
                   pref: 'list_nearest_streams_first'),
             ]),
-            inAsyncCall: loading,
           )),
     ));
   }

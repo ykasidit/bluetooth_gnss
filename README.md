@@ -12,7 +12,7 @@ Build instructions
 
 * Make sure the flutter sdk version matches that of below:
 
-`flutter downgrade v3.10.6`
+`flutter downgrade v3.24.0`
 
 * In this folder run:
 `flutter pub get`

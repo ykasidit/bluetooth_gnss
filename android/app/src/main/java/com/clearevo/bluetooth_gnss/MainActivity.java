@@ -84,7 +84,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
         new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), ENGINE_METHOD_CHANNEL)
                 .setMethodCallHandler(
                         (call, result) -> {
-
+                            Log.d(TAG, "got method call: "+call.method);
                             if (call.method.equals("connect")) {
                                 final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
                                 gnssConnectionParams.bdaddr = call.argument("bdaddr");
