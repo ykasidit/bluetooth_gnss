@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
 
+import 'tab_messages.dart';
 import 'tabs.dart';
 
 const String BLE_UART_MODE_KEY = 'ble_uart_mode';

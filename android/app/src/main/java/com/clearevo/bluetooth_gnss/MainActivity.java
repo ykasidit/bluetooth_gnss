@@ -57,6 +57,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
     Handler m_handler;
     final int MESSAGE_PARAMS_MAP = 0;
     final int MESSAGE_SETTINGS_MAP = 1;
+    final int MESSAGE_DEVICE_MESSAGE = 2;
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
@@ -341,14 +342,19 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
         m_handler = new Handler(getMainLooper()) {
             @Override
             public void handleMessage(Message inputMessage) {
-                if (inputMessage.what == MESSAGE_PARAMS_MAP) {
-                    Log.d(TAG, "mainactivity handler got params map");
+                if (inputMessage.what == MESSAGE_PARAMS_MAP || inputMessage.what == MESSAGE_DEVICE_MESSAGE) {
                     try {
                         if (mBound == false || m_events_sink == null) {
                             Log.d(TAG, "mBound == false || m_events_sink == null so not delivering params_map");
                         } else {
                             Object params_map = inputMessage.obj;
                             if (params_map instanceof HashMap) {
+                                if (inputMessage.what == MESSAGE_DEVICE_MESSAGE) {
+                                    ((HashMap)params_map).put("is_dev_msg_map", true);
+                                } else {
+                                    //dont put
+                                    ((HashMap)params_map).remove("is_dev_msg_map");
+                                }
                                 /*
                         PREVENT BELOW: try clone the hashmap...
                         D/btgnss_mainactvty(15208): handlemessage exception: java.util.ConcurrentModificationException
@@ -363,9 +369,8 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                                 //params_map = ((HashMap) params_map).clone();
                                 //Log.d(TAG, "cloned HashMap to prevent ConcurrentModificationException...");
                             }
-                            Log.d(TAG, "sending params map to m_events_sink start");
                             m_events_sink.success(params_map);
-                            Log.d(TAG, "sending params map to m_events_sink done");
+                            Log.d(TAG, "mainactivity sent "+((inputMessage.what == MESSAGE_PARAMS_MAP)?"params_map":"dev_msg"));
                         }
                     } catch (Exception e) {
                         Log.d(TAG, "handlemessage MESSAGE_PARAMS_MAP exception: " + Log.getStackTraceString(e));
@@ -377,10 +382,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                             Log.d(TAG, "mBound == false || m_settings_events_sink == null so not delivering params_map");
                         } else {
                             Object params_map = inputMessage.obj;
-                            //this is already a concurrenthashmap - no need to clone
-                            Log.d(TAG, "sending params map to m_settings_events_sink start");
                             m_settings_events_sink.success(params_map);
-                            Log.d(TAG, "sending params map to m_settings_events_sink done");
                         }
                     } catch (Exception e) {
                         Log.d(TAG, "handlemessage MESSAGE_SETTINGS_MAP exception: " + Log.getStackTraceString(e));
@@ -461,8 +463,8 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         return false;
     }
 
-    public void on_updated_nmea_params(HashMap<String, Object> params_map) {
-        Log.d(TAG, "mainactivity on_updated_nmea_params()");
+    public void onPositionUpdate(HashMap<String, Object> params_map) {
+        Log.d(TAG, "mainactivity onPositionUpdate()");
         try {
             Message msg = m_handler.obtainMessage(MESSAGE_PARAMS_MAP, params_map);
             msg.sendToTarget();
@@ -471,6 +473,16 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         }
     }
 
+    @Override
+    public void onDeviceMessage(HashMap<String, Object> message_map) {
+        Log.d(TAG, "mainactivity onDeviceMessage()");
+        try {
+            Message msg = m_handler.obtainMessage(MESSAGE_DEVICE_MESSAGE, message_map);
+            msg.sendToTarget();
+        } catch (Exception e) {
+            Log.d(TAG, "on_updated_nmea_params sink update exception: " + Log.getStackTraceString(e));
+        }
+    }
 
     public void toast(String msg) {
         m_handler.post(

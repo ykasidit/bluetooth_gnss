@@ -15,9 +15,9 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
 
     final String TAG = "btgnss_istqrt";
 
-    public static final int MAX_READ_BUF_SIZE = 204800;
+    public static final int MAX_READ_BUF_SIZE = 500_000;
     byte[] m_read_buffer = new byte[MAX_READ_BUF_SIZE];
-    public static final int BUFFERED_INPUTSTREAM_SIZE = MAX_READ_BUF_SIZE *10;
+    public static final int BUFFERED_INPUTSTREAM_SIZE = 10 * MAX_READ_BUF_SIZE;
     public static final byte[] CRLF = {0x0D, 0x0A};
 
     readline_callbacks m_readline_cb;

@@ -3,7 +3,6 @@ package com.clearevo.libbluetooth_gnss_service;
 
 import static android.app.PendingIntent.FLAG_IMMUTABLE;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AppOpsManager;
 import android.app.Notification;
@@ -23,8 +22,6 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.provider.ProviderProperties;
 import android.net.Uri;
 import android.os.Binder;
@@ -42,7 +39,6 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.location.Location;
 
-import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.documentfile.provider.DocumentFile;
 
@@ -270,7 +266,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             log(TAG, "ble gap lon: "+param_map.get("lon_double_07_str"));
             try {
                 if (m_activity_for_nmea_param_callbacks != null) {
-                    m_activity_for_nmea_param_callbacks.on_updated_nmea_params(param_map);
+                    m_activity_for_nmea_param_callbacks.onPositionUpdate(param_map);
                 }
             } catch (Exception e) {
                 log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: "+Log.getStackTraceString(e));
@@ -905,9 +901,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         try {
             //log(TAG, "rfcomm on_readline: "+new String(readline, "ascii"));
             log_bt_rx(readline);
-            String parsed_nmea = m_gnss_parser.parse(readline);
-            if (parsed_nmea != null && parsed_nmea.length() > 6 && parsed_nmea.substring(3).startsWith("GGA")) {
-
+            HashMap<String, Object> parsed_nmea = m_gnss_parser.parse(readline);            
+            String nmea_name = "";
+            if (parsed_nmea != null && parsed_nmea.containsKey("name")) {
+                nmea_name = (String) parsed_nmea.get("name");
+            }
+            if (nmea_name.startsWith("GGA")) {
                 if (m_all_ntrip_params_specified) {
                     start_ntrip_conn_if_specified_but_not_connected();
                 }
@@ -917,7 +916,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     if (now >= m_last_ntrip_gga_send_ts) {
                         if (now - m_last_ntrip_gga_send_ts > SEND_GGA_TO_NTRIP_EVERY_MILLIS) {
                             m_last_ntrip_gga_send_ts = now;
-                            String send_str = parsed_nmea.trim() + "\r\n";
+                            String send_str = (parsed_nmea.get("contents")) + "\r\n";
                             log(TAG, "yes send to ntrip now: "+send_str);
                             m_ntrip_conn_mgr.send_buff_to_server(send_str.getBytes("ascii"));
                         }
@@ -926,6 +925,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     }
                 }
             }
+            m_activity_for_nmea_param_callbacks.onDeviceMessage(parsed_nmea);
         } catch (Exception e) {
             log(TAG, "bluetooth_gnss_service on_readline parse exception: "+Log.getStackTraceString(e));
         }
@@ -1075,7 +1075,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     File bt_gnss_test_debug_mock_location_1_1_mode_flag = new File("/sdcard/bt_gnss_test_debug_mock_location_1_1_mode_flag");
     public static final String POSITION_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE";
-    public static final String PARSED_NMEA_UPDATE_NTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.PARSED_NMEA_UPDATE";
+    public static final String PARSED_NMEA_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.PARSED_NMEA_UPDATE";
     public static final String INTENT_EXTRA_DATA_JSON_KEY = "data_json";
     private void setMock(double latitude, double longitude, double altitude, float accuracy, float bearing, float speed, boolean alt_is_elipsoidal, int n_sats) {
         long ts = System.currentTimeMillis();
@@ -1262,12 +1262,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
     @Override
-    public void on_updated_nmea_params(HashMap<String, Object> params_map) {
+    public void onPositionUpdate(HashMap<String, Object> params_map) {
 
-        log(TAG, "service: on_updated_nmea_params() start");
+        log(TAG, "service: onPositionUpdate() start");
         try {
             Intent intent = new Intent();
-            intent.setAction(PARSED_NMEA_UPDATE_NTENT_ACTION);
+            intent.setAction(PARSED_NMEA_UPDATE_INTENT_ACTION);
             JSONObject jo = new JSONObject();
             for (String k :params_map.keySet()) {
                 try {
@@ -1389,13 +1389,15 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         //report params to activity
         try {
             if (m_activity_for_nmea_param_callbacks != null) {
-                m_activity_for_nmea_param_callbacks.on_updated_nmea_params(params_map);
+                m_activity_for_nmea_param_callbacks.onPositionUpdate(params_map);
             }
         } catch (Exception e) {
             log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: "+Log.getStackTraceString(e));
         }
+    }
 
-        log(TAG, "service: on_updated_nmea_params() done");
+    @Override
+    public void onDeviceMessage(HashMap<String, Object> message_map) {
 
     }
 

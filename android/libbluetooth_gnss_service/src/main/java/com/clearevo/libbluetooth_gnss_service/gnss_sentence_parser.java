@@ -13,6 +13,7 @@ import net.sf.marineapi.nmea.util.Position;
 import net.sf.marineapi.nmea.util.SatelliteInfo;
 import net.sf.marineapi.nmea.util.Units;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class gnss_sentence_parser {
     public ArrayList m_gsv_talker_signal_id_list = new ArrayList<Object[]>();
 
     //returns valid parsed nmea or null if parse failed
-    public String parse(byte[] read_line_raw_bytes) throws Exception {
+    public HashMap<String, Object> parse(byte[] read_line_raw_bytes) throws Exception {
 
         if (read_line_raw_bytes == null)
             return null;
@@ -64,7 +65,7 @@ public class gnss_sentence_parser {
             return null;
 
         //String nmea = new String(read_line_raw_bytes, pos_after_ubx_parse, len_remain, "ascii"); //parse from remaining bytes
-        String nmea = new String(read_line_raw_bytes, "ascii"); //parse nmea from all bytes just to be sure
+        String nmea = new String(read_line_raw_bytes, pos_after_ubx_parse, len_remain, StandardCharsets.US_ASCII); //parse nmea from all bytes just to be sure
 
         /* this should not happen - the case was because a wrong crlf raw buff reader code
         final String NMEA_SPLIT_STR_REGEX = "\\$";
@@ -96,7 +97,11 @@ public class gnss_sentence_parser {
     }
 
 
-    public String parse_nmea_string(String nmea) throws Exception{
+    public HashMap<String, Object> parse_nmea_string(String nmea) throws Exception{
+
+        HashMap<String, Object> ret = new HashMap<>();
+        ret.put("tx", false);
+        ret.put("contents", nmea);
 
         boolean found_and_filt_to_prefix = false;
         for (String NMEA_PREFIX : KNOWN_NMEA_PREFIX_LIST) {
@@ -122,11 +127,12 @@ public class gnss_sentence_parser {
         }
 
         //try parse this nmea and update our states
-        String ret = null;
         boolean is_nmea = false;
         try {
 
             if (nmea.startsWith("$PUBX")) {
+                ret.put("name", "PUBX");
+
                 //proprietary messages handle here...
                 //Log.d(TAG, "got PUBX: "+nmea);
 
@@ -166,8 +172,8 @@ public class gnss_sentence_parser {
                     }
                 }
                 Sentence sentence = m_sf.createParser(nmea);
-                ret = nmea; // if control reaches here means that this nmea string is valid
                 String sentence_id = sentence.getSentenceId();
+                ret.put("name", sentence_id);
 
                 //sentence type counter
                 String param_key = sentence_id + "_count";
@@ -343,7 +349,7 @@ public class gnss_sentence_parser {
                     //update on RMC
                     if (m_cb != null) {
                         Log.d(TAG, "calling m_cb callback with parsed params");
-                        m_cb.on_updated_nmea_params(m_parsed_params_hashmap);
+                        m_cb.onPositionUpdate(m_parsed_params_hashmap);
                     }
                 } else if (sentence instanceof GSASentence) {
                     GSASentence gsa = (GSASentence) sentence;
@@ -614,7 +620,8 @@ public class gnss_sentence_parser {
 
 
     public interface gnss_parser_callbacks {
-        public void on_updated_nmea_params(HashMap<String, Object> params_map);
+        public void onPositionUpdate(HashMap<String, Object> params_map);
+        public void onDeviceMessage(HashMap<String, Object> message_map);
     }
 
 
