@@ -18,9 +18,10 @@ class Message {
   }
 }
 
+bool autoScroll = true;
+
 Widget BuildTabMsg(BuildContext context, TabsState state) {
   final TextEditingController contentsController = TextEditingController();
-  bool autoScroll = true;
   List<Message> filteredMessages = state.msgList;
 
   // Dropdown filter variables
@@ -87,8 +88,17 @@ Widget BuildTabMsg(BuildContext context, TabsState state) {
     );
   }
 
+  ScrollController _scrollController = ScrollController();
+  _scrollToBottom() {
+    if (autoScroll && filteredMessages.length > 0 && _scrollController.hasClients) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    }
+  }
+  WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+
   return StatefulBuilder(
     builder: (context, setState) {
+
       return Column(
         children: [
           // Dropdown filter row
@@ -165,6 +175,7 @@ Widget BuildTabMsg(BuildContext context, TabsState state) {
           Expanded(
             child: ListView.builder(
               itemCount: filteredMessages.length,
+              controller: _scrollController,
               itemBuilder: (context, index) {
                 final message = filteredMessages[index];
                 return ListTile(

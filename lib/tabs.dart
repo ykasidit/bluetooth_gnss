@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pref/pref.dart';
-import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -631,7 +630,7 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
 
         return null;
       }
-      _check_state_map_icon["Target device selected"] = ICON_OK;
+      _check_state_map_icon["Target device selected:\n"+selected_device] = ICON_OK;
     }
 
     //print('check_and_update_selected_device11');

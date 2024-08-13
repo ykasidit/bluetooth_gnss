@@ -192,8 +192,10 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                             } else if (call.method.equals("test_can_create_file_in_chosen_folder")) {
                                 result.success(bluetooth_gnss_service.test_can_create_file_in_chosen_folder(getApplicationContext()));
                             } else if (call.method.equals("is_write_enabled")) {
-                                Log.d(TAG, "is_write_enabled check start");
-                                if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                    /*android 11 - no need writ ext storage perm*/
+                                    result.success(true);
+                                } else if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                                     result.success(true);
                                 } else {
                                     Log.d(TAG, "is_write_enabled check write permission not granted yet so requesting permission now");
