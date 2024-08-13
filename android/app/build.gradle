@@ -59,7 +59,14 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
-        }
+            minifyEnabled false  //required otherwise built release apk would crash on app entry
+            shrinkResources false //required for minifyEnabled false above
+            }
+        debug {
+            signingConfig signingConfigs.release
+            minifyEnabled false  //required otherwise built release apk would crash on app entry
+            shrinkResources false //required for minifyEnabled false above
+            }
     }
 }
 
