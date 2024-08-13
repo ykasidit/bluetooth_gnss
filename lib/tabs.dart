@@ -139,10 +139,92 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
 
   Timer? timer;
   static String note_how_to_disable_mock_location = "";
+
+  //params
   Map<dynamic, dynamic> _param_map = <dynamic, dynamic>{};
   Map<dynamic, dynamic> get param_map => _param_map;
+
+  ///////////////////msg list
   List<Message> _msgList = [];
   List<Message> get msgList => _msgList;
+  final max_msg_list_size = 1000;
+  final TextEditingController contentsController = TextEditingController();
+  List<Message> filteredMessages = [];
+  bool autoScroll = true;
+  // Dropdown filter variables
+  bool? isTxFilter;
+  String? nameFilter;
+  List<String> uniqueNames = [];
+
+  bool isMessageInFilter(Message message) {
+    final matchesIsTx = isTxFilter == null || message.tx == isTxFilter;
+    final matchesName = nameFilter == null || message.name == nameFilter;
+    final matchesContents = message.contents.toLowerCase().contains(contentsController.text.toLowerCase());
+    return matchesIsTx && matchesName && matchesContents;
+  }
+
+  void filterMessages() {
+    filteredMessages = msgList.where((message) {
+      return isMessageInFilter(message);
+    }).toList();
+  }
+
+  void showDialogMessage(Message message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(message.name),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: contentsController,
+                    decoration: InputDecoration(
+                      hintText: 'Search in message...',
+                    ),
+                    onChanged: (query) {
+                      // Implement search and highlight within the dialog
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Text(message.contents),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.share),
+                  onPressed: () {
+                    // Implement share functionality
+                  },
+                ),
+                TextButton(
+                  child: Text('Close'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+  ScrollController scrollController = ScrollController();
+  void scrollToBottom() {
+    if (autoScroll && filteredMessages.length > 0 && scrollController.hasClients) {
+      scrollController.jumpTo(scrollController.position.maxScrollExtent);
+    }
+  }
+  ///////////////////
+
 
   void wakelock_enable() {
     if (_wakelock_enabled == false) {
@@ -182,6 +264,7 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
     }
   }
 
+
   @override
   void initState() {
     super.initState();
@@ -190,14 +273,28 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
     _controller = TabController(vsync: this, length: _allPages.length);
     check_and_update_selected_device();
 
+
     event_channel.receiveBroadcastStream().listen((dynamic event) {
       Map<dynamic, dynamic> paramMap = event;
       if (paramMap.containsKey("is_dev_msg_map")) {
         print("got event is_dev_msg_parse");
         try {
-          setState(() {
-            msgList.add(Message.fromMap(paramMap));
-          });
+          Message msg = Message.fromMap(paramMap);
+          if (!uniqueNames.contains(msg.name)) {
+            uniqueNames.add(msg.name);
+          }
+          msgList.add(msg);
+          if (msgList.length > max_msg_list_size) {
+            msgList.removeAt(0);
+          }
+          if (filteredMessages.length > max_msg_list_size) {
+            filteredMessages.removeAt(0);
+          }
+          if (isMessageInFilter(msg)) {
+            setState(() {
+            filteredMessages.add(msg);
+            });
+          }
         } catch (e) {
           print('parse msg exception: $e');
         }
