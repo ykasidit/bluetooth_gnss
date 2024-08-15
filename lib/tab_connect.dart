@@ -4,10 +4,10 @@ import 'package:share_plus/share_plus.dart';
 
 import 'tabs.dart';
 
-Widget BuildTabConnectUi(BuildContext context, TabsState state) {
-  Map<dynamic, dynamic> _param_map = state.param_map;
+Widget buildTabConnectUi(BuildContext context, TabsState state) {
+  Map<dynamic, dynamic> paramMap = state.paramMap;
   List<Widget> rows = List.empty();
-  if (state.is_bt_connected) {
+  if (state.isBtConnected) {
     rows = <Widget>[
       Card(
         child: Container(
@@ -26,7 +26,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Lat:',
                       style: Theme.of(context).textTheme.headlineSmall),
-                  Text((_param_map['lat_double_07_str'] ?? WAITING_DEV),
+                  Text((paramMap['lat_double_07_str'] ?? waitingDev),
                       style: Theme.of(context).textTheme.headlineSmall),
                 ],
               ),
@@ -35,7 +35,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Lon:',
                       style: Theme.of(context).textTheme.headlineSmall),
-                  Text((_param_map['lon_double_07_str'] ?? WAITING_DEV),
+                  Text((paramMap['lon_double_07_str'] ?? waitingDev),
                       style: Theme.of(context).textTheme.headlineSmall),
                 ],
               ),
@@ -45,9 +45,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   ElevatedButton(
                     onPressed: () {
                       String content =
-                          (_param_map['lat_double_07_str'] ?? WAITING_DEV) +
+                          (paramMap['lat_double_07_str'] ?? waitingDev) +
                               "," /* no space here for sharing to gmaps */ +
-                              (_param_map['lon_double_07_str'] ?? WAITING_DEV);
+                              (paramMap['lon_double_07_str'] ?? waitingDev);
                       Share.share(
                               'https://www.google.com/maps/search/?api=1&query=$content')
                           .then((result) {
@@ -62,9 +62,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   ElevatedButton(
                     onPressed: () {
                       String content =
-                          (_param_map['lat_double_07_str'] ?? WAITING_DEV) +
+                          (paramMap['lat_double_07_str'] ?? waitingDev) +
                               "," +
-                              (_param_map['lon_double_07_str'] ?? WAITING_DEV);
+                              (paramMap['lon_double_07_str'] ?? waitingDev);
                       Clipboard.setData(ClipboardData(text: content))
                           .then((result) {
                         state.snackbar('Copied to clipboard: $content');
@@ -80,9 +80,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Time from GNSS:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      _param_map['GN_time'] ??
-                          _param_map['GP_time'] ??
-                          WAITING_DEV,
+                      paramMap['GN_time'] ??
+                          paramMap['GP_time'] ??
+                          waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -92,9 +92,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Ellipsoidal Height:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      _param_map['GN_ellipsoidal_height_double_02_str'] ??
-                          _param_map['GP_ellipsoidal_height_double_02_str'] ??
-                          WAITING_DEV,
+                      paramMap['GN_ellipsoidal_height_double_02_str'] ??
+                          paramMap['GP_ellipsoidal_height_double_02_str'] ??
+                          waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -104,9 +104,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Orthometric (MSL) Height:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      _param_map['GN_gga_alt_double_02_str'] ??
-                          _param_map['GP_gga_alt_double_02_str'] ??
-                          WAITING_DEV,
+                      paramMap['GN_gga_alt_double_02_str'] ??
+                          paramMap['GP_gga_alt_double_02_str'] ??
+                          waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -116,9 +116,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Geoidal Height:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      _param_map['GN_geoidal_height_double_02_str'] ??
-                          _param_map['GP_geoidal_height_double_02_str'] ??
-                          WAITING_DEV,
+                      paramMap['GN_geoidal_height_double_02_str'] ??
+                          paramMap['GP_geoidal_height_double_02_str'] ??
+                          waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -128,8 +128,8 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Fix status:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      (_param_map["GN_status"] ??
-                          _param_map["GP_status"] ??
+                      (paramMap["GN_status"] ??
+                          paramMap["GP_status"] ??
                           "No data"),
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
@@ -140,9 +140,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Fix quality:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      _param_map["GN_fix_quality"] ??
-                          _param_map["GP_fix_quality"] ??
-                          WAITING_DEV,
+                      paramMap["GN_fix_quality"] ??
+                          paramMap["GP_fix_quality"] ??
+                          waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -151,7 +151,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('UBLOX Fix Type:',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(_param_map["UBX_POSITION_navStat"] ?? WAITING_DEV,
+                  Text(paramMap["UBX_POSITION_navStat"] ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -160,7 +160,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('UBLOX XY Accuracy(m):',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(_param_map["UBX_POSITION_hAcc"] ?? WAITING_DEV,
+                  Text(paramMap["UBX_POSITION_hAcc"] ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -169,7 +169,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('UBLOX Z Accuracy(m):',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(_param_map["UBX_POSITION_vAcc"] ?? WAITING_DEV,
+                  Text(paramMap["UBX_POSITION_vAcc"] ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -177,7 +177,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Text('HDOP:', style: Theme.of(context).textTheme.bodySmall),
-                  Text(_param_map["hdop_str"] ?? WAITING_DEV,
+                  Text(paramMap["hdop_str"] ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -185,7 +185,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Text('Course:', style: Theme.of(context).textTheme.bodySmall),
-                  Text(_param_map["course_str"] ?? WAITING_DEV,
+                  Text(paramMap["course_str"] ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -198,11 +198,11 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('N Sats used TOTAL:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      ((_param_map["GP_n_sats_used"] ?? 0) +
-                              (_param_map["GL_n_sats_used"] ?? 0) +
-                              (_param_map["GA_n_sats_used"] ?? 0) +
-                              (_param_map["GB_n_sats_used"] ?? 0) +
-                              (_param_map["GQ_n_sats_used"] ?? 0))
+                      ((paramMap["GP_n_sats_used"] ?? 0) +
+                              (paramMap["GL_n_sats_used"] ?? 0) +
+                              (paramMap["GA_n_sats_used"] ?? 0) +
+                              (paramMap["GB_n_sats_used"] ?? 0) +
+                              (paramMap["GQ_n_sats_used"] ?? 0))
                           .toString(),
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
@@ -213,7 +213,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('N Galileo in use/view:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      "${_param_map["GA_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GA_n_sats_in_view_str"] ?? WAITING_DEV}",
+                      "${paramMap["GA_n_sats_used_str"] ?? waitingDev} / ${paramMap["GA_n_sats_in_view_str"] ?? waitingDev}",
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -223,7 +223,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('N GPS in use/view:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      "${_param_map["GP_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GP_n_sats_in_view_str"] ?? WAITING_DEV}",
+                      "${paramMap["GP_n_sats_used_str"] ?? waitingDev} / ${paramMap["GP_n_sats_in_view_str"] ?? waitingDev}",
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -233,7 +233,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('N GLONASS in use/view:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      "${_param_map["GL_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GL_n_sats_in_view_str"] ?? WAITING_DEV}",
+                      "${paramMap["GL_n_sats_used_str"] ?? waitingDev} / ${paramMap["GL_n_sats_in_view_str"] ?? waitingDev}",
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -243,7 +243,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('N BeiDou in use/view:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      "${_param_map["GB_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GB_n_sats_in_view_str"] ?? WAITING_DEV}",
+                      "${paramMap["GB_n_sats_used_str"] ?? waitingDev} / ${paramMap["GB_n_sats_in_view_str"] ?? waitingDev}",
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -253,7 +253,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('N QZSS in use/view:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      "${_param_map["GQ_n_sats_used_str"] ?? WAITING_DEV} / ${_param_map["GQ_n_sats_in_view_str"] ?? WAITING_DEV}",
+                      "${paramMap["GQ_n_sats_used_str"] ?? waitingDev} / ${paramMap["GQ_n_sats_in_view_str"] ?? waitingDev}",
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -265,7 +265,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Location sent to Android:',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(state.mock_location_set_status,
+                  Text(state.mockLocationSetStatus,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -274,7 +274,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Alt type used:',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(_param_map["alt_type"] ?? WAITING_DEV,
+                  Text(paramMap["alt_type"] ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -287,9 +287,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Total GGA Count:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      _param_map["GN_GGA_count_str"] ??
-                          _param_map["GP_GGA_count_str"] ??
-                          WAITING_DEV,
+                      paramMap["GN_GGA_count_str"] ??
+                          paramMap["GP_GGA_count_str"] ??
+                          waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -299,9 +299,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Total RMC Count:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      _param_map["GN_RMC_count_str"] ??
-                          _param_map["GP_RMC_count_str"] ??
-                          WAITING_DEV,
+                      paramMap["GN_RMC_count_str"] ??
+                          paramMap["GP_RMC_count_str"] ??
+                          waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -310,7 +310,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Current log folder:',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(_param_map["logfile_folder"] ?? WAITING_DEV,
+                  Text(paramMap["logfile_folder"] ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -319,7 +319,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Current log name:',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(_param_map["logfile_name"] ?? WAITING_DEV,
+                  Text(paramMap["logfile_name"] ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -329,9 +329,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Current log size (MB):',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      _param_map["logfile_n_bytes"] == null
-                          ? WAITING_DEV
-                          : (_param_map["logfile_n_bytes"] / 1000000)
+                      paramMap["logfile_n_bytes"] == null
+                          ? waitingDev
+                          : (paramMap["logfile_n_bytes"] / 1000000)
                               .toString(),
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
@@ -358,11 +358,11 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
                 const Padding(
                   padding: EdgeInsets.all(5.0),
                 ),
-                ICON_CONNECTED,
+                iconConnected,
                 const Padding(
                   padding: EdgeInsets.all(5.0),
                 ),
-                Text(state.selected_device),
+                Text(state.selectedDevice),
                 const Padding(
                   padding: EdgeInsets.all(5.0),
                 ),
@@ -380,11 +380,11 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
             )),
       ),
     ];
-  } else if (state.is_bt_connected == false &&
-      state.is_bt_conn_thread_alive_likely_connecting) {
+  } else if (state.isBtConnected == false &&
+      state.isBtConnThreadConnecting) {
     rows = <Widget>[
       const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        ICON_LOADING,
+        iconLoading,
       ]),
       const Padding(
         padding: EdgeInsets.all(15.0),
@@ -400,7 +400,7 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
         'Selected device:',
         style: Theme.of(context).textTheme.bodyMedium,
       ),
-      Text(state.selected_device),
+      Text(state.selectedDevice),
       const Padding(
         padding: EdgeInsets.all(10.0),
       ),
@@ -421,9 +421,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
     ];
 
     List<Widget> checklist = [];
-    for (String key in state.check_state_map_icon.keys) {
+    for (String key in state.checkStateMapIcon.keys) {
       Row row = Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-        state.check_state_map_icon[key]!,
+        state.checkStateMapIcon[key]!,
         Container(
             padding: const EdgeInsets.all(8.0),
             child: Text(
@@ -479,10 +479,9 @@ Widget BuildTabConnectUi(BuildContext context, TabsState state) {
   return SingleChildScrollView(
       child: Padding(
     padding: const EdgeInsets.all(5.0),
-    child: Container(
-        child: Column(
+    child: Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: rows,
-    )),
+    ),
   ));
 }

@@ -2,19 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
 import 'tabs.dart';
 
-Widget BuildTabRtkUi(BuildContext context, TabsState state) {
+Widget buildTabRtkUi(BuildContext context, TabsState state) {
   return SingleChildScrollView(
       child: Padding(
           padding: const EdgeInsets.all(5.0),
           child: Card(
               child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Container(
-                child: Column(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  state.is_ntrip_connected
+                  state.isNtripConnected
                       ? 'NTRIP Connected'
                       : 'NTRIP Not Connected',
                   style: Theme.of(context).textTheme.titleSmall!.copyWith(
@@ -95,6 +94,6 @@ Widget BuildTabRtkUi(BuildContext context, TabsState state) {
                   ],
                 ),
               ],
-            )),
+            ),
           ))));
 }

@@ -8,48 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'tabs.dart';
 
-const String _markdownData = """# Markdown Example
-Markdown allows you to easily include formatted text, images, and even formatted Dart code in your app.
-
-## Styling
-Style text as _italic_, __bold__, or `inline code`.
-
-- Use bulleted lists
-- To better clarify
-- Your points
-
-## Links
-You can use [hyperlinks](hyperlink) in markdown
-
-## Images
-
-You can include images:
-
-![Flutter logo](https://flutter.io/images/flutter-mark-square-100.png#100x100)
-
-## Markdown widget
-
-This is an example of how to create your own Markdown widget:
-
-    new Markdown(data: 'Hello _world_!');
-
-## Code blocks
-Formatted Dart code looks really pretty too:
-
-```
-void main() {
-  runApp(new MaterialApp(
-    home: new Scaffold(
-      body: new Markdown(data: markdownData)
-    )
-  ));
-}
-```
-
-Enjoy!
-""";
-
-Widget get_about_view(String version) {
+Widget createAboutView(String version) {
   String md = """  
 Bluetooth GNSS
 ==============
@@ -60,7 +19,7 @@ Purpose
 
 Use this app to get more accurate positioning data (latitude, longitude, elevation...) from external 'Bluetooth GNSS Receivers' (like 'Bad Elf GPS PRO+', 'HOLUX', 'Garmin GLO' etc) and use it as the position for apps in this phone (like Waze, etc) via 'Mock location app' Android Developer Settings.
 
-${TabsState.note_how_to_disable_mock_location}
+${TabsState.notHowToDisableMockLocation}
 This app 'bluetooth_gnss' is free software and released under the GNU GPL for anyone to study/use/modify/share at:
 - <https://github.com/ykasidit/bluetooth_gnss>
 
@@ -117,7 +76,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   return Markdown(
     selectable: true,
     onTapLink: (text, url, title){
-      url != null ? launch(url) : "";
+      url != null ? launchUrl(Uri.dataFromString(url)) : "";
     },
     data: md,
   );

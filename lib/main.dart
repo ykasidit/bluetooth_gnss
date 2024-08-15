@@ -3,11 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
 
-import 'tab_messages.dart';
 import 'tabs.dart';
 
-const String BLE_UART_MODE_KEY = 'ble_uart_mode';
-const String BLE_QSTARTZ_MODE_KEY = 'ble_qstarz_mode';
+const String bleUartModeKey = 'ble_uart_mode';
+const String bleQstarzModeKey = 'ble_qstarz_mode';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); //https://stackoverflow.com/questions/57689492/flutter-unhandled-exception-servicesbinding-defaultbinarymessenger-was-accesse
@@ -20,8 +19,8 @@ Future<void> main() async {
             'log_bt_rx': false,
             'disable_ntrip': false,
             'ble_gap_scan_mode': false,
-            BLE_UART_MODE_KEY: false,
-            BLE_QSTARTZ_MODE_KEY: false,
+            bleUartModeKey: false,
+            bleQstarzModeKey: false,
             'autostart': false,
             'list_nearest_streams_first': true,
             'ntrip_host': "igs-ip.net",
@@ -36,8 +35,8 @@ Future<void> main() async {
 class App extends StatefulWidget {
   // This widget is the root of your application.
 
-  const App(this.pref_service, {super.key});
-  final BasePrefService pref_service;
+  const App(this.prefService, {super.key});
+  final BasePrefService prefService;
 
   @override
   AppState createState() => AppState();
@@ -45,16 +44,16 @@ class App extends StatefulWidget {
 
 class AppState extends State<App> {
 
-  Tabs? m_widget;
+  Tabs? mWidget;
 
   @override
   Widget build(BuildContext context) {
-    m_widget = Tabs(widget.pref_service);
+    mWidget = Tabs(widget.prefService);
     return PrefService(
-        service: widget.pref_service,
+        service: widget.prefService,
         child: MaterialApp(
           title: 'Bluetooth GNSS',
-          home: m_widget,
+          home: mWidget,
     ));
   }
 }

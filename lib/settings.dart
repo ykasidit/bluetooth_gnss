@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:bluetooth_gnss/main.dart';
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
@@ -5,48 +7,46 @@ import 'package:flutter/services.dart';
 import 'dart:math' show cos, sqrt, asin;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
-class settings_widget extends StatefulWidget {
-  const settings_widget(this.pref_service, this._bd_map, {super.key});
-  final BasePrefService pref_service;
-  final Map<dynamic, dynamic> _bd_map;
+class SettingsWidget extends StatefulWidget {
+  const SettingsWidget(this.prefService, this.bdMap, {super.key});
+  final BasePrefService prefService;
+  final Map<dynamic, dynamic> bdMap;
   final String title = "Settings";
 
   @override
-  settings_widget_state createState() => settings_widget_state(_bd_map);
+  SettingsWidgetState createState() => SettingsWidgetState();
 }
 
-class settings_widget_state extends State<settings_widget> {
-  Map<dynamic, dynamic> m_bdaddr_to_name_map = <dynamic, dynamic>{};
-  String _selected_dev = "Loading...";
+class SettingsWidgetState extends State<SettingsWidget> {
   bool loading = false;
 
-  static const method_channel =
+  static const methodChannel =
       MethodChannel("com.clearevo.bluetooth_gnss/engine");
-  static const event_channel =
+  static const eventChannel =
       EventChannel("com.clearevo.bluetooth_gnss/settings_events");
   void toast(String msg) async {
     try {
-      await method_channel.invokeMethod("toast", {"msg": msg});
+      await methodChannel.invokeMethod("toast", {"msg": msg});
     } catch (e) {
-      print("WARNING: toast failed exception: $e");
+      developer.log("WARNING: toast failed exception: $e");
     }
   }
 
   @override
   void initState() {
-    _selected_dev = get_selected_bd_summary(widget.pref_service) ?? "";
-    event_channel.receiveBroadcastStream().listen((dynamic event) async {
+    super.initState();
+    eventChannel.receiveBroadcastStream().listen((dynamic event) async {
       Map<dynamic, dynamic> eventMap = event;
 
       if (eventMap.containsKey('callback_src')) {
         try {
-          print("settings got callback event: $eventMap");
+          developer.log("settings got callback event: $eventMap");
         } catch (e) {
-          print('parse event_map exception: $e');
+          developer.log('parse event_map exception: $e');
         }
 
         if (eventMap["callback_src"] == "get_mountpoint_list") {
-          print("dismiss progress dialog now0");
+          developer.log("dismiss progress dialog now0");
 
           setState(() {
             loading = false;
@@ -54,7 +54,7 @@ class settings_widget_state extends State<settings_widget> {
 
           //get list from native engine
           List<dynamic> oriMpl = eventMap["callback_payload"];
-          print("got mpl: $oriMpl");
+          developer.log("got mpl: $oriMpl");
           if (oriMpl.isEmpty) {
             toast("Failed to list mount-points list from server specified...");
             return;
@@ -78,14 +78,14 @@ class settings_widget_state extends State<settings_widget> {
               mountPointStrList.where((s) => s.contains(';')).toList();
 
           mountPointStrList.sort();
-          print("mount_point_str_list: $mountPointStrList");
+          developer.log("mount_point_str_list: $mountPointStrList");
 
           int nmpl = mountPointStrList.length;
           toast("Found $nmpl mountpoints...");
           bool sortByNearest =
-              widget.pref_service.get('list_nearest_streams_first') ??
+              widget.prefService.get('list_nearest_streams_first') ??
                   false;
-          print('sort_by_nearest: $sortByNearest');
+          developer.log('sort_by_nearest: $sortByNearest');
 
           List<Map<String, String>> mountPointMapList =
               List.empty(growable: true);
@@ -97,8 +97,8 @@ class settings_widget_state extends State<settings_widget> {
               mountPointMapList.add({
                 "mountpoint": parts[0],
                 "identifier": parts[1],
-                "lat": parts[8] ?? "0",
-                "lon": parts[9] ?? "0",
+                "lat": parts[8],
+                "lon": parts[9],
                 "distance_km": "0",
               });
             }
@@ -110,7 +110,7 @@ class settings_widget_state extends State<settings_widget> {
               double lastLat = 0;
               double lastLon = 0;
               String refLatLon =
-                  widget.pref_service.get('ref_lat_lon') ?? "";
+                  widget.prefService.get('ref_lat_lon') ?? "";
               lastPosValid = false;
               if (refLatLon.contains(",")) {
                 List<String> parts = refLatLon.split(",");
@@ -119,10 +119,12 @@ class settings_widget_state extends State<settings_widget> {
                     lastLat = double.parse(parts[0]);
                     lastLon = double.parse(parts[1]);
                     lastPosValid = true;
-                  } catch (e) {}
+                  } catch (e) {
+                    developer.log("WARNING: parse last lat/lon exception {e}");
+                  }
                 }
               }
-              print('last_pos_valid: $lastPosValid $lastLat $lastLon');
+              developer.log('last_pos_valid: $lastPosValid $lastLat $lastLon');
 
               if (lastPosValid) {
                 //calc distance into the map in the list
@@ -134,7 +136,7 @@ class settings_widget_state extends State<settings_widget> {
                     distanceKm =
                         calculateDistance(lastLat, lastLon, lat, lon);
                   } catch (e) {
-                    print('parse lat/lon exception: $e');
+                    developer.log('parse lat/lon exception: $e');
                   }
                   vmap["distance_km"] =
                       distanceKm.truncateToDouble().toString();
@@ -149,7 +151,7 @@ class settings_widget_state extends State<settings_widget> {
                 toast("Sort by distance failed: Invalid Ref lat,lon position");
               }
             } catch (e) {
-              print('sort_by_nearest exception: $e');
+              developer.log('sort_by_nearest exception: $e');
               toast("Sort by distance failed: $e");
             }
           }
@@ -164,7 +166,7 @@ class settings_widget_state extends State<settings_widget> {
                   children: mountPointMapList.map((valmap) {
                     String dispText =
                         "${valmap["mountpoint"]}: ${valmap["identifier"]} @ ${valmap["lat"]}, ${valmap["lon"]}";
-                    print(
+                    developer.log(
                         "disp_text sort_by_nearest $sortByNearest last_pos_valid $lastPosValid");
                     if (sortByNearest && lastPosValid) {
                       dispText += ": ${valmap["distance_km"]} km";
@@ -178,53 +180,21 @@ class settings_widget_state extends State<settings_widget> {
                 );
               });
 
-          print("chosen_mountpoint: $chosenMountpoint");
-          widget.pref_service.set('ntrip_mountpoint', chosenMountpoint);
+          developer.log("chosen_mountpoint: $chosenMountpoint");
+          widget.prefService.set('ntrip_mountpoint', chosenMountpoint);
 
           //force re-load of selected ntrip_mountpoint
           Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (BuildContext context) {
-            return settings_widget(widget.pref_service, m_bdaddr_to_name_map);
+            return SettingsWidget(widget.prefService, widget.bdMap);
           }));
         }
       }
     }, onError: (dynamic error) {
-      print('Received error: ${error.message}');
+      developer.log('Received error: ${error.message}');
     });
   }
 
-  settings_widget_state(Map<dynamic, dynamic> bdaddr_to_name_map) {
-    m_bdaddr_to_name_map = bdaddr_to_name_map;
-  }
-
-  String get_selected_bdaddr(BasePrefService prefService) {
-    return prefService.get("target_bdaddr") ?? "";
-  }
-
-  String get_selected_bdname(BasePrefService prefService) {
-    String? bdaddr = get_selected_bdaddr(prefService);
-    //print("get_selected_bdname: bdaddr: $bdaddr");
-    if (!(m_bdaddr_to_name_map.containsKey(bdaddr))) {
-      return "";
-    }
-    return m_bdaddr_to_name_map[bdaddr];
-  }
-
-  String get_selected_bd_summary(BasePrefService prefService) {
-    //print("get_selected_bd_summary 0");
-    String ret = '';
-    String bdaddr = get_selected_bdaddr(prefService);
-    //print("get_selected_bd_summary selected bdaddr: $bdaddr");
-    String bdname = get_selected_bdname(prefService);
-    if (bdaddr.isEmpty) {
-      ret += "No device selected";
-    } else {
-      ret += bdname;
-      ret += " ($bdaddr)";
-    }
-    //print("get_selected_bd_summary ret $ret");
-    return ret;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -232,16 +202,16 @@ class settings_widget_state extends State<settings_widget> {
     List<DropdownMenuItem> devlist = List.empty(growable: true);
     devlist.add(
         const DropdownMenuItem(
-            value: BLE_QSTARTZ_MODE_KEY, child: Text("Qstarz BLE GPS")
+            value: bleQstarzModeKey, child: Text("Qstarz BLE GPS")
         )
     );
-    for (String bdaddr in m_bdaddr_to_name_map.keys) {
+    for (String bdaddr in widget.bdMap.keys) {
       devlist.add(DropdownMenuItem(
-          value: bdaddr, child: Text(m_bdaddr_to_name_map[bdaddr].toString())));
+          value: bdaddr, child: Text(widget.bdMap[bdaddr].toString())));
     }
 
     return PrefService(
-        service: widget.pref_service,
+        service: widget.prefService,
         child: MaterialApp(
       title: 'Settings',
       home: Scaffold(
@@ -274,7 +244,7 @@ class settings_widget_state extends State<settings_widget> {
                     if (enable) {
                       bool writeEnabled = false;
                       try {
-                        writeEnabled = await method_channel
+                        writeEnabled = await methodChannel
                             .invokeMethod('is_write_enabled');
                       } on PlatformException catch (e) {
                         toast("WARNING: check _is_connecting failed: $e");
@@ -284,14 +254,14 @@ class settings_widget_state extends State<settings_widget> {
                             "Write external storage permission required for data loggging...");
                       }
                       try {
-                        await method_channel.invokeMethod('set_log_uri');
+                        await methodChannel.invokeMethod('set_log_uri');
                       } on PlatformException catch (e) {
                         toast("WARNING: set_log_uri failed: $e");
                       }
-                      widget.pref_service.set('log_bt_rx',
+                      widget.prefService.set('log_bt_rx',
                           false); //set by java-side mainactivity on success only
                     } else {
-                      widget.pref_service.set('log_uri', "");
+                      widget.prefService.set('log_uri', "");
                     }
                   }),
               const PrefTitle(title: Text('RTK/NTRIP Server settings')),
@@ -352,13 +322,13 @@ class settings_widget_state extends State<settings_widget> {
                   ),
                   onPressed: () async {
                     String host =
-                        widget.pref_service.get('ntrip_host') ?? "";
+                        widget.prefService.get('ntrip_host') ?? "";
                     String port =
-                        widget.pref_service.get('ntrip_port') ?? "";
+                        widget.prefService.get('ntrip_port') ?? "";
                     String user =
-                        widget.pref_service.get('ntrip_user') ?? "";
+                        widget.prefService.get('ntrip_user') ?? "";
                     String pass =
-                        widget.pref_service.get('ntrip_pass') ?? "";
+                        widget.prefService.get('ntrip_pass') ?? "";
                     if (host.isEmpty || port.isEmpty) {
                       toast(
                           "Please specify the ntrip_host and ntrip_port first...");
@@ -374,14 +344,14 @@ class settings_widget_state extends State<settings_widget> {
                       //make sure dialog shows first otherwise if no internet the .dismoiss wont work if immediate fail and progress dialog would block forever
                       Future.delayed(const Duration(seconds: 0), () async {
                         try {
-                          retCode = await method_channel
+                          retCode = await methodChannel
                               .invokeMethod("get_mountpoint_list", {
                             'ntrip_host': host,
                             'ntrip_port': port,
                             'ntrip_user': user,
                             'ntrip_pass': pass,
                           });
-                          print(
+                          developer.log(
                               "get_mountpoint_list req waiting callback ret: $retCode");
                         } catch (e) {
                           setState(() {
@@ -391,13 +361,15 @@ class settings_widget_state extends State<settings_widget> {
                         }
                       });
                     } catch (e) {
-                      print("WARNING: Choose mount-point failed exception: $e");
+                      developer.log("WARNING: Choose mount-point failed exception: $e");
                       try {
                         setState(() {
                           loading = false;
                         });
                         toast("List mount-points failed start: $e");
-                      } catch (e) {}
+                      } catch (e) {
+                        developer.log("list mount point failed {e}");
+                      }
                     }
                   },
                 ),

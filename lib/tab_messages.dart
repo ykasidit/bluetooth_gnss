@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pref/pref.dart';
 import 'tabs.dart';
+import 'dart:developer' as developer;
 
 class Message {
   final bool tx;
@@ -9,7 +9,7 @@ class Message {
   Message({required this.tx, required this.name, required this.contents});
   // Factory constructor to create a Message from a Map<String, Object>
   factory Message.fromMap(Map<dynamic, dynamic> map) {
-    print("got Message map: $map");
+    developer.log("got Message map: $map");
     return Message(
       tx: map['tx'] as bool,
       name: map['name'] as String,
@@ -18,7 +18,7 @@ class Message {
   }
 }
 
-Widget BuildTabMsg(BuildContext context, TabsState state) {
+Widget buildTabMsg(BuildContext context, TabsState state) {
   WidgetsBinding.instance.addPostFrameCallback((_) => state.scrollToBottom());
   return StatefulBuilder(
     builder: (context, setState) {
@@ -27,12 +27,12 @@ Widget BuildTabMsg(BuildContext context, TabsState state) {
           // Dropdown filter row
           Row(
             children: [
-              Icon(Icons.search),
+              const Icon(Icons.search),
               // isTx Filter
               DropdownButton<bool?>(
-                hint: Text('Direction filter'),
+                hint: const Text('Direction filter'),
                 value: state.isTxFilter,
-                items: [
+                items: const [
                   DropdownMenuItem(value: null, child: Text('Name')),
                   DropdownMenuItem(value: false, child: Text('Rx')),
                   DropdownMenuItem(value: true, child: Text('Tx')),
@@ -46,13 +46,13 @@ Widget BuildTabMsg(BuildContext context, TabsState state) {
               ),
               // Name Filter
               DropdownButton<String?>(
-                hint: Text('Name filter'),
+                hint: const Text('Name filter'),
                 value: state.nameFilter,
                 items: [
-                  DropdownMenuItem(value: null, child: Text('Name')),
+                  const DropdownMenuItem(value: null, child: Text('Name')),
                   ...state.uniqueNames.map((name) {
                     return DropdownMenuItem(value: name, child: Text(name));
-                  }).toList(),
+                  }),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -65,7 +65,7 @@ Widget BuildTabMsg(BuildContext context, TabsState state) {
               Expanded(
                 child: TextField(
                   controller: state.contentsController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: 'Contents',
                   ),
                   onChanged: (query) {
@@ -81,7 +81,7 @@ Widget BuildTabMsg(BuildContext context, TabsState state) {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Autoscroll'),
+              const Text('Autoscroll'),
               Checkbox(
                 value: state.autoScroll,
                 onChanged: (bool? value) {
@@ -99,7 +99,7 @@ Widget BuildTabMsg(BuildContext context, TabsState state) {
                 thumbVisibility:
                     true, // Optional: Always show the scrollbar thumb
                 child: ListView.builder(
-                  key: ValueKey('msgList'),
+                  key: const ValueKey('msgList'),
                   itemCount: state.filteredMessages.length,
                   controller: state.scrollController,
                   itemBuilder: (context, index) {
