@@ -390,13 +390,15 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
                         "Please Disconnect first - cannot change settings during live connection...");
                     return;
                   } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) {
-                        developer.log("sw.bdaddr_to_name_map: $getBdMap()");
-                        return SettingsWidget(widget.prefService, bdmap);
-                      }),
-                    );
+                    if (context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) {
+                          developer.log("sw.bdaddr_to_name_map: $getBdMap()");
+                          return SettingsWidget(widget.prefService, bdmap);
+                        }),
+                      );
+                    }
                   }
                 });
               },
@@ -488,16 +490,18 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
         break;
       case "about":
         final packageInfo = await PackageInfo.fromPlatform();
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) {
-            return Scaffold(
-                appBar: AppBar(
-                  title: const Text("About"),
-                ),
-                body: createAboutView(packageInfo.version.toString()));
-          }),
-        );
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) {
+              return Scaffold(
+                  appBar: AppBar(
+                    title: const Text("About"),
+                  ),
+                  body: createAboutView(packageInfo.version.toString()));
+            }),
+          );
+        }
         break;
       case "issues":
         launchUrl(Uri.dataFromString("https://github.com/ykasidit/bluetooth_gnss/issues"));
@@ -629,6 +633,9 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
     if (userPressedSettingsTakeActionAndRetSw) {
       return null;
     }
+    if (!mounted) {
+      return null;
+    }
     bool gapMode = PrefService.of(context).get('ble_gap_scan_mode') ?? false;
     if (gapMode) {
       //bt ble gap broadcast mode
@@ -684,7 +691,9 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
     }
 
     //developer.log('check_and_update_selected_device11');
-
+    if (!mounted) {
+      return null;
+    }
     bool checkLocation =
         PrefService.of(context).get('check_settings_location') ?? true;
 
@@ -871,12 +880,23 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
       toast("Connecting - please wait...");
       return;
     }
-    
+
+    if (!mounted) {
+      return;
+    }
+
     String bdaddr = PrefService.of(context).get("target_bdaddr");
+    if (bdaddr.isEmpty) {
+      developer.log("main.dart connect() start1");
+      snackbar("No bluetooth device selected in settings");
+      return;
+    }
     if (!gapMode) {}
 
     developer.log("main.dart connect() start1");
-
+    if (!mounted) {
+      return;
+    }
     _paramMap = <dynamic, dynamic>{}; //clear last conneciton params state...
     String status = "unknown";
     try {

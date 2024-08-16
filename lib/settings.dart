@@ -62,7 +62,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
 
           //conv to List<String> and sort
           List<String> mountPointStrList =
-              List<String>.generate(oriMpl.length, (i) => "${oriMpl[i]}");
+          List<String>.generate(oriMpl.length, (i) => "${oriMpl[i]}");
 
           //filter startswith STR;
           mountPointStrList =
@@ -71,7 +71,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
           //remove starting STR; to sort by mountpoint name
           mountPointStrList = List<String>.generate(
               mountPointStrList.length,
-              (i) => mountPointStrList[i].substring(4));
+                  (i) => mountPointStrList[i].substring(4));
 
           //filter for that contains ; so wont have errors for split further below
           mountPointStrList =
@@ -88,7 +88,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
           developer.log('sort_by_nearest: $sortByNearest');
 
           List<Map<String, String>> mountPointMapList =
-              List.empty(growable: true);
+          List.empty(growable: true);
 
           for (String val in mountPointStrList) {
             List<String> parts = val.split(";");
@@ -155,40 +155,54 @@ class SettingsWidgetState extends State<SettingsWidget> {
               toast("Sort by distance failed: $e");
             }
           }
+
           //make dialog to choose from mount_point_map_list
-
-          String? chosenMountpoint = await showDialog<String>(
-              context: context,
-              barrierDismissible: true,
-              builder: (BuildContext context) {
-                return SimpleDialog(
-                  title: const Text('Select stream:'),
-                  children: mountPointMapList.map((valmap) {
-                    String dispText =
-                        "${valmap["mountpoint"]}: ${valmap["identifier"]} @ ${valmap["lat"]}, ${valmap["lon"]}";
-                    developer.log(
-                        "disp_text sort_by_nearest $sortByNearest last_pos_valid $lastPosValid");
-                    if (sortByNearest && lastPosValid) {
-                      dispText += ": ${valmap["distance_km"]} km";
-                    }
-                    return SimpleDialogOption(
-                        onPressed: () {
-                          Navigator.pop(context, "${valmap["mountpoint"]}");
-                        },
-                        child: Text(dispText));
-                  }).toList(),
-                );
-              });
-
+          String? chosenMountpoint;
+          if (mounted) {
+            chosenMountpoint = await showDialog<
+                String>(
+                context: context,
+                barrierDismissible: true,
+                builder: (BuildContext context) {
+                  return SimpleDialog(
+                    title: const Text('Select stream:'),
+                    children: mountPointMapList.map((valmap) {
+                      String dispText =
+                          "${valmap["mountpoint"]}: ${valmap["identifier"]} @ ${valmap["lat"]}, ${valmap["lon"]}";
+                      developer.log(
+                          "disp_text sort_by_nearest $sortByNearest last_pos_valid $lastPosValid");
+                      if (sortByNearest && lastPosValid) {
+                        dispText += ": ${valmap["distance_km"]} km";
+                      }
+                      return SimpleDialogOption(
+                          onPressed: () {
+                            Navigator.pop(context, "${valmap["mountpoint"]}");
+                          },
+                          child: Text(dispText));
+                    }).toList(),
+                  );
+                });
+          }
           developer.log("chosen_mountpoint: $chosenMountpoint");
-          widget.prefService.set('ntrip_mountpoint', chosenMountpoint);
+          if (chosenMountpoint != null) {
+            widget.prefService.set('ntrip_mountpoint', chosenMountpoint);
 
-          //force re-load of selected ntrip_mountpoint
-          Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (BuildContext context) {
-            return SettingsWidget(widget.prefService, widget.bdMap);
-          }));
-        }
+            //force re-load of selected ntrip_mountpoint
+
+            if (mounted) {
+              Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (BuildContext context) {
+                    return SettingsWidget(widget.prefService, widget.bdMap);
+                  }));
+            }
+          }
+
+
+
+
+
+
+      }
       }
     }, onError: (dynamic error) {
       developer.log('Received error: ${error.message}');
