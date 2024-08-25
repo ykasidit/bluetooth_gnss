@@ -13,6 +13,4 @@ public class GnssConnectionParams {
     public boolean ble_qstarz_mode;
     public boolean ble_uart_mode;
     public final Map<String, String> extraParams = new HashMap<>();
-
-
 }

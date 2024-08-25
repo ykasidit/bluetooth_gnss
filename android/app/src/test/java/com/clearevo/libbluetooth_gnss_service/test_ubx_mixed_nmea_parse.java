@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 
 import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
 import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.toHexString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class test_ubx_mixed_nmea_parse {
@@ -52,7 +53,7 @@ public class test_ubx_mixed_nmea_parse {
             System.out.println("n_ubx_consumed: " + n_ubx_consumed);
             assertTrue(n_ubx_consumed == assert_consumed_les[i]);
             if (i == 5)
-                assertTrue(example_nmea_gga.equals(new gnss_sentence_parser().parse(example_line_buffer)));
+                assertEquals(example_nmea_gga, new gnss_sentence_parser().parse(example_line_buffer).get("nmea"));
             else
                 assertTrue(null == new gnss_sentence_parser().parse(example_line_buffer));
 
@@ -66,7 +67,7 @@ public class test_ubx_mixed_nmea_parse {
                 System.out.println("start test ubx + nmea i: "+i+"new parser");
                 gnss_sentence_parser gp = new gnss_sentence_parser();
                 System.out.println("start test ubx + nmea i: "+i+"new parser parse() start ====== ");
-                assertTrue(example_nmea_gga.equals(gp.parse(baos.toByteArray()).trim()));
+                assertEquals(example_nmea_gga, gp.parse(baos.toByteArray()).get("nmea"));
                 System.out.println("start test ubx + nmea i: "+i+"new parser parse() done =======");
             }
             i++;

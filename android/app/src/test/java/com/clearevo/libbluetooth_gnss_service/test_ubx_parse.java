@@ -8,7 +8,10 @@ import net.sf.marineapi.nmea.util.Position;
 import org.junit.Test;
 
 import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import java.util.HashMap;
 
 public class test_ubx_parse {
 
@@ -36,9 +39,11 @@ public class test_ubx_parse {
 
             if (i == 0) {
                 assertTrue(0x24 == example_line_buffer[194]);
-                String parsed = new gnss_sentence_parser().parse(example_line_buffer);
+                HashMap<String, Object> parsed = new gnss_sentence_parser().parse(example_line_buffer);
                 System.out.println("parsed: " + parsed);
-                assertTrue(parsed.equals("$GNRMC,122630.00,A,0641.64320,N,10137.05886,E,0.043,,230919,,,A,V*10"));
+                assertEquals("$GNRMC,122630.00,A,0641.64320,N,10137.05886,E,0.043,,230919,,,A,V*10",
+                        parsed.get("contents")
+                );
             }
 
             i++;

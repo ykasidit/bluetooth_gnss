@@ -98,7 +98,10 @@ public class gnss_sentence_parser {
 
 
     public HashMap<String, Object> parse_nmea_string(String nmea) throws Exception{
-
+        if (nmea == null) {
+            nmea = "";
+        }
+        nmea = nmea.trim();
         HashMap<String, Object> ret = new HashMap<>();
         ret.put("tx", false);
         ret.put("contents", nmea);
@@ -171,6 +174,7 @@ public class gnss_sentence_parser {
                         nmea = nmea.substring(li);
                     }
                 }
+                ret.put("nmea", nmea);
                 Sentence sentence = m_sf.createParser(nmea);
                 String sentence_id = sentence.getSentenceId();
                 ret.put("name", sentence_id);

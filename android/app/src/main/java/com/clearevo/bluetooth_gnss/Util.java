@@ -1,5 +1,8 @@
 package com.clearevo.bluetooth_gnss;
 
+import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_qstarz_mode;
+import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_uart_mode;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -26,8 +29,8 @@ public class Util {
         gnssConnectionParams.logBtRx = prefs.getBoolean("flutter.pref_log_bt_rx", false);
         gnssConnectionParams.disableNtrip = prefs.getBoolean("flutter.pref_disable_ntrip", false);
         gnssConnectionParams.gapMode = prefs.getBoolean("flutter.pref_ble_gap_scan_mode", false);
-        gnssConnectionParams.ble_uart_mode = prefs.getBoolean("flutter."+ble_uart_mode, false);
-        gnssConnectionParams.ble_qstarz_mode = prefs.getBoolean("flutter."+ble_qstarz_mode, false);
+        gnssConnectionParams.ble_uart_mode = prefs.getBoolean("flutter.pref_"+ble_uart_mode, false);
+        gnssConnectionParams.ble_qstarz_mode = prefs.getBoolean("flutter.pref_"+ble_qstarz_mode, false);
 
         for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
             final String value = prefs.getString("flutter.pref_" + pk, null);
@@ -36,9 +39,6 @@ public class Util {
 
         return gnssConnectionParams;
     }
-
-    public static final String ble_uart_mode = "ble_uart_mode";
-    public static final String ble_qstarz_mode = "ble_qstarz_mode";
 
     public static int connect(final String activityClassName,
                               final Context context,
@@ -76,7 +76,7 @@ public class Util {
             gnssConnectionParams.bdaddr = ""; //no need to do null handling below
         }
         boolean gap_mode = intent.getBooleanExtra(bluetooth_gnss_service.BLE_GAP_SCAN_MODE, false);
-        Log.d(TAG, "util.connect() gap_mode: "+gap_mode+" ble_uart_mode: "+ble_uart_mode+" ble_qstarz_mode: "+ble_qstarz_mode);
+        Log.d(TAG, "util.connect() gap_mode: "+gap_mode+" ble_uart_mode: "+intent.getBooleanExtra(ble_uart_mode, false)+" ble_qstarz_mode: "+intent.getBooleanExtra(ble_qstarz_mode, false));
         if (gnssConnectionParams.ble_uart_mode) {
             //TODO
             Log.e(TAG, "ble uart not implemented yet");

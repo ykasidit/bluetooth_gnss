@@ -1,5 +1,8 @@
 package com.clearevo.bluetooth_gnss;
 
+import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_qstarz_mode;
+import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_uart_mode;
+
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -94,10 +97,11 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                 gnssConnectionParams.logBtRx = (Boolean.TRUE.equals(call.argument("log_bt_rx")));
                                 gnssConnectionParams.disableNtrip = (Boolean.TRUE.equals(call.argument("disable_ntrip")));
                                 gnssConnectionParams.gapMode = (Boolean.TRUE.equals(call.argument("ble_gap_scan_mode")));
+                                gnssConnectionParams.ble_uart_mode = (Boolean.TRUE.equals(call.argument(ble_uart_mode)));
+                                gnssConnectionParams.ble_qstarz_mode = (Boolean.TRUE.equals(call.argument(ble_qstarz_mode)));
                                 for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
                                     gnssConnectionParams.extraParams.put(pk, call.argument(pk));
                                 }
-
                                 final Context context = getApplicationContext();
 
                                 new Thread() {

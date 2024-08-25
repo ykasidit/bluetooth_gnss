@@ -2,6 +2,7 @@ package com.clearevo.libbluetooth_gnss_service;
 
 
 import static android.app.PendingIntent.FLAG_IMMUTABLE;
+import static android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -72,11 +73,11 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     static final long BLE_GAP_SCAN_LOOP_DURAITON_MILLIS = 3000;
     String ECODROIDGPS_BROADCAST_MODE = "ECODROIDGPS_BROADCAST";
     public static final String BLE_GAP_SCAN_MODE = "ble_gap_scan_mode";
-    public static final ParcelUuid eddystone_service_uuid = ParcelUuid.fromString("0000feaa-0000-1000-8000-00805f9b34fb");  //https://proandroiddev.com/scanning-google-eddystone-in-android-application-cf181e0a8648
-    public static final ParcelUuid nordic_uart_service_uuid = ParcelUuid.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
-    public static final ParcelUuid nordic_chrc_rx_uuid = ParcelUuid.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E");
-    public static final ParcelUuid nordic_chrc_tx_uuid = ParcelUuid.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
-    public static final ParcelUuid qstarz_chrc_tx_uuid = ParcelUuid.fromString("6E400004-B5A3-F393-E0A9-E50E24DCCA9E");
+    public static final UUID eddystone_service_uuid = UUID.fromString("0000feaa-0000-1000-8000-00805f9b34fb");  //https://proandroiddev.com/scanning-google-eddystone-in-android-application-cf181e0a8648
+    public static final UUID nordic_uart_service_uuid = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
+    public static final UUID nordic_chrc_rx_uuid = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E");
+    public static final UUID nordic_chrc_tx_uuid = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
+    public static final UUID qstarz_chrc_tx_uuid = UUID.fromString("6E400004-B5A3-F393-E0A9-E50E24DCCA9E");
     public static final long BLE_GAP_SCAN_MODE_SETMOCK_INTERVAL = 1000;
     String[] SATS_USED_KEYS = new String[]{"GP_n_sats_used", "GL_n_sats_used", "GA_n_sats_used", "GB_n_sats_used", "GQ_n_sats_used"};
 
@@ -298,11 +299,11 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             log("gatt scan status: "+status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 // Get the Nordic UART Service
-                BluetoothGattService service = gatt.getService(nordic_uart_service_uuid.getUuid());
+                BluetoothGattService service = gatt.getService(nordic_uart_service_uuid);
                 if (service != null) {
                     Log.d(TAG, "Nordic/qstarz UART Service discovered");
                     // Get the TX characteristic
-                    BluetoothGattCharacteristic txCharacteristic = service.getCharacteristic(qstarz_chrc_tx_uuid.getUuid());
+                    BluetoothGattCharacteristic txCharacteristic = service.getCharacteristic(qstarz_chrc_tx_uuid);
                     if (txCharacteristic != null) {
                         Log.d(TAG, "TX Characteristic found, enabling notifications...");
                         // Enable notifications on the TX characteristic
@@ -326,7 +327,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         public void onCharacteristicRead(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
 
-            if (status == BluetoothGatt.GATT_SUCCESS && qstarz_chrc_tx_uuid.getUuid().equals(characteristic.getUuid())) {
+            if (status == BluetoothGatt.GATT_SUCCESS && qstarz_chrc_tx_uuid.equals(characteristic.getUuid())) {
                 // Read the data from the TX characteristic
                 byte[] data = characteristic.getValue();
                 Log.d(TAG, "Received data: " + new String(data));
@@ -413,7 +414,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             if (m_ble_gap_scan_mode) {
                                 filters.add(
                                         new ScanFilter.Builder()
-                                                .setServiceUuid(eddystone_service_uuid)
+                                                .setServiceUuid(new ParcelUuid(eddystone_service_uuid))
                                                 .build());
                                 ScanSettings settings = new ScanSettings.Builder()
                                         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -432,7 +433,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                 //start connection to target dev
                                 filters.add(
                                         new ScanFilter.Builder()
-                                                .setServiceUuid(nordic_uart_service_uuid)
+                                                .setServiceUuid(new ParcelUuid(nordic_uart_service_uuid))
                                                 .build());
                                 ScanSettings settings = new ScanSettings.Builder()
                                         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -1126,7 +1127,11 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     void start_foreground(String title, String text, String ticker)
     {
         log(TAG, "start_forgroud 0");
-        startForeground(1, getMyActivityNotification(title, text, ticker));
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            startForeground(1, getMyActivityNotification(title, text, ticker));
+        } else {
+            startForeground(1, getMyActivityNotification(title, text, ticker), FOREGROUND_SERVICE_TYPE_LOCATION);
+        }
         log(TAG, "start_forgroud end");
     }
 
