@@ -214,11 +214,6 @@ class SettingsWidgetState extends State<SettingsWidget> {
   Widget build(BuildContext context) {
 //create matching radiopreflist
     List<DropdownMenuItem> devlist = List.empty(growable: true);
-    devlist.add(
-        const DropdownMenuItem(
-            value: bleQstarzModeKey, child: Text("Qstarz BLE GPS")
-        )
-    );
     for (String bdaddr in widget.bdMap.keys) {
       devlist.add(DropdownMenuItem(
           value: bdaddr, child: Text(widget.bdMap[bdaddr].toString())));
@@ -238,6 +233,9 @@ class SettingsWidgetState extends State<SettingsWidget> {
               const PrefTitle(title: Text('Target device:')),
               PrefDropdown(title: const Text("Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)"), items: devlist, pref: 'target_bdaddr'),
               const PrefTitle(title: Text('Bluetooth Connection settings')),
+              const PrefCheckbox(
+                  title: Text("QStarz BLE GPS Racing device"),
+                  pref: bleQstarzModeKey),
               const PrefCheckbox(
                   title: Text("Secure RFCOMM connection"), pref: 'secure'),
               const PrefCheckbox(
