@@ -2,6 +2,7 @@ package com.clearevo.libbluetooth_gnss_service;
 
 import org.junit.Test;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,10 +44,12 @@ public class test_ntrip_conn_mgr implements ntrip_conn_callbacks{
         String user = null;
         String pass = null;
 
-        //make sure you write /etc/test_ntrip_conn_mgr.properties in a format like https://www.mkyong.com/java/java-properties-file-examples/
+        //make sure you write ~/test_ntrip_conn_mgr.properties in a format like https://www.mkyong.com/java/java-properties-file-examples/
 
         boolean no_ntrip_cred = false;
-        try (InputStream input = new FileInputStream("/etc/libbluetooth_gnss_test/test_ntrip_conn_mgr.properties")) {
+        String home_dir = System.getProperty("user.home");
+        String prop_mp = null;
+        try (InputStream input = new FileInputStream(new File(home_dir, "test_ntrip_conn_mgr.properties"))) {
 
             Properties prop = new Properties();
             prop.load(input);
@@ -56,7 +59,7 @@ public class test_ntrip_conn_mgr implements ntrip_conn_callbacks{
             port = Integer.parseInt(prop.getProperty("port"));
             user = prop.getProperty("user");
             pass = prop.getProperty("pass");
-
+            prop_mp = prop.getProperty("mountpoint");
         } catch (IOException ex) {
             no_ntrip_cred = true;
             //host = "www.igs-ip.net";
@@ -119,6 +122,9 @@ public class test_ntrip_conn_mgr implements ntrip_conn_callbacks{
         if (no_ntrip_cred)
             return;
 
+        if (prop_mp != null) {
+            first_mount_point = prop_mp;
+        }
         System.out.println("connecting to first_mount_point: "+first_mount_point);
         assertTrue(first_mount_point != null);
         //test conn to correct site

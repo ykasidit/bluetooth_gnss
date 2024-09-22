@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'main.dart';
 import 'settings.dart';
 import 'tab_rtk.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 enum TabsDemoStyle { iconsAndText, iconsOnly, textOnly }
 
@@ -222,15 +223,15 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin, Widgets
   ///////////////////
 
   void wakelockEnable() async {
-    if (await Wakelock.enabled == false) {
-       Wakelock
+    if (await WakelockPlus.enabled == false) {
+      WakelockPlus
            .enable(); //keep screen on for users to continuously monitor connection state
      }
    }
  
   void wakelockDisable() async {
-    if (await Wakelock.enabled == true) {
-       Wakelock
+    if (await WakelockPlus.enabled == true) {
+      WakelockPlus
            .disable(); //keep screen on for users to continuously monitor connection state
      }
    }
@@ -258,6 +259,11 @@ bool m_is_background = false;
       case AppLifecycleState.detached:
         m_is_background = true;
       // widget is detached
+        break;
+      case AppLifecycleState.hidden:
+        // TODO: Handle this case.
+        m_is_background = true;
+        // widget is detached
         break;
     }
   }
