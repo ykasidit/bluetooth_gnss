@@ -89,7 +89,7 @@ class Tabs extends StatefulWidget {
   TabsState createState() => TabsState();
 }
 
-class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
+class TabsState extends State<Tabs> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const methodChannel =
       MethodChannel("com.clearevo.bluetooth_gnss/engine");
   static const eventChannel =
@@ -120,7 +120,7 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
   Icon _floatingButtonIcon = const Icon(Icons.access_time);
   bool _isBtConnected = false;
   bool get isBtConnected => _isBtConnected;
-  bool wakelockEnabled = false;
+
   String get status => _status;
   bool _isBtConnThreadConnecting = false;
   int _mockLocationSetTs = 0;
@@ -222,19 +222,44 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
   }
   ///////////////////
 
-  void wakelockEnable() {
-    if (wakelockEnabled == false) {
-      WakelockPlus
-          .enable(); //keep screen on for users to continuously monitor connection state
-      wakelockEnabled = true;
-    }
-  }
+  void wakelockEnable() async {
+    if (await Wakelock.enabled == false) {
+       Wakelock
+           .enable(); //keep screen on for users to continuously monitor connection state
+     }
+   }
+ 
+  void wakelockDisable() async {
+    if (await Wakelock.enabled == true) {
+       Wakelock
+           .disable(); //keep screen on for users to continuously monitor connection state
+     }
+   }
 
-  void wakelockDisable() {
-    if (wakelockEnabled == true) {
-      WakelockPlus
-          .disable(); //keep screen on for users to continuously monitor connection state
-      wakelockEnabled = false;
+bool m_is_background = false;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // These are the callbacks
+    switch (state) {
+      case AppLifecycleState.resumed:
+      // widget is resumed
+      m_is_background = false;
+        break;
+      case AppLifecycleState.inactive:
+        m_is_background = true;
+      // widget is inactive
+        break;
+      case AppLifecycleState.paused:
+      // widget is paused
+        m_is_background = true;
+        break;
+      case AppLifecycleState.detached:
+        m_is_background = true;
+      // widget is detached
+        break;
     }
   }
 
@@ -242,6 +267,7 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance!.addObserver(this);
     timer = Timer.periodic(const Duration(seconds: 2),
         (Timer t) => checkUpdateSelectedDev());
     _controller = TabController(vsync: this, length: _allPages.length);
@@ -304,6 +330,8 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
     cleanup();
 
     _controller!.dispose();
+    // Remove the observer
+    WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
   }
 
@@ -522,6 +550,11 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin {
       [bool userPressedSettingsTakeActionAndRetSw = false,
       bool userPressedConnectTakeActionAndRetSw = false]) async {
     _floatingButtonIcon = iconBluetoothSettings;
+
+    if (m_is_background) {
+      print('m_is_backgrund so not refreshing state...');
+      return null;
+    }
 
     try {
       _isBtConnected = await methodChannel.invokeMethod('is_bt_connected');
