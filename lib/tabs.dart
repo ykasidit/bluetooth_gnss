@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pref/pref.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'main.dart';
 import 'settings.dart';
@@ -267,7 +266,7 @@ bool m_is_background = false;
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     timer = Timer.periodic(const Duration(seconds: 2),
         (Timer t) => checkUpdateSelectedDev());
     _controller = TabController(vsync: this, length: _allPages.length);
@@ -331,7 +330,7 @@ bool m_is_background = false;
 
     _controller!.dispose();
     // Remove the observer
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
