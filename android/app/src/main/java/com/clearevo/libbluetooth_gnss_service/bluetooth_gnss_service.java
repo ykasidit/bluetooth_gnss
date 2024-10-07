@@ -55,15 +55,21 @@ import androidx.documentfile.provider.DocumentFile;
 import java.io.File;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
 import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.toHexString;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 
@@ -128,6 +134,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public int onStartCommand(Intent intent, int flags, int startId) {
         // If we get killed, after returning from here, restart
         log(TAG, "onStartCommand");
+        closing = false;
 
         curInstance = this;
 
@@ -348,6 +355,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
 
     public void parse_scan_record_bytes_and_set_location(byte[] gap_buffer) {
+
+        if (closing) {
+            Log.d(TAG, "parse_scan_record_bytes_and_set_location ignore as already closing");
+            return;
+        }
+
         long now = System.currentTimeMillis();
 
         //handle system time change
@@ -738,8 +751,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
 
+    boolean closing = false;
     //return true if was connected
     public boolean close() {
+        closing = true;
         log(TAG, "close()0");
         deactivate_mock_location();
 
@@ -879,6 +894,132 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         );
         deactivate_mock_location();
         close();
+    }
+
+    public static HashMap<String, Object> jsonToMap(JSONObject jsonObj) throws Exception {
+        HashMap<String, Object> map = new HashMap<>();
+
+        // Get all keys of the JSONObject
+        Iterator<String> keys = jsonObj.keys();
+
+        // Iterate through keys and put key-value pairs into the HashMap
+        while (keys.hasNext()) {
+            String key = keys.next();
+            Object value = jsonObj.get(key);
+
+            // If the value is a JSONObject, convert it recursively
+            if (value instanceof JSONObject) {
+                map.put(key, jsonToMap((JSONObject) value));  // Recursion for nested objects
+            }
+            // If the value is a JSONArray, convert it to a List<Object>
+            else if (value instanceof JSONArray) {
+                map.put(key, jsonToList((JSONArray) value));  // Convert JSONArray to List<Object>
+            } else {
+                map.put(key, value);  // Otherwise, put the value directly
+            }
+        }
+
+        return map;
+    }
+
+    // Convert a JSONArray to a List<Object>
+    public static List<Object> jsonToList(JSONArray array) throws Exception {
+        List<Object> list = new ArrayList<>();
+
+        // Iterate through the JSONArray
+        for (int i = 0; i < array.length(); i++) {
+            Object value = array.get(i);
+
+            // If the value is a JSONObject, convert it to a Map
+            if (value instanceof JSONObject) {
+                list.add(jsonToMap((JSONObject) value));
+            }
+            // If the value is another JSONArray, convert it recursively
+            else if (value instanceof JSONArray) {
+                list.add(jsonToList((JSONArray) value));
+            } else {
+                list.add(value);  // Otherwise, add the value directly
+            }
+        }
+
+        return list;
+    }
+
+
+    public static DateTimeFormatter sql_date_formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
+
+    public static String convertUnixTimeStampToSQLDateTime(long unixTimeStampMillis) throws Exception {
+        // Convert Unix timestamp to LocalDateTime in UTC without timezone or locale
+        LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(unixTimeStampMillis), ZoneOffset.UTC);
+
+        // Format it as SQL datetime (yyyy-MM-dd HH:mm:ss.SSS) with milliseconds
+
+
+        // Return formatted date time string
+        return dateTime.format(sql_date_formatter);
+    }
+
+
+
+    public void on_read_object(JSONObject object) {
+        if (closing) {
+            Log.d(TAG, "on_read_object ignore as already closing");
+            return;
+        }
+
+        if (object == null)
+            return;
+        if (m_ble_qstarz_mode) {
+            /*
+             {
+             "fix_status":3,
+             "fix_status_matched":"3D",
+             "rcr":84,
+             "millisecond":700,
+             "latitude":6.41639016,
+             "longitude":101.37057211,
+             "timestamp_s":1726303552,
+             "float_speed_kmh":0.2592799961566925,
+             "float_height_m":27.68000030517578,
+             "heading_degrees":100.06999969482422,
+             "g_sensor_x":-0.17578125,
+             "g_sensor_y":0.2578125,
+             "g_sensor_z":0.93359375,
+             "max_snr":22,
+             "hdop":1.850000023841858,
+             "vdop":0.9700000286102295,
+             "satellite_count_view":20,
+             "satellite_count_used":4,
+             "fix_quality":1,
+             "fix_quality_matched":"GPS fix (SPS)",
+             "battery_percent":100,"dummy":0,
+             "series_number":0,
+             "gsv_fields":[{"prn":0,"elevation":8194,"azimuth":35,"snr":33},{"prn":0,"elevation":7168,"azimuth":39,"snr":98},{"prn":0,"elevation":7958,"azimuth":45,"snr":47}]}
+* */
+            try {
+                Log.d(TAG, "on_read_object ondevicemessage start");
+                if (object.getInt("fix_status") >= 3) {
+                    //3D so fix is ok now - get lat lon to send mock location
+                    double lat = object.getDouble("latitude");
+                    double lon = object.getDouble("longitude");
+                    double float_height_m = object.getDouble("float_height_m");
+                    double heading_degrees = object.getDouble("heading_degrees");
+                    double float_speed_kmh = object.getDouble("float_speed_kmh");
+                    double hdop = object.getDouble("hdop");
+                    double accuracy = hdop * get_connected_device_CEP();
+                    int satellite_count_used = object.getInt("satellite_count_used");
+                    String time_str = convertUnixTimeStampToSQLDateTime((object.getLong("timestamp_s")*1000L) + object.getLong("millisecond"));
+                    object.put("time", time_str);
+                    Log.d(TAG, "time: "+time_str);
+                    setMock(lat, lon, float_height_m, (float) accuracy, (float) heading_degrees, (float) float_speed_kmh, false, satellite_count_used);
+                }
+                m_activity_for_nmea_param_callbacks.onPositionUpdate(jsonToMap(object));
+                Log.d(TAG, "on_read_object ondevicemessage success");
+            } catch (Exception e) {
+                Log.d(TAG, "WARNING: on_read_object m_ble_qstarz_mode exception:", e);
+            }
+        }
     }
 
     public void start_connecting_thread()
@@ -1232,6 +1373,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String PARSED_NMEA_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.PARSED_NMEA_UPDATE";
     public static final String INTENT_EXTRA_DATA_JSON_KEY = "data_json";
     private void setMock(double latitude, double longitude, double altitude, float accuracy, float bearing, float speed, boolean alt_is_elipsoidal, int n_sats) {
+        if (closing) {
+            Log.d(TAG, "setmock ignore as already closing");
+            return;
+        }
         long ts = System.currentTimeMillis();
 
         try {
@@ -1305,13 +1450,25 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             log(TAG, "deactivate_mock_location1");
             try {
                 LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                locationManager.setTestProviderEnabled(LocationManager.GPS_PROVIDER, false);
-                locationManager.removeTestProvider(LocationManager.GPS_PROVIDER);
+                // Remove the test provider safely
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    log(TAG, "deactivate_mock_location set enabled false");
+                    locationManager.setTestProviderEnabled(LocationManager.GPS_PROVIDER, false);
+                }
+
+                try {
+                    log(TAG, "deactivate_mock_location rm provider");
+                    locationManager.removeTestProvider(LocationManager.GPS_PROVIDER);
+                } catch (IllegalArgumentException e) {
+                    // Handle case where the provider is not set or doesn't exist
+                    Log.e(TAG, "WARNING: removeTestProvider: Provider does not exist.");
+                }
                 g_mock_location_active = false;
                 m_handler.post(
                         new Runnable() {
                             @Override
                             public void run() {
+                                log(TAG, "deactivate_mock_location toast");
                                 toast("Deactivated Mock location provider...");
                                 updateNotification("Bluetooth GNSS - Not active...", "Deactivated", "");
                             }
@@ -1326,8 +1483,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
     private void activate_mock_location() {
+        if (closing) {
+            Log.d(TAG, "activate_mock_location ignore as already closing");
+            return;
+        }
         if (!is_mock_location_active()) {
             try {
+                log(TAG, "activate_mock_location 0");
                 LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
                 locationManager.addTestProvider(LocationManager.GPS_PROVIDER,
                         /*boolean requiresNetwork*/ false,
@@ -1344,12 +1506,14 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         new Runnable() {
                             @Override
                             public void run() {
+                                log(TAG, "activate_mock_location 1");
                                 toast("Activated Mock location provider...");
                                 updateNotification("Bluetooth GNSS - Active...", "Connected to: "+get_connected_device_alias(), "");
                             }
                         }
                 );
                 g_mock_location_active = true;
+                log(TAG, "activate_mock_location 2");
             } catch (Exception e) {
                 String st = Log.getStackTraceString(e);
                 if (st.contains("already exists")) {
@@ -1368,6 +1532,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 log(TAG, "activate_mock_location exception: " + st);
 
             }
+            log(TAG, "activate_mock_location done");
         }
     }
 
@@ -1417,6 +1582,11 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     @Override
     public void onPositionUpdate(HashMap<String, Object> params_map) {
+
+        if (closing) {
+            Log.d(TAG, "onPositionUpdate ignore as already closing");
+            return;
+        }
 
         log(TAG, "service: onPositionUpdate() start");
         try {
