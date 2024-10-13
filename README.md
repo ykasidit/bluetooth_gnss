@@ -12,15 +12,18 @@ Build instructions
 
 * Make sure the flutter sdk version matches that of below:
 
-`flutter downgrade v3.24.0`
+`flutter downgrade v<flutter ver in pubspec.yaml>`
 
 * In this folder run:
 `flutter pub get`
 
+* build rust dependencies (first install same ver to match that of flutter_rust_bridge in pubspec.yaml - see https://cjycode.com/flutter_rust_bridge/quickstart)
+`flutter_rust_bridge_codegen integrate`
+
 * If you don't already have an android signing key, create one as per:
 <https://docs.flutter.dev/deployment/android#create-an-upload-keystore>
 
-* Create the file `key.properties` in this folder and add your keystore information:
+* Create the file `key.properties` in parent of this folder and add your keystore information:
 ```
 storeFile=/path/to/keystore.jks
 storePassword=*********
