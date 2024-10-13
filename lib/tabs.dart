@@ -236,7 +236,7 @@ class TabsState extends State<Tabs>
     }
   }
 
-  bool m_is_background = false;
+  bool isInBackground = false;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -246,23 +246,23 @@ class TabsState extends State<Tabs>
     switch (state) {
       case AppLifecycleState.resumed:
         // widget is resumed
-        m_is_background = false;
+        isInBackground = false;
         break;
       case AppLifecycleState.inactive:
-        m_is_background = true;
+        isInBackground = true;
         // widget is inactive
         break;
       case AppLifecycleState.paused:
         // widget is paused
-        m_is_background = true;
+        isInBackground = true;
         break;
       case AppLifecycleState.detached:
-        m_is_background = true;
+        isInBackground = true;
         // widget is detached
         break;
       case AppLifecycleState.hidden:
         // TODO: Handle this case.
-        m_is_background = true;
+        isInBackground = true;
         // widget is detached
         break;
     }
@@ -553,8 +553,8 @@ class TabsState extends State<Tabs>
       bool userPressedConnectTakeActionAndRetSw = false]) async {
     _floatingButtonIcon = iconBluetoothSettings;
 
-    if (m_is_background) {
-      print('m_is_backgrund so not refreshing state...');
+    if (isInBackground) {
+      developer.log('isInBackground so not refreshing state...');
       return null;
     }
 
