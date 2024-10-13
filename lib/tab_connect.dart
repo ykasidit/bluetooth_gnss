@@ -79,10 +79,7 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Time from GNSS:',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      paramMap['GN_time'] ??
-                          paramMap['GP_time'] ??
-                          waitingDev,
+                  Text(paramMap['GN_time'] ?? paramMap['GP_time'] ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -331,8 +328,7 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                   Text(
                       paramMap["logfile_n_bytes"] == null
                           ? waitingDev
-                          : (paramMap["logfile_n_bytes"] / 1000000)
-                              .toString(),
+                          : (paramMap["logfile_n_bytes"] / 1000000).toString(),
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -380,8 +376,7 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
             )),
       ),
     ];
-  } else if (state.isBtConnected == false &&
-      state.isBtConnThreadConnecting) {
+  } else if (state.isBtConnected == false && state.isBtConnThreadConnecting) {
     rows = <Widget>[
       const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         iconLoading,

@@ -9,7 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'tabs.dart';
 
 Widget createAboutView(String version) {
-  String md = """  
+  String md = """
 Bluetooth GNSS
 ==============
 App version: $version
@@ -75,7 +75,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
   return Markdown(
     selectable: true,
-    onTapLink: (text, url, title){
+    onTapLink: (text, url, title) {
       url != null ? launchUrl(Uri.dataFromString(url)) : "";
     },
     data: md,

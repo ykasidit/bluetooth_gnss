@@ -10,7 +10,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pref/pref.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'main.dart';
 import 'settings.dart';
 import 'tab_rtk.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -89,14 +88,15 @@ class Tabs extends StatefulWidget {
   TabsState createState() => TabsState();
 }
 
-class TabsState extends State<Tabs> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+class TabsState extends State<Tabs>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const methodChannel =
       MethodChannel("com.clearevo.bluetooth_gnss/engine");
   static const eventChannel =
       EventChannel("com.clearevo.bluetooth_gnss/engine_events");
   static const uninitState = "Loading state...";
 
-  TabsState() ;
+  TabsState();
 
   ////////connect tab
   List<String> talkerIds = ["GP", "GL", "GA", "GB", "GQ"];
@@ -225,18 +225,18 @@ class TabsState extends State<Tabs> with SingleTickerProviderStateMixin, Widgets
   void wakelockEnable() async {
     if (await WakelockPlus.enabled == false) {
       WakelockPlus
-           .enable(); //keep screen on for users to continuously monitor connection state
-     }
-   }
- 
+          .enable(); //keep screen on for users to continuously monitor connection state
+    }
+  }
+
   void wakelockDisable() async {
     if (await WakelockPlus.enabled == true) {
       WakelockPlus
-           .disable(); //keep screen on for users to continuously monitor connection state
-     }
-   }
+          .disable(); //keep screen on for users to continuously monitor connection state
+    }
+  }
 
-bool m_is_background = false;
+  bool m_is_background = false;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -245,20 +245,20 @@ bool m_is_background = false;
     // These are the callbacks
     switch (state) {
       case AppLifecycleState.resumed:
-      // widget is resumed
-      m_is_background = false;
+        // widget is resumed
+        m_is_background = false;
         break;
       case AppLifecycleState.inactive:
         m_is_background = true;
-      // widget is inactive
+        // widget is inactive
         break;
       case AppLifecycleState.paused:
-      // widget is paused
+        // widget is paused
         m_is_background = true;
         break;
       case AppLifecycleState.detached:
         m_is_background = true;
-      // widget is detached
+        // widget is detached
         break;
       case AppLifecycleState.hidden:
         // TODO: Handle this case.
@@ -268,13 +268,12 @@ bool m_is_background = false;
     }
   }
 
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    timer = Timer.periodic(const Duration(seconds: 2),
-        (Timer t) => checkUpdateSelectedDev());
+    timer = Timer.periodic(
+        const Duration(seconds: 2), (Timer t) => checkUpdateSelectedDev());
     _controller = TabController(vsync: this, length: _allPages.length);
     checkUpdateSelectedDev();
 
@@ -417,8 +416,7 @@ bool m_is_background = false;
               icon: const Icon(Icons.settings),
               onPressed: () {
                 getBdMap().then((bdmap) {
-                  if (_isBtConnected ||
-                      _isBtConnThreadConnecting) {
+                  if (_isBtConnected || _isBtConnThreadConnecting) {
                     toast(
                         "Please Disconnect first - cannot change settings during live connection...");
                     return;
@@ -493,8 +491,7 @@ bool m_is_background = false;
               return SingleChildScrollView(
                   child: Padding(
                 padding: const EdgeInsets.all(25.0),
-                child: 
-                    Column(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
@@ -537,10 +534,12 @@ bool m_is_background = false;
         }
         break;
       case "issues":
-        launchUrl(Uri.dataFromString("https://github.com/ykasidit/bluetooth_gnss/issues"));
+        launchUrl(Uri.dataFromString(
+            "https://github.com/ykasidit/bluetooth_gnss/issues"));
         break;
       case "project":
-        launchUrl(Uri.dataFromString("https://github.com/ykasidit/bluetooth_gnss"));
+        launchUrl(
+            Uri.dataFromString("https://github.com/ykasidit/bluetooth_gnss"));
         break;
     }
   }
@@ -724,8 +723,7 @@ bool m_is_background = false;
 
         return null;
       }
-      _checkStateMapIcon["Target device selected:\n$selectedDevice"] =
-          iconOk;
+      _checkStateMapIcon["Target device selected:\n$selectedDevice"] = iconOk;
     }
 
     //developer.log('check_and_update_selected_device11');
@@ -789,8 +787,7 @@ bool m_is_background = false;
             "'Mock Location app' is 'Bluetooth GNSS'\n$notHowToDisableMockLocation"] =
         iconOk;
 
-    if (_isBtConnected == false &&
-        _isBtConnThreadConnecting) {
+    if (_isBtConnected == false && _isBtConnThreadConnecting) {
       setState(() {
         _floatingButtonIcon = iconConnecting;
       });
@@ -849,9 +846,6 @@ bool m_is_background = false;
     developer.log("main.dart connect() start");
     bool logBtRx = PrefService.of(context).get('log_bt_rx') ?? false;
     bool gapMode = PrefService.of(context).get('ble_gap_scan_mode') ?? false;
-    bool bleUartMode = PrefService.of(context).get(bleUartModeKey) ?? false;
-    bool bleQstarzMode =
-        PrefService.of(context).get(bleQstarzModeKey) ?? false;
 
     if (logBtRx) {
       bool writeEnabled = false;
@@ -900,8 +894,7 @@ bool m_is_background = false;
       return;
     }
 
-    Map<dynamic, dynamic>? bdmap =
-        await checkUpdateSelectedDev(false, true);
+    Map<dynamic, dynamic>? bdmap = await checkUpdateSelectedDev(false, true);
     if (bdmap == null) {
       //toast("Please see Pre-connect checklist...");
       return;
@@ -944,8 +937,6 @@ bool m_is_background = false;
         'secure': PrefService.of(context).get('secure') ?? true,
         'reconnect': PrefService.of(context).get('reconnect') ?? false,
         'ble_gap_scan_mode': gapMode,
-        bleQstarzModeKey: bleQstarzMode,
-        bleUartModeKey: bleUartMode,
         'log_bt_rx': logBtRx,
         'disable_ntrip': PrefService.of(context).get('disable_ntrip') ?? false,
         'ntrip_host': PrefService.of(context).get('ntrip_host'),
@@ -956,8 +947,7 @@ bool m_is_background = false;
       });
       developer.log("main.dart connect() start connect done");
       if (ret) {
-        status =
-            "Connecting ...";
+        status = "Connecting ...";
       } else {
         status = "Failed to connect...";
       }
@@ -978,7 +968,6 @@ bool m_is_background = false;
 
     developer.log("marin.dart connect() done");
   }
-
 
   String getSelectedBdaddr(BasePrefService prefService) {
     return prefService.get("target_bdaddr") ?? "";
@@ -1013,8 +1002,8 @@ bool m_is_background = false;
   Future<Map<dynamic, dynamic>> getBdMap() async {
     Map<dynamic, dynamic>? ret;
     try {
-      ret = await methodChannel
-          .invokeMethod<Map<dynamic, dynamic>>('get_bd_map');
+      ret =
+          await methodChannel.invokeMethod<Map<dynamic, dynamic>>('get_bd_map');
       //developer.log("got bt_map: $ret");
     } on PlatformException {
       //String status = "get_bd_map exception: '${e.message}'.";
@@ -1099,8 +1088,4 @@ bool m_is_background = false;
   int get ntripPacketCount => ntripPacketsCount;
 
   bool get isBtConnThreadConnecting => _isBtConnThreadConnecting;
-
-
 }
-
-

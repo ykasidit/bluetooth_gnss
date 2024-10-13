@@ -1,6 +1,5 @@
 import 'dart:developer' as developer;
 
-import 'package:bluetooth_gnss/main.dart';
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
 import 'package:flutter/services.dart';
@@ -62,16 +61,15 @@ class SettingsWidgetState extends State<SettingsWidget> {
 
           //conv to List<String> and sort
           List<String> mountPointStrList =
-          List<String>.generate(oriMpl.length, (i) => "${oriMpl[i]}");
+              List<String>.generate(oriMpl.length, (i) => "${oriMpl[i]}");
 
           //filter startswith STR;
           mountPointStrList =
               mountPointStrList.where((s) => s.startsWith('STR;')).toList();
 
           //remove starting STR; to sort by mountpoint name
-          mountPointStrList = List<String>.generate(
-              mountPointStrList.length,
-                  (i) => mountPointStrList[i].substring(4));
+          mountPointStrList = List<String>.generate(mountPointStrList.length,
+              (i) => mountPointStrList[i].substring(4));
 
           //filter for that contains ; so wont have errors for split further below
           mountPointStrList =
@@ -83,12 +81,11 @@ class SettingsWidgetState extends State<SettingsWidget> {
           int nmpl = mountPointStrList.length;
           toast("Found $nmpl mountpoints...");
           bool sortByNearest =
-              widget.prefService.get('list_nearest_streams_first') ??
-                  false;
+              widget.prefService.get('list_nearest_streams_first') ?? false;
           developer.log('sort_by_nearest: $sortByNearest');
 
           List<Map<String, String>> mountPointMapList =
-          List.empty(growable: true);
+              List.empty(growable: true);
 
           for (String val in mountPointStrList) {
             List<String> parts = val.split(";");
@@ -109,8 +106,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
             try {
               double lastLat = 0;
               double lastLon = 0;
-              String refLatLon =
-                  widget.prefService.get('ref_lat_lon') ?? "";
+              String refLatLon = widget.prefService.get('ref_lat_lon') ?? "";
               lastPosValid = false;
               if (refLatLon.contains(",")) {
                 List<String> parts = refLatLon.split(",");
@@ -133,8 +129,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
                   try {
                     double lat = double.parse(vmap["lat"].toString());
                     double lon = double.parse(vmap["lon"].toString());
-                    distanceKm =
-                        calculateDistance(lastLat, lastLon, lat, lon);
+                    distanceKm = calculateDistance(lastLat, lastLon, lat, lon);
                   } catch (e) {
                     developer.log('parse lat/lon exception: $e');
                   }
@@ -159,8 +154,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
           //make dialog to choose from mount_point_map_list
           String? chosenMountpoint;
           if (mounted) {
-            chosenMountpoint = await showDialog<
-                String>(
+            chosenMountpoint = await showDialog<String>(
                 context: context,
                 barrierDismissible: true,
                 builder: (BuildContext context) {
@@ -192,23 +186,16 @@ class SettingsWidgetState extends State<SettingsWidget> {
             if (mounted) {
               Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (BuildContext context) {
-                    return SettingsWidget(widget.prefService, widget.bdMap);
-                  }));
+                return SettingsWidget(widget.prefService, widget.bdMap);
+              }));
             }
           }
-
-
-
-
-
-
-      }
+        }
       }
     }, onError: (dynamic error) {
       developer.log('Received error: ${error.message}');
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -222,176 +209,181 @@ class SettingsWidgetState extends State<SettingsWidget> {
     return PrefService(
         service: widget.prefService,
         child: MaterialApp(
-      title: 'Settings',
-      home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Settings'),
-          ),
-          body: ModalProgressHUD(
-            inAsyncCall: loading,
-            child: PrefPage(children: [
-              const PrefTitle(title: Text('Target device:')),
-              PrefDropdown(title: const Text("Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)"), items: devlist, pref: 'target_bdaddr'),
-              const PrefTitle(title: Text('Bluetooth Connection settings')),
-              const PrefCheckbox(
-                  title: Text("QStarz BLE GPS Racing device"),
-                  pref: bleQstarzModeKey),
-              const PrefCheckbox(
-                  title: Text("Secure RFCOMM connection"), pref: 'secure'),
-              const PrefCheckbox(
-                  title: Text("Auto-reconnect - when disconnected"),
-                  pref: 'reconnect'),
-              const PrefCheckbox(
-                  title: Text("Autostart - connect on phone boot"),
-                  pref: 'autostart'),
-              const PrefCheckbox(
-                  title: Text(
-                      "Check for Settings > 'Location' ON and 'High Accuracy'"),
-                  pref: 'check_settings_location'),
-              PrefCheckbox(
-                  title: const Text("Enable Logging (location/nmea/debug-trace)"),
-                  pref: 'log_bt_rx',
-                  onChange: (bool? val) async {
-                    bool enable = val!;
-                    if (enable) {
-                      bool writeEnabled = false;
-                      try {
-                        writeEnabled = await methodChannel
-                            .invokeMethod('is_write_enabled');
-                      } on PlatformException catch (e) {
-                        toast("WARNING: check _is_connecting failed: $e");
-                      }
-                      if (writeEnabled == false) {
-                        toast(
-                            "Write external storage permission required for data loggging...");
-                      }
-                      try {
-                        await methodChannel.invokeMethod('set_log_uri');
-                      } on PlatformException catch (e) {
-                        toast("WARNING: set_log_uri failed: $e");
-                      }
-                      widget.prefService.set('log_bt_rx',
-                          false); //set by java-side mainactivity on success only
-                    } else {
-                      widget.prefService.set('log_uri', "");
-                    }
-                  }),
-              const PrefTitle(title: Text('RTK/NTRIP Server settings')),
-              Text(
-                "Set these if your Bluetooth GNSS device supports RTK,\n(Like Ardusimple U-Blox F9, etc)",
-                style: Theme.of(context).textTheme.bodySmall,
+          title: 'Settings',
+          home: Scaffold(
+              appBar: AppBar(
+                title: const Text('Settings'),
               ),
-              const PrefCheckbox(title: Text("Disable NTRIP"), pref: 'disable_ntrip'),
-              PrefText(
-                  label: 'Host',
-                  pref: 'ntrip_host',
-                  validator: (str) {
-                    str = str.toString();
-                    if (str == "") {
-                      return "Invalid Host domain/IP";
-                    }
-                    return null;
-                  }),
-              PrefText(
-                  label: 'Port',
-                  pref: 'ntrip_port',
-                  validator: (str) {
-                    str = str.toString();
-                    int? port = intParse(str);
-                    if (port == null || !(port >= 0 && port <= 65535)) {
-                      return "Invalid port";
-                    }
-                    return null;
-                  }),
-              const PrefText(label: "Ref lat,lon for sorting", pref: 'ref_lat_lon'),
-              PrefText(
-                  label: "Stream (mount-point)",
-                  pref: 'ntrip_mountpoint',
-                  validator: (str) {
-                    if (str == null) {
-                      return "Invalid mount-point";
-                    }
-                    return null;
-                  }),
-              PrefText(
-                  label: 'User',
-                  pref: 'ntrip_user',
-                  validator: (str) {
-                    return null;
-                  }),
-              PrefText(
-                  label: 'Password',
-                  pref: 'ntrip_pass',
-                  obscureText: true,
-                  validator: (str) {
-                    return null;
-                  }),
-              Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: ElevatedButton(
-                  child: const Text(
-                    'List streams from above server',
-                  ),
-                  onPressed: () async {
-                    String host =
-                        widget.prefService.get('ntrip_host') ?? "";
-                    String port =
-                        widget.prefService.get('ntrip_port') ?? "";
-                    String user =
-                        widget.prefService.get('ntrip_user') ?? "";
-                    String pass =
-                        widget.prefService.get('ntrip_pass') ?? "";
-                    if (host.isEmpty || port.isEmpty) {
-                      toast(
-                          "Please specify the ntrip_host and ntrip_port first...");
-                      return;
-                    }
-
-                    int retCode = -1;
-
-                    try {
-                      setState(() {
-                        loading = true;
-                      });
-                      //make sure dialog shows first otherwise if no internet the .dismoiss wont work if immediate fail and progress dialog would block forever
-                      Future.delayed(const Duration(seconds: 0), () async {
-                        try {
-                          retCode = await methodChannel
-                              .invokeMethod("get_mountpoint_list", {
-                            'ntrip_host': host,
-                            'ntrip_port': port,
-                            'ntrip_user': user,
-                            'ntrip_pass': pass,
-                          });
-                          developer.log(
-                              "get_mountpoint_list req waiting callback ret: $retCode");
-                        } catch (e) {
-                          setState(() {
-                            loading = false;
-                          });
-                          toast("List mount-points failed invoke: $e");
+              body: ModalProgressHUD(
+                inAsyncCall: loading,
+                child: PrefPage(children: [
+                  const PrefTitle(title: Text('Target device:')),
+                  PrefDropdown(
+                      title: const Text(
+                          "Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)"),
+                      items: devlist,
+                      pref: 'target_bdaddr'),
+                  const PrefTitle(title: Text('Bluetooth Connection settings')),
+                    const PrefCheckbox(
+                      title: Text("Secure RFCOMM connection"), pref: 'secure'),
+                  const PrefCheckbox(
+                      title: Text("Auto-reconnect - when disconnected"),
+                      pref: 'reconnect'),
+                  const PrefCheckbox(
+                      title: Text("Autostart - connect on phone boot"),
+                      pref: 'autostart'),
+                  const PrefCheckbox(
+                      title: Text(
+                          "Check for Settings > 'Location' ON and 'High Accuracy'"),
+                      pref: 'check_settings_location'),
+                  PrefCheckbox(
+                      title: const Text(
+                          "Enable Logging (location/nmea/debug-trace)"),
+                      pref: 'log_bt_rx',
+                      onChange: (bool? val) async {
+                        bool enable = val!;
+                        if (enable) {
+                          bool writeEnabled = false;
+                          try {
+                            writeEnabled = await methodChannel
+                                .invokeMethod('is_write_enabled');
+                          } on PlatformException catch (e) {
+                            toast("WARNING: check _is_connecting failed: $e");
+                          }
+                          if (writeEnabled == false) {
+                            toast(
+                                "Write external storage permission required for data loggging...");
+                          }
+                          try {
+                            await methodChannel.invokeMethod('set_log_uri');
+                          } on PlatformException catch (e) {
+                            toast("WARNING: set_log_uri failed: $e");
+                          }
+                          widget.prefService.set('log_bt_rx',
+                              false); //set by java-side mainactivity on success only
+                        } else {
+                          widget.prefService.set('log_uri', "");
                         }
-                      });
-                    } catch (e) {
-                      developer.log("WARNING: Choose mount-point failed exception: $e");
-                      try {
-                        setState(() {
-                          loading = false;
-                        });
-                        toast("List mount-points failed start: $e");
-                      } catch (e) {
-                        developer.log("list mount point failed {e}");
-                      }
-                    }
-                  },
-                ),
-              ),
-              const PrefCheckbox(
-                  title: Text("Sort by nearest to to Ref lat,lon"),
-                  pref: 'list_nearest_streams_first'),
-            ]),
-          )),
-    ));
+                      }),
+                  const PrefTitle(title: Text('RTK/NTRIP Server settings')),
+                  Text(
+                    "Set these if your Bluetooth GNSS device supports RTK,\n(Like Ardusimple U-Blox F9, etc)",
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const PrefCheckbox(
+                      title: Text("Disable NTRIP"), pref: 'disable_ntrip'),
+                  PrefText(
+                      label: 'Host',
+                      pref: 'ntrip_host',
+                      validator: (str) {
+                        str = str.toString();
+                        if (str == "") {
+                          return "Invalid Host domain/IP";
+                        }
+                        return null;
+                      }),
+                  PrefText(
+                      label: 'Port',
+                      pref: 'ntrip_port',
+                      validator: (str) {
+                        str = str.toString();
+                        int? port = intParse(str);
+                        if (port == null || !(port >= 0 && port <= 65535)) {
+                          return "Invalid port";
+                        }
+                        return null;
+                      }),
+                  const PrefText(
+                      label: "Ref lat,lon for sorting", pref: 'ref_lat_lon'),
+                  PrefText(
+                      label: "Stream (mount-point)",
+                      pref: 'ntrip_mountpoint',
+                      validator: (str) {
+                        if (str == null) {
+                          return "Invalid mount-point";
+                        }
+                        return null;
+                      }),
+                  PrefText(
+                      label: 'User',
+                      pref: 'ntrip_user',
+                      validator: (str) {
+                        return null;
+                      }),
+                  PrefText(
+                      label: 'Password',
+                      pref: 'ntrip_pass',
+                      obscureText: true,
+                      validator: (str) {
+                        return null;
+                      }),
+                  Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: ElevatedButton(
+                      child: const Text(
+                        'List streams from above server',
+                      ),
+                      onPressed: () async {
+                        String host =
+                            widget.prefService.get('ntrip_host') ?? "";
+                        String port =
+                            widget.prefService.get('ntrip_port') ?? "";
+                        String user =
+                            widget.prefService.get('ntrip_user') ?? "";
+                        String pass =
+                            widget.prefService.get('ntrip_pass') ?? "";
+                        if (host.isEmpty || port.isEmpty) {
+                          toast(
+                              "Please specify the ntrip_host and ntrip_port first...");
+                          return;
+                        }
+
+                        int retCode = -1;
+
+                        try {
+                          setState(() {
+                            loading = true;
+                          });
+                          //make sure dialog shows first otherwise if no internet the .dismoiss wont work if immediate fail and progress dialog would block forever
+                          Future.delayed(const Duration(seconds: 0), () async {
+                            try {
+                              retCode = await methodChannel
+                                  .invokeMethod("get_mountpoint_list", {
+                                'ntrip_host': host,
+                                'ntrip_port': port,
+                                'ntrip_user': user,
+                                'ntrip_pass': pass,
+                              });
+                              developer.log(
+                                  "get_mountpoint_list req waiting callback ret: $retCode");
+                            } catch (e) {
+                              setState(() {
+                                loading = false;
+                              });
+                              toast("List mount-points failed invoke: $e");
+                            }
+                          });
+                        } catch (e) {
+                          developer.log(
+                              "WARNING: Choose mount-point failed exception: $e");
+                          try {
+                            setState(() {
+                              loading = false;
+                            });
+                            toast("List mount-points failed start: $e");
+                          } catch (e) {
+                            developer.log("list mount point failed {e}");
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                  const PrefCheckbox(
+                      title: Text("Sort by nearest to to Ref lat,lon"),
+                      pref: 'list_nearest_streams_first'),
+                ]),
+              )),
+        ));
   }
 }
 
