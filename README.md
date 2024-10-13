@@ -17,8 +17,8 @@ Build instructions
 * In this folder run:
 `flutter pub get`
 
-* build rust dependencies (first install same ver to match that of flutter_rust_bridge in pubspec.yaml - see https://cjycode.com/flutter_rust_bridge/quickstart)
-`flutter_rust_bridge_codegen integrate`
+* If you modify the rust code then update with (first install same ver to match that of flutter_rust_bridge in pubspec.yaml - see https://cjycode.com/flutter_rust_bridge/quickstart)
+`flutter_rust_bridge_codegen generate`
 
 * If you don't already have an android signing key, create one as per:
 <https://docs.flutter.dev/deployment/android#create-an-upload-keystore>

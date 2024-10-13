@@ -33,7 +33,7 @@ Widget buildTabMsg(BuildContext context, TabsState state) {
                 hint: const Text('Direction filter'),
                 value: state.isTxFilter,
                 items: const [
-                  DropdownMenuItem(value: null, child: Text('Name')),
+                  DropdownMenuItem(value: null, child: Text('Direction')),
                   DropdownMenuItem(value: false, child: Text('Rx')),
                   DropdownMenuItem(value: true, child: Text('Tx')),
                 ],

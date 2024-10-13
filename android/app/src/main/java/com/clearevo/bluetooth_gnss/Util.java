@@ -8,8 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.util.Log;
 
+
+import com.clearevo.libbluetooth_gnss_service.Log;
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 
 import org.jetbrains.annotations.NotNull;
@@ -48,8 +49,7 @@ public class Util {
         for (Map.Entry<String, String> entry : gnssConnectionParams.extraParams.entrySet()) {
             Log.d(TAG, "\t" + entry.getKey() + " = " + entry.getValue());
         }
-
-
+        gnssConnectionParams.gapMode = false; //disabled - no longer supported
 
         Log.d(TAG, "connect(): " + gnssConnectionParams.bdaddr);
         int ret = -1;
@@ -76,14 +76,11 @@ public class Util {
             gnssConnectionParams.bdaddr = ""; //no need to do null handling below
         }
         boolean gap_mode = intent.getBooleanExtra(bluetooth_gnss_service.BLE_GAP_SCAN_MODE, false);
+        gap_mode = false; //DISABLED gap_mode - no longer supported
         Log.d(TAG, "util.connect() gap_mode: "+gap_mode+" ble_uart_mode: "+intent.getBooleanExtra(ble_uart_mode, false)+" ble_qstarz_mode: "+intent.getBooleanExtra(ble_qstarz_mode, false));
         if (gnssConnectionParams.ble_uart_mode) {
-            //TODO
             Log.e(TAG, "ble uart not implemented yet");
             return -99;
-        } else if (gnssConnectionParams.ble_qstarz_mode) {
-            //ok no need to check target bdaddr
-            Log.e(TAG, "ble_qstarz_mode no need to check bdaddr");
         } else {
             //bt classic rfcomm spp mode
             if (gnssConnectionParams.bdaddr.trim().isEmpty() || !gnssConnectionParams.bdaddr.matches("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$")) {

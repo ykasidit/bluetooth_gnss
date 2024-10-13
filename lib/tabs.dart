@@ -534,12 +534,10 @@ class TabsState extends State<Tabs>
         }
         break;
       case "issues":
-        launchUrl(Uri.dataFromString(
-            "https://github.com/ykasidit/bluetooth_gnss/issues"));
+        await launchUrl(Uri.parse("https://github.com/ykasidit/bluetooth_gnss/issues"));
         break;
       case "project":
-        launchUrl(
-            Uri.dataFromString("https://github.com/ykasidit/bluetooth_gnss"));
+        await launchUrl(Uri.parse("https://github.com/ykasidit/bluetooth_gnss"));
         break;
     }
   }

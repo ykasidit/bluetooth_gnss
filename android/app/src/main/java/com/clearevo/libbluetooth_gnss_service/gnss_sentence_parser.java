@@ -623,9 +623,16 @@ public class gnss_sentence_parser {
     }
 
 
+    public enum MessageType {
+        NMEA,
+        App,
+        Ubx,
+        Qstarz
+    }
+
     public interface gnss_parser_callbacks {
         public void onPositionUpdate(HashMap<String, Object> params_map);
-        public void onDeviceMessage(HashMap<String, Object> message_map);
+        public void onDeviceMessage(MessageType type, HashMap<String, Object> message_map);
     }
 
 

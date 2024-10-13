@@ -17,12 +17,13 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.provider.Settings;
-import android.util.Log;
+
 import android.widget.Toast;
 import android.net.Uri;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.clearevo.libbluetooth_gnss_service.Log;
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 import com.clearevo.libbluetooth_gnss_service.ntrip_conn_mgr;
 import com.clearevo.libbluetooth_gnss_service.rfcomm_conn_mgr;
@@ -88,7 +89,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
         new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), ENGINE_METHOD_CHANNEL)
                 .setMethodCallHandler(
                         (call, result) -> {
-                            Log.d(TAG, "got method call: "+call.method);
+                            //Log.d(TAG, "got method call: "+call.method);
                             if (call.method.equals("connect")) {
                                 final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
                                 gnssConnectionParams.bdaddr = call.argument("bdaddr");
@@ -173,8 +174,12 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                 result.success(rfcomm_conn_mgr.is_bluetooth_on());
                             } else if (call.method.equals("is_ntrip_connected")) {
                                 result.success(m_service != null && m_service.is_ntrip_connected());
-                            } else if (m_service != null && call.method.equals("get_ntrip_cb_count")) {
-                                result.success(m_service.get_ntrip_cb_count());
+                            } else if (call.method.equals("get_ntrip_cb_count")) {
+                                if (m_service != null) {
+                                    result.success(m_service.get_ntrip_cb_count());
+                                } else {
+                                    result.success(0);
+                                }
                             } else if (call.method.equals("is_bt_connected")) {
                                 result.success(mBound && m_service != null && m_service.is_bt_connected());
                             } else if (call.method.equals("is_conn_thread_alive")) {
@@ -480,9 +485,9 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
     }
 
     @Override
-    public void onDeviceMessage(HashMap<String, Object> message_map) {
-        Log.d(TAG, "mainactivity onDeviceMessage()");
+    public void onDeviceMessage(gnss_sentence_parser.MessageType type, HashMap<String, Object> message_map) {
         try {
+            message_map.put("type", type.name());
             Message msg = m_handler.obtainMessage(MESSAGE_DEVICE_MESSAGE, message_map);
             msg.sendToTarget();
         } catch (Exception e) {
@@ -648,6 +653,9 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             noNeedToAskList.add("android.permission.FOREGROUND_SERVICE");
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            noNeedToAskList.add("android.permission.FOREGROUND_SERVICE_LOCATION");
         }
         if (Build.VERSION.SDK_INT < 31) { //If your app targets Android 12 (API level 31) or higher, declare the following permissions in your app's manifest file:
 
