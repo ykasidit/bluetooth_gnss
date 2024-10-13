@@ -47,7 +47,7 @@ dependencies:
   share_plus: ^10.0.1
   rust_lib_bluetooth_gnss:
     path: rust_builder
-  flutter_rust_bridge: ^2.5.0
+  flutter_rust_bridge: 2.5.0
 
 dev_dependencies:
   flutter_test:

@@ -224,7 +224,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
                       items: devlist,
                       pref: 'target_bdaddr'),
                   const PrefTitle(title: Text('Bluetooth Connection settings')),
-                    const PrefCheckbox(
+                  const PrefCheckbox(
                       title: Text("Secure RFCOMM connection"), pref: 'secure'),
                   const PrefCheckbox(
                       title: Text("Auto-reconnect - when disconnected"),
