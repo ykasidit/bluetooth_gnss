@@ -29,12 +29,12 @@ keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
     namespace = "com.clearevo.bluetooth_gnss"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 34
+    ndkVersion = '26.2.11394342'
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     defaultConfig {
@@ -42,8 +42,8 @@ android {
         applicationId = "com.clearevo.bluetooth_gnss"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = 26
-        targetSdk = flutter.targetSdkVersion
+        minSdk 26
+        targetSdk 34
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
