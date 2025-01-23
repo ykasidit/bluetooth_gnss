@@ -23,8 +23,9 @@ class SettingsWidgetState extends State<SettingsWidget> {
       MethodChannel("com.clearevo.bluetooth_gnss/engine");
   static const eventChannel =
       EventChannel("com.clearevo.bluetooth_gnss/settings_events");
-  void toast(String msg) async {
+  Future<void> toast(String msg) async {
     try {
+      print("toast: $msg");
       await methodChannel.invokeMethod("toast", {"msg": msg});
     } catch (e) {
       developer.log("WARNING: toast failed exception: $e");
@@ -55,7 +56,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
           List<dynamic> oriMpl = eventMap["callback_payload"];
           developer.log("got mpl: $oriMpl");
           if (oriMpl.isEmpty) {
-            toast("Failed to list mount-points list from server specified...");
+            await toast("Failed to list mount-points list from server specified...");
             return;
           }
 
@@ -79,7 +80,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
           developer.log("mount_point_str_list: $mountPointStrList");
 
           int nmpl = mountPointStrList.length;
-          toast("Found $nmpl mountpoints...");
+          await toast("Found $nmpl mountpoints...");
           bool sortByNearest =
               widget.prefService.get('list_nearest_streams_first') ?? false;
           developer.log('sort_by_nearest: $sortByNearest');
@@ -143,11 +144,11 @@ class SettingsWidgetState extends State<SettingsWidget> {
                       .compareTo(double.parse(m2["distance_km"].toString()));
                 });
               } else {
-                toast("Sort by distance failed: Invalid Ref lat,lon position");
+                await toast("Sort by distance failed: Invalid Ref lat,lon position");
               }
             } catch (e) {
               developer.log('sort_by_nearest exception: $e');
-              toast("Sort by distance failed: $e");
+              await toast("Sort by distance failed: $e");
             }
           }
 
@@ -184,7 +185,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
             //force re-load of selected ntrip_mountpoint
 
             if (mounted) {
-              Navigator.of(context).pushReplacement(
+              await Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (BuildContext context) {
                 return SettingsWidget(widget.prefService, widget.bdMap);
               }));
@@ -248,16 +249,16 @@ class SettingsWidgetState extends State<SettingsWidget> {
                             writeEnabled = await methodChannel
                                 .invokeMethod('is_write_enabled');
                           } on PlatformException catch (e) {
-                            toast("WARNING: check _is_connecting failed: $e");
+                            await toast("WARNING: check _is_connecting failed: $e");
                           }
                           if (writeEnabled == false) {
-                            toast(
+                            await toast(
                                 "Write external storage permission required for data loggging...");
                           }
                           try {
                             await methodChannel.invokeMethod('set_log_uri');
                           } on PlatformException catch (e) {
-                            toast("WARNING: set_log_uri failed: $e");
+                            await toast("WARNING: set_log_uri failed: $e");
                           }
                           widget.prefService.set('log_bt_rx',
                               false); //set by java-side mainactivity on success only
@@ -333,7 +334,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
                         String pass =
                             widget.prefService.get('ntrip_pass') ?? "";
                         if (host.isEmpty || port.isEmpty) {
-                          toast(
+                          await toast(
                               "Please specify the ntrip_host and ntrip_port first...");
                           return;
                         }
@@ -360,7 +361,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
                               setState(() {
                                 loading = false;
                               });
-                              toast("List mount-points failed invoke: $e");
+                              await toast("List mount-points failed invoke: $e");
                             }
                           });
                         } catch (e) {
@@ -370,7 +371,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
                             setState(() {
                               loading = false;
                             });
-                            toast("List mount-points failed start: $e");
+                            await toast("List mount-points failed start: $e");
                           } catch (e) {
                             developer.log("list mount point failed {e}");
                           }

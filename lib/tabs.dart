@@ -222,16 +222,16 @@ class TabsState extends State<Tabs>
   }
   ///////////////////
 
-  void wakelockEnable() async {
+  Future<void> wakelockEnable() async {
     if (await WakelockPlus.enabled == false) {
-      WakelockPlus
+      await WakelockPlus
           .enable(); //keep screen on for users to continuously monitor connection state
     }
   }
 
-  void wakelockDisable() async {
+  Future<void> wakelockDisable() async {
     if (await WakelockPlus.enabled == true) {
-      WakelockPlus
+      await WakelockPlus
           .disable(); //keep screen on for users to continuously monitor connection state
     }
   }
@@ -448,7 +448,12 @@ class TabsState extends State<Tabs>
                 const PopupMenuItem<String>(
                     value: 'about', child: Text('About')),
               ],
-              onSelected: menuSelected,
+              onSelected: (String menu) {
+                print("menuselected start");
+                 menuSelected(menu).then((result) {
+                   print("menuselected end");
+                 });
+              },
             ),
           ],
           bottom: TabBar(
@@ -462,7 +467,6 @@ class TabsState extends State<Tabs>
                 case TabsDemoStyle.iconsOnly:
                   return Tab(icon: Icon(page.icon));
                 case TabsDemoStyle.textOnly:
-                default:
                   return Tab(text: page.text);
               }
             }).toList(),
@@ -512,7 +516,7 @@ class TabsState extends State<Tabs>
   }
 
   /////////////functions
-  void menuSelected(String menu) async {
+  Future<void> menuSelected(String menu) async {
     developer.log('menu_selected: $menu');
     switch (menu) {
       case "disconnect":
@@ -521,7 +525,7 @@ class TabsState extends State<Tabs>
       case "about":
         final packageInfo = await PackageInfo.fromPlatform();
         if (mounted) {
-          Navigator.push(
+          await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) {
               return Scaffold(
@@ -568,9 +572,9 @@ class TabsState extends State<Tabs>
           await methodChannel.invokeMethod('get_ntrip_cb_count');
 
       if (_isBtConnected) {
-        wakelockEnable();
+        await wakelockEnable();
       } else {
-        wakelockDisable();
+        await wakelockDisable();
       }
 
       if (_isBtConnected) {
@@ -604,7 +608,7 @@ class TabsState extends State<Tabs>
         return null;
       }
     } on PlatformException catch (e) {
-      toast("WARNING: check _is_bt_connected failed: $e");
+      await toast("WARNING: check _is_bt_connected failed: $e");
       _isBtConnected = false;
     }
 
@@ -620,7 +624,7 @@ class TabsState extends State<Tabs>
         return null;
       }
     } on PlatformException catch (e) {
-      toast("WARNING: check _is_connecting failed: $e");
+      await toast("WARNING: check _is_connecting failed: $e");
       _isBtConnThreadConnecting = false;
     }
     //developer.log('check_and_update_selected_device1');
@@ -654,7 +658,7 @@ class TabsState extends State<Tabs>
           userPressedSettingsTakeActionAndRetSw) {
         try {
           await methodChannel.invokeMethod('open_phone_blueooth_settings');
-          toast("Please turn ON Bluetooth...");
+          await toast("Please turn ON Bluetooth...");
         } on PlatformException {
           //developer.log("Please open phone Settings and change first (can't redirect screen: $e)");
         }
@@ -692,7 +696,7 @@ class TabsState extends State<Tabs>
             userPressedSettingsTakeActionAndRetSw) {
           try {
             await methodChannel.invokeMethod('open_phone_blueooth_settings');
-            toast("Please pair your Bluetooth GPS/GNSS Device...");
+            await toast("Please pair your Bluetooth GPS/GNSS Device...");
           } on PlatformException {
             //developer.log("Please open phone Settings and change first (can't redirect screen: $e)");
           }
@@ -749,7 +753,7 @@ class TabsState extends State<Tabs>
           try {
             //developer.log('calling open_phone_location_settings()');
             await methodChannel.invokeMethod('open_phone_location_settings');
-            toast("Please set Location ON and 'High Accuracy Mode'...");
+            await toast("Please set Location ON and 'High Accuracy Mode'...");
           } on PlatformException catch (e) {
             developer.log(
                 "Please open phone Settings and change first (can't redirect screen: $e)");
@@ -774,7 +778,7 @@ class TabsState extends State<Tabs>
       if (userPressedConnectTakeActionAndRetSw) {
         try {
           await methodChannel.invokeMethod('open_phone_developer_settings');
-          toast("Please set 'Mock Locaiton app' to 'Blueooth GNSS'..");
+          await toast("Please set 'Mock Locaiton app' to 'Blueooth GNSS'..");
         } on PlatformException catch (e) {
           developer.log(
               "Please open phone Settings and change first (can't redirect screen: $e)");
@@ -811,7 +815,7 @@ class TabsState extends State<Tabs>
     return bdMap;
   }
 
-  void toast(String msg) async {
+  Future<void> toast(String msg) async {
     try {
       await methodChannel.invokeMethod("toast", {"msg": msg});
     } catch (e) {
@@ -831,14 +835,19 @@ class TabsState extends State<Tabs>
   Future<void> disconnect() async {
     try {
       if (_isBtConnected) {
-        toast("Disconnecting...");
+        print("disconnect() toast start");
+        //await toast("Disconnecting...");
+        print("disconnect() toast done");
       } else {
-        //toast("Not connected...");
+        await toast("Not connected...");
       }
+      print("disconnect() invoke disconnect start");
       //call it in any case just to be sure service it is stopped (.close()) method called
       await methodChannel.invokeMethod('disconnect');
-    } on PlatformException catch (e) {
-      toast("WARNING: disconnect failed: $e");
+      print("disconnect() invoke disconnect done");
+    } on Exception catch (e, trace) {
+      print("disconnect failed: $e $trace");
+      await toast("WARNING: disconnect failed: $e");
     }
   }
 
@@ -852,10 +861,10 @@ class TabsState extends State<Tabs>
       try {
         writeEnabled = await methodChannel.invokeMethod('is_write_enabled');
       } on PlatformException catch (e) {
-        toast("WARNING: check write_enabled failed: $e");
+        await toast("WARNING: check write_enabled failed: $e");
       }
       if (writeEnabled == false) {
-        toast(
+        await toast(
             "Write external storage permission required for data loggging...");
         return;
       }
@@ -865,12 +874,12 @@ class TabsState extends State<Tabs>
         canCreateFile = await methodChannel
             .invokeMethod('test_can_create_file_in_chosen_folder');
       } on PlatformException catch (e) {
-        toast(
+        await toast(
             "WARNING: check test_can_create_file_in_chosen_folder failed: $e");
       }
       if (canCreateFile == false) {
         //TODO: try req permission firstu
-        toast(
+        await toast(
             "Please go to Settings > re-tick 'Enable logging' (failed to access chosen log folder)");
         return;
       }
@@ -879,18 +888,18 @@ class TabsState extends State<Tabs>
     if (gapMode) {
       bool coarseLocationEnabled = await isCoarseLocationEnabled();
       if (coarseLocationEnabled == false) {
-        toast("Coarse Locaiton permission required for BLE GAP mode...");
+        await toast("Coarse Locaiton permission required for BLE GAP mode...");
         return;
       }
     }
 
     if (_isBtConnected) {
-      toast("Already connected...");
+      await toast("Already connected...");
       return;
     }
 
     if (_isBtConnThreadConnecting) {
-      toast("Connecting, please wait...");
+      await toast("Connecting, please wait...");
       return;
     }
 
@@ -904,11 +913,11 @@ class TabsState extends State<Tabs>
     try {
       connecting = await methodChannel.invokeMethod('is_conn_thread_alive');
     } on PlatformException catch (e) {
-      toast("WARNING: check _is_connecting failed: $e");
+      await toast("WARNING: check _is_connecting failed: $e");
     }
 
     if (connecting) {
-      toast("Connecting - please wait...");
+      await toast("Connecting - please wait...");
       return;
     }
 

@@ -45,9 +45,7 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                   ElevatedButton(
                     onPressed: () {
                       String content =
-                          (paramMap['lat_double_07_str'] ?? waitingDev) +
-                              "," /* no space here for sharing to gmaps */ +
-                              (paramMap['lon_double_07_str'] ?? waitingDev);
+                          "${paramMap['lat_double_07_str'] ?? waitingDev},${paramMap['lon_double_07_str'] ?? waitingDev}"; //no space after comma for sharing to gmaps
                       Share.share(
                               'https://www.google.com/maps/search/?api=1&query=$content')
                           .then((result) {
@@ -62,9 +60,7 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                   ElevatedButton(
                     onPressed: () {
                       String content =
-                          (paramMap['lat_double_07_str'] ?? waitingDev) +
-                              "," +
-                              (paramMap['lon_double_07_str'] ?? waitingDev);
+                          "${paramMap['lat_double_07_str'] ?? waitingDev},${paramMap['lon_double_07_str'] ?? waitingDev}";
                       Clipboard.setData(ClipboardData(text: content))
                           .then((result) {
                         state.snackbar('Copied to clipboard: $content');
