@@ -10,15 +10,26 @@ Build instructions
 
 * Install the the [Flutter SDK](https://flutter.dev/docs/get-started/install) as per official instructions including the 'Android setup' and make sure that the Android SDK is installed.
 
-* Make sure the flutter sdk version matches that of below:
+* Make sure the flutter sdk version matches that in pubspec.yaml:
 
 `flutter downgrade v<flutter ver in pubspec.yaml>`
 
 * In this folder run:
 `flutter pub get`
 
-* If you modify the rust code then update with (first install same ver to match that of flutter_rust_bridge in pubspec.yaml - see https://cjycode.com/flutter_rust_bridge/quickstart)
-`flutter_rust_bridge_codegen generate`
+* If you modify the rust code then update with (first install same ver to match that of flutter_rust_bridge in pubspec.yaml (replace 2.7.0 in below) - see https://cjycode.com/flutter_rust_bridge/quickstart)
+example:
+```
+rustup install 1.84
+rustup default 1.84
+cargo install flutter_rust_bridge_codegen --version 2.7.0
+flutter_rust_bridge_codegen generate
+```
+
+You might need below if above faces issues:
+```
+flutter_rust_bridge_codegen integrate
+```
 
 * If you don't already have an android signing key, create one as per:
 <https://docs.flutter.dev/deployment/android#create-an-upload-keystore>
@@ -45,7 +56,8 @@ If all went well, it would create the apk file in the folder:
 * Develop in Android studio:
   - Open android studio, and choose 'Projects' > 'Open' to this folder (or File > Open... menu) and you can edit the source code then run 'main.dart' from there. This is suitable for editing the dart files in the lib folder.
   - UI changes to main.dart can be seen immediately (hot-reload) on phone but function changes or java/engine part changes won't, you need to 'stop' then 'run' main.dart again for the changes to take effect.
-  - Auto-completion of java code (in the android subfolder) and running of the java unit-tests won't work as this Android Studio is run in a 'flutter' project mode. To edit the engine part and run the java unit tests, simply open the 'android' subfolder of this folder in a new Android Studio instance: File > Open ... choose: bluetooth_gnss > android. After Android Studio is ready, then you can try run some tests like browse on the left panel to libecodroidgnss_parse > java > (test) and right click on 'test_nmea_parse' > Run.
+  - Auto-completion of java code (in the android subfolder) and running of the java unit-tests won't work as this Android Studio is run in a 'flutter' project mode.
+  - To edit the engine part and run the java unit tests, simply open the 'android' subfolder of this folder in a new Android Studio instance: File > Open ... choose: bluetooth_gnss > android. After Android Studio is ready, then you can try run some tests like browse on the left panel to libecodroidgnss_parse > java > (test) and right click on 'test_nmea_parse' > Run.
 
 * Use the `flutter build apk` command when you want to build a release apk file.
 

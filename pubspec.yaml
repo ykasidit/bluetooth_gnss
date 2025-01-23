@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.59+59
+version: 1.0.61+61
 
 environment:
   sdk: '>=3.4.4 <4.0.0'
@@ -45,9 +45,9 @@ dependencies:
   modal_progress_hud_nsn: ^0.5.1
   wakelock_plus: ^1.2.7
   share_plus: ^10.0.1
+  flutter_rust_bridge: 2.7.0
   rust_lib_bluetooth_gnss:
     path: rust_builder
-  flutter_rust_bridge: 2.3.0
 
 dev_dependencies:
   flutter_test:

@@ -2,8 +2,10 @@ package com.clearevo.bluetooth_gnss;
 
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_qstarz_mode;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_uart_mode;
+import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.log;
 
 import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
@@ -36,7 +38,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
@@ -46,7 +47,7 @@ import io.flutter.plugin.common.EventChannel;
 import android.content.SharedPreferences;
 
 public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks, EventChannel.StreamHandler {
-
+public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
     private static final String ENGINE_METHOD_CHANNEL = "com.clearevo.bluetooth_gnss/engine";
     private static final String ENGINE_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/engine_events";
     private static final String SETTINGS_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/settings_events";
@@ -167,7 +168,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                 }
                                 result.success(false);
                             } else if (call.method.equals("get_bd_map")) {
-                                result.success(get_bd_map());
+                                result.success(get_bd_map(m_handler, getApplicationContext(), this));
                             } else if (call.method.equals("check_permissions_not_granted")) {
                                 result.success(check_permissions_not_granted());
                             }else if (call.method.equals("is_bluetooth_on")) {
@@ -230,7 +231,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                     result.success(false);
                                 }
                             } else if (call.method.equals("is_mock_location_enabled")) {
-                                result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
+                                result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), APPLICATION_ID));
                             } else if (call.method.equals("is_location_enabled")) {
 
                                 Log.d(TAG, "is_location_enabled 0");
@@ -243,7 +244,7 @@ public class MainActivity extends FlutterActivity implements gnss_sentence_parse
                                     if (call.method.equals("is_location_enabled")) {
                                         result.success(bluetooth_gnss_service.is_location_enabled(getApplicationContext()));
                                     } else if (call.method.equals("is_mock_location_enabled")) {
-                                        result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), BuildConfig.APPLICATION_ID));
+                                        result.success(bluetooth_gnss_service.is_mock_location_enabled(getApplicationContext(), android.os.Process.myUid(), APPLICATION_ID));
                                     }
                                 } else {
                                     Log.d(TAG, "is_location_enabled check locaiton permission not granted yet so requesting permission now");
@@ -496,12 +497,16 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
     }
 
     public void toast(String msg) {
-        m_handler.post(
+        toast(msg, m_handler, getApplicationContext());
+    }
+
+    public static void toast(String msg, Handler handler, Context context) {
+        handler.post(
                 new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
                         } catch (Exception e) {
                             Log.d(TAG, "toast exception: " + Log.getStackTraceString(e));
                         }
@@ -675,22 +680,29 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         needed.removeAll(removeList);
         return needed;
     }
-    public HashMap<String, String> get_bd_map() {
+
+
+    public static HashMap<String, String> get_bd_map(Handler handler, Context context, Activity activity) {
         HashMap<String, String> ret = new HashMap<String, String>();
         try {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             if (adapter != null) {
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    m_handler.post(
-                            new Runnable() {
-                                @Override
-                                public void run() {
-                                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                                            Manifest.permission.BLUETOOTH_CONNECT
-                                    }, 1);
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    if (handler !=null && activity != null) {
+                        handler.post(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ActivityCompat.requestPermissions(activity, new String[]{
+                                                Manifest.permission.BLUETOOTH_CONNECT
+                                        }, 1);
+                                    }
                                 }
-                            }
-                    );
+                        );
+                    } else {
+                        log("WARNING: get_bd_map() abort - BLUETOOTH_CONNECT not granted but either handler or activity is null");
+                        return ret;
+                    }
                 }
                 Set<BluetoothDevice> bonded_devs = adapter.getBondedDevices();
                 for (BluetoothDevice bonded_dev : bonded_devs) {

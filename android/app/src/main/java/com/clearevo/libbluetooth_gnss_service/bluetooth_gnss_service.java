@@ -47,9 +47,6 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.location.Location;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.documentfile.provider.DocumentFile;
 
@@ -67,16 +64,20 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import static com.clearevo.bluetooth_gnss.MainActivity.get_bd_map;
 import static com.clearevo.libbluetooth_gnss_service.Log.*;
 import static com.clearevo.libbluetooth_gnss_service.Log.m_log_operations_fos;
 import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
 import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.toHexString;
 
+
+import com.clearevo.bluetooth_gnss.MainActivity;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.flutter_rust_bridge.rust_lib_bluetooth_gnss.BuildConfig; //test that it can access
+//import com.flutter_rust_bridge.rust_lib_bluetooth_gnss.BuildConfig; //test that it can access
 
 
 
@@ -537,6 +538,21 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 return 2;
             } else {
 
+                log(TAG, "using dev bdaddr:" + bdaddr);
+                HashMap<String, String> bdaddr_to_name_map = get_bd_map(m_handler, getApplicationContext(), null);
+                String name = null;
+                if (bdaddr_to_name_map.containsKey(bdaddr)) {
+                    name = bdaddr_to_name_map.get(bdaddr);
+                } else {
+                    throw new Exception("Unknown device - please re-select device in settings");
+                }
+                if (name == null) {
+                    throw new Exception("invalid state - device name is null");
+                }
+                log(TAG, "using dev name:" + name);
+                m_ble_qstarz_mode = name.startsWith("QSTARZ");
+                log(TAG, "m_ble_qstarz_mode:" + m_ble_qstarz_mode);
+
                 m_gnss_parser = new gnss_sentence_parser(); //use new instance
                 m_gnss_parser.set_callback(this);
 
@@ -554,7 +570,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 } else {
                     //ok
                 }
-                log(TAG, "using dev: " + dev.getAddress());
                 g_rfcomm_mgr = new rfcomm_conn_mgr(dev, secure, this, context, m_ble_qstarz_mode);
 
                 start_connecting_thread();

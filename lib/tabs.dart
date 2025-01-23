@@ -534,10 +534,12 @@ class TabsState extends State<Tabs>
         }
         break;
       case "issues":
-        await launchUrl(Uri.parse("https://github.com/ykasidit/bluetooth_gnss/issues"));
+        await launchUrl(
+            Uri.parse("https://github.com/ykasidit/bluetooth_gnss/issues"));
         break;
       case "project":
-        await launchUrl(Uri.parse("https://github.com/ykasidit/bluetooth_gnss"));
+        await launchUrl(
+            Uri.parse("https://github.com/ykasidit/bluetooth_gnss"));
         break;
     }
   }
@@ -704,7 +706,7 @@ class TabsState extends State<Tabs>
 
       //developer.log('check_and_update_selected_device9');
 
-      if (getSelectedBdaddr(widget.prefService).isEmpty) {
+      if (getSelectedBdaddr(widget.prefService).isEmpty || (await getSelectedBdname(widget.prefService)).isEmpty) {
         String msg =
             "Please select your Bluetooth GPS/GNSS Receiver in Settings (the gear icon on top right)";
         /*Fluttertoast.showToast(
