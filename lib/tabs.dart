@@ -448,12 +448,7 @@ class TabsState extends State<Tabs>
                 const PopupMenuItem<String>(
                     value: 'about', child: Text('About')),
               ],
-              onSelected: (String menu) {
-                print("menuselected start");
-                 menuSelected(menu).then((result) {
-                   print("menuselected end");
-                 });
-              },
+              onSelected: menuSelected,
             ),
           ],
           bottom: TabBar(
@@ -517,7 +512,7 @@ class TabsState extends State<Tabs>
 
   /////////////functions
   Future<void> menuSelected(String menu) async {
-    developer.log('menu_selected: $menu');
+    print('menu_selected start: $menu');
     switch (menu) {
       case "disconnect":
         await disconnect();
@@ -546,6 +541,7 @@ class TabsState extends State<Tabs>
             Uri.parse("https://github.com/ykasidit/bluetooth_gnss"));
         break;
     }
+    print('menu_selected done: $menu');
   }
 
   void clearDispText() {
@@ -817,9 +813,11 @@ class TabsState extends State<Tabs>
 
   Future<void> toast(String msg) async {
     try {
+      print("toast start");
       await methodChannel.invokeMethod("toast", {"msg": msg});
+      print("toast done");
     } catch (e) {
-      developer.log("WARNING: toast failed exception: $e");
+      print("WARNING: toast failed exception: $e");
     }
   }
 
@@ -836,7 +834,7 @@ class TabsState extends State<Tabs>
     try {
       if (_isBtConnected) {
         print("disconnect() toast start");
-        //await toast("Disconnecting...");
+        await toast("Disconnecting...");
         print("disconnect() toast done");
       } else {
         await toast("Not connected...");
@@ -846,17 +844,18 @@ class TabsState extends State<Tabs>
       await methodChannel.invokeMethod('disconnect');
       print("disconnect() invoke disconnect done");
     } on Exception catch (e, trace) {
-      print("disconnect failed: $e $trace");
+      developer.log("disconnect failed: $e $trace");
       await toast("WARNING: disconnect failed: $e");
     }
   }
 
   Future<void> connect() async {
     developer.log("main.dart connect() start");
-    bool logBtRx = PrefService.of(context).get('log_bt_rx') ?? false;
+    String log_bt_rx_log_uri = PrefService.of(context).get('log_bt_rx_log_uri') ?? "";
+    bool autostart = PrefService.of(context).get('autostart') ?? false;
     bool gapMode = PrefService.of(context).get('ble_gap_scan_mode') ?? false;
 
-    if (logBtRx) {
+    if (log_bt_rx_log_uri.isNotEmpty) {
       bool writeEnabled = false;
       try {
         writeEnabled = await methodChannel.invokeMethod('is_write_enabled');
@@ -872,7 +871,7 @@ class TabsState extends State<Tabs>
       bool canCreateFile = false;
       try {
         canCreateFile = await methodChannel
-            .invokeMethod('test_can_create_file_in_chosen_folder');
+            .invokeMethod('test_can_create_file_in_chosen_folder', {"log_bt_rx_log_uri": PrefService.of(context).get('log_bt_rx_log_uri')});
       } on PlatformException catch (e) {
         await toast(
             "WARNING: check test_can_create_file_in_chosen_folder failed: $e");
@@ -946,13 +945,14 @@ class TabsState extends State<Tabs>
         'secure': PrefService.of(context).get('secure') ?? true,
         'reconnect': PrefService.of(context).get('reconnect') ?? false,
         'ble_gap_scan_mode': gapMode,
-        'log_bt_rx': logBtRx,
+        'log_bt_rx_log_uri': log_bt_rx_log_uri,
         'disable_ntrip': PrefService.of(context).get('disable_ntrip') ?? false,
         'ntrip_host': PrefService.of(context).get('ntrip_host'),
         'ntrip_port': PrefService.of(context).get('ntrip_port'),
         'ntrip_mountpoint': PrefService.of(context).get('ntrip_mountpoint'),
         'ntrip_user': PrefService.of(context).get('ntrip_user'),
         'ntrip_pass': PrefService.of(context).get('ntrip_pass'),
+        'autostart': autostart,
       });
       developer.log("main.dart connect() start connect done");
       if (ret) {

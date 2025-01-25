@@ -129,7 +129,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     long m_last_ntrip_gga_send_ts = 0;
     public static final long SEND_GGA_TO_NTRIP_EVERY_MILLIS = 29 * 1000;
     public static final String[] REQUIRED_INTENT_EXTRA_PARAM_KEYS = {"ntrip_host", "ntrip_port", "ntrip_mountpoint", "ntrip_user", "ntrip_pass"};
-    boolean m_log_bt_rx = false;
+    String m_log_bt_rx_log_uri = "";
     boolean m_disable_ntrip = false;
     boolean m_ble_gap_scan_mode = false;
     boolean m_ble_qstarz_mode = false;
@@ -163,10 +163,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     m_secure_rfcomm = intent.getBooleanExtra("secure", true);
                     m_auto_reconnect = intent.getBooleanExtra("reconnect", false);
 
-                    m_log_bt_rx = intent.getBooleanExtra("log_bt_rx", false);
+                    m_log_bt_rx_log_uri = intent.getStringExtra("log_bt_rx_log_uri");
                     m_disable_ntrip = intent.getBooleanExtra("disable_ntrip", false);
                     log(TAG, "m_secure_rfcomm: " + m_secure_rfcomm);
-                    log(TAG, "m_log_bt_rx: " + m_log_bt_rx);
+                    log(TAG, "m_log_bt_rx_log_uri: " + m_log_bt_rx_log_uri);
                     log(TAG, "m_disable_ntrip: " + m_disable_ntrip);
                     String cn = intent.getStringExtra("activity_class_name");
                     m_start_intent = intent;
@@ -180,9 +180,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     }
                     m_icon_id = intent.getIntExtra("activity_icon_id", 0);
 
-                    if (m_log_bt_rx) {
-                        final SharedPreferences prefs = getApplicationContext().getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
-                        String log_uri = prefs.getString(log_uri_pref_key, "");
+                    if (m_log_bt_rx_log_uri != null && (!m_log_bt_rx_log_uri.isEmpty())) {
+                        String log_uri = m_log_bt_rx_log_uri;
                         if (!log_uri.isEmpty()) {
                             curInstance.prepare_log_output_streams(log_uri);
                         }
@@ -960,7 +959,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             return;
         try {
             if (log_file_uri != null) {
-                if (m_log_bt_rx && read_buf != null) {
+                if (m_log_bt_rx_log_uri != null && (!m_log_bt_rx_log_uri.isEmpty()) && read_buf != null) {
                     if (m_log_bt_rx_fos != null) {
                         m_log_bt_rx_fos.write(read_buf);
                         log_bt_rx_bytes_written += read_buf.length;
@@ -983,11 +982,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         d(tag, msg);
     }
 
-    public static boolean test_can_create_file_in_chosen_folder(Context context)
+    public static boolean test_can_create_file_in_chosen_folder(Context context, String log_uri)
     {
         try {
-            final SharedPreferences prefs = context.getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
-            String log_uri = prefs.getString(log_uri_pref_key, "");
             if (log_uri.isEmpty()) {
                 throw new Exception("folder not chosen yet - please tick enable logging in settings to choose");
             }

@@ -2,6 +2,7 @@ package com.clearevo.bluetooth_gnss;
 
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_qstarz_mode;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_uart_mode;
+import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.log;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,34 +13,42 @@ import android.os.Build;
 
 import com.clearevo.libbluetooth_gnss_service.Log;
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
+import com.google.gson.Gson;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.Map;
 
 public class Util {
 
     public static final String TAG = "btgnss_util";
+    public static final String LAST_CONN_FILE_NAME = "last_connect_dev.json";
 
-    @NotNull
-    public static GnssConnectionParams createGnssConnectionFromPreferences(SharedPreferences prefs) {
-        final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
-        gnssConnectionParams.bdaddr = prefs.getString("flutter.pref_target_bdaddr", null);
-        gnssConnectionParams.secure = prefs.getBoolean("flutter.pref_secure", true);
-        gnssConnectionParams.reconnect = prefs.getBoolean("flutter.pref_reconnect", false);
-        gnssConnectionParams.logBtRx = prefs.getBoolean("flutter.pref_log_bt_rx", false);
-        gnssConnectionParams.disableNtrip = prefs.getBoolean("flutter.pref_disable_ntrip", false);
-        gnssConnectionParams.gapMode = prefs.getBoolean("flutter.pref_ble_gap_scan_mode", false);
-        gnssConnectionParams.ble_uart_mode = prefs.getBoolean("flutter.pref_"+ble_uart_mode, false);
-        gnssConnectionParams.ble_qstarz_mode = prefs.getBoolean("flutter.pref_"+ble_qstarz_mode, false);
-
-        for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-            final String value = prefs.getString("flutter.pref_" + pk, null);
-            if (value != null) gnssConnectionParams.extraParams.put(pk, value);
-        }
-
-        return gnssConnectionParams;
+    public static File get_prev_conn_param_file(Context context) throws Exception
+    {
+        return new File(context.getFilesDir(), LAST_CONN_FILE_NAME);
     }
+    public static void save_last_connect_dev(Context context, GnssConnectionParams gnssConnectionParams) throws Exception
+    {
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(gnssConnectionParams);
+        File file = get_prev_conn_param_file(context);
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(jsonString);
+        }
+    }
+
+    public static GnssConnectionParams load_last_connect_dev(Context context) throws Exception
+    {
+            Gson gson = new Gson();
+            try (FileReader reader = new FileReader(get_prev_conn_param_file(context))) {
+                return gson.fromJson(reader, GnssConnectionParams.class);
+            }
+    }
+
 
     public static int connect(final String activityClassName,
                               final Context context,
@@ -58,7 +67,7 @@ public class Util {
         intent.putExtra("bdaddr", gnssConnectionParams.bdaddr);
         intent.putExtra("secure", gnssConnectionParams.secure);
         intent.putExtra("reconnect", gnssConnectionParams.reconnect);
-        intent.putExtra("log_bt_rx", gnssConnectionParams.logBtRx);
+        intent.putExtra("log_bt_rx_log_uri", gnssConnectionParams.log_bt_rx_log_uri);
         intent.putExtra("disable_ntrip", gnssConnectionParams.disableNtrip);
         intent.putExtra(ble_qstarz_mode, gnssConnectionParams.ble_qstarz_mode);
         intent.putExtra(ble_uart_mode, gnssConnectionParams.ble_uart_mode);

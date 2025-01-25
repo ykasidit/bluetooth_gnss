@@ -3,7 +3,6 @@ package com.clearevo.bluetooth_gnss;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -20,24 +19,21 @@ public class StartConnectionReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if ("bluetooth.CONNECT".equals(intent.getAction())) {
-
+            try {
             // defaults from preferences
-            final SharedPreferences prefs = context.getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
-
-            final GnssConnectionParams gnssConnectionParams = Util.createGnssConnectionFromPreferences(prefs);
+            final GnssConnectionParams gnssConnectionParams = Util.load_last_connect_dev(context);
 
             // get override from intent
             final Bundle extras = intent.getExtras();
             if (extras != null) {
                 final String configStr = extras.getString("config");
-
                 overrideConnectionWithOptions(gnssConnectionParams, configStr);
             }
-            try {
                 Util.connect(MainActivity.MAIN_ACTIVITY_CLASSNAME, context, gnssConnectionParams);
             } catch (Exception e) {
-                Log.d(TAG, "scr onreceive got exception: " +Log.getStackTraceString(e));
+                Log.d(TAG, "StartConnectionReceiver onreceive got exception: " +Log.getStackTraceString(e));
             }
+
         }
     }
 
@@ -49,7 +45,7 @@ public class StartConnectionReceiver extends BroadcastReceiver {
                 gnssConnectionParams.bdaddr = overrides.optString("bdaddr", gnssConnectionParams.bdaddr);
                 gnssConnectionParams.secure = (overrides.optBoolean("secure", gnssConnectionParams.secure));
                 gnssConnectionParams.reconnect = (overrides.optBoolean("reconnect", gnssConnectionParams.secure));
-                gnssConnectionParams.logBtRx = (overrides.optBoolean("log_bt_rx", gnssConnectionParams.logBtRx));
+                gnssConnectionParams.log_bt_rx_log_uri = (overrides.optString("log_bt_rx_log_uri", gnssConnectionParams.log_bt_rx_log_uri));
                 gnssConnectionParams.disableNtrip = (overrides.optBoolean("disable_ntrip", gnssConnectionParams.disableNtrip));
 
                 final JSONObject overrides_extra_params = overrides.optJSONObject("extra");

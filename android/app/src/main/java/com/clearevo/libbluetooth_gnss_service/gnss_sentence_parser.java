@@ -358,25 +358,25 @@ public class gnss_sentence_parser {
                 } else if (sentence instanceof GSASentence) {
                     GSASentence gsa = (GSASentence) sentence;
                     try {
-                        //Log.d(TAG, "gsa sentence:" +gsa.toString());
+                        Log.d(TAG, "gsa sentence:" +gsa.toString());
                         String[] sids = gsa.getSatelliteIds();
                         String gsa_talker_id = get_gsa_talker_id_from_gsa_nmea(nmea, sids);
-                        //Log.d(TAG, "gsa_talker_id: "+gsa_talker_id);
+                        Log.d(TAG, "gsa_talker_id: "+gsa_talker_id);
                         if (gsa_talker_id != null && talker_id.equals(TalkerId.GN.toString())) {
+                            Log.d(TAG, "gsa_talker_id not null sids.length "+sids.length);
                             put_param(gsa_talker_id, "n_sats_used", sids.length);
                             put_param(gsa_talker_id, "sat_used_ids", str_list_to_csv(Arrays.asList(sids)));
                             put_param(gsa_talker_id, "gsa_hdop", gsa.getHorizontalDOP());
                             put_param(gsa_talker_id, "gsa_pdop", gsa.getPositionDOP());
                             put_param(gsa_talker_id, "gsa_vdop", gsa.getVerticalDOP());
                         } else {
+                            Log.d(TAG, "gsa_talker_id null sids.length "+sids.length);
                             put_param(talker_id, "n_sats_used", sids.length);
                             put_param(talker_id, "sats_used_ids", str_list_to_csv(Arrays.asList(sids)));
                             put_param(talker_id, "gsa_hdop", gsa.getHorizontalDOP());
                             put_param(talker_id, "gsa_pdop", gsa.getPositionDOP());
                             put_param(talker_id, "gsa_vdop", gsa.getVerticalDOP());
                         }
-
-
                     } catch (Exception pe) {
                         Log.d(TAG, "parse/put gsa nmea: [" + nmea + "] got exception: " + Log.getStackTraceString(pe));
                     }

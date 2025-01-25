@@ -3,7 +3,6 @@ package com.clearevo.bluetooth_gnss;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.util.Log;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -16,11 +15,9 @@ public class Autostart extends BroadcastReceiver {
             Log.d(TAG, "onReceive start");
             try {
                 // defaults from preferences
-                final SharedPreferences prefs = context.getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
-                boolean autostart = prefs.getBoolean("flutter.pref_autostart", false);
-                final GnssConnectionParams gnssConnectionParams = Util.createGnssConnectionFromPreferences(prefs);
-                Log.d(TAG, "pref autostart: " +autostart);
-                if (autostart) {
+                final GnssConnectionParams gnssConnectionParams = Util.load_last_connect_dev(context);
+                Log.d(TAG, "pref autostart: " +gnssConnectionParams.autostart);
+                if (gnssConnectionParams.autostart) {
                     Util.connect(MainActivity.MAIN_ACTIVITY_CLASSNAME, context, gnssConnectionParams);
                 }
             } catch (Exception e) {

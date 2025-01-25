@@ -18,185 +18,212 @@ class SettingsWidget extends StatefulWidget {
 
 class SettingsWidgetState extends State<SettingsWidget> {
   bool loading = false;
-
+  String log_bt_rx_log_uri = "";
   static const methodChannel =
       MethodChannel("com.clearevo.bluetooth_gnss/engine");
   static const eventChannel =
       EventChannel("com.clearevo.bluetooth_gnss/settings_events");
+  static bool eventChannelRegDone = false;
   Future<void> toast(String msg) async {
     try {
-      print("toast: $msg");
+      developer.log("toast: $msg");
       await methodChannel.invokeMethod("toast", {"msg": msg});
     } catch (e) {
       developer.log("WARNING: toast failed exception: $e");
     }
   }
 
+  Stream<dynamic>? event_stream;
   @override
   void initState() {
     super.initState();
-    eventChannel.receiveBroadcastStream().listen((dynamic event) async {
-      Map<dynamic, dynamic> eventMap = event;
+    log_bt_rx_log_uri = widget.prefService.get('log_bt_rx_log_uri') ?? "";
+    event_stream = eventChannel.receiveBroadcastStream();
+    if (true) {
+      event_stream!.listen((dynamic event) async {
+        Map<dynamic, dynamic> eventMap = event;
 
-      if (eventMap.containsKey('callback_src')) {
-        try {
-          developer.log("settings got callback event: $eventMap");
-        } catch (e) {
-          developer.log('parse event_map exception: $e');
-        }
-
-        if (eventMap["callback_src"] == "get_mountpoint_list") {
-          developer.log("dismiss progress dialog now0");
-
-          setState(() {
-            loading = false;
-          });
-
-          //get list from native engine
-          List<dynamic> oriMpl = eventMap["callback_payload"];
-          developer.log("got mpl: $oriMpl");
-          if (oriMpl.isEmpty) {
-            await toast("Failed to list mount-points list from server specified...");
-            return;
+        if (eventMap.containsKey('callback_src')) {
+          try {
+            developer.log("settings got callback event: $eventMap");
+          } catch (e) {
+            developer.log('parse event_map exception: $e');
           }
 
-          //conv to List<String> and sort
-          List<String> mountPointStrList =
-              List<String>.generate(oriMpl.length, (i) => "${oriMpl[i]}");
+          if (eventMap["callback_src"] == "get_mountpoint_list") {
+            developer.log("dismiss progress dialog now0");
 
-          //filter startswith STR;
-          mountPointStrList =
-              mountPointStrList.where((s) => s.startsWith('STR;')).toList();
+            setState(() {
+              loading = false;
+            });
 
-          //remove starting STR; to sort by mountpoint name
-          mountPointStrList = List<String>.generate(mountPointStrList.length,
-              (i) => mountPointStrList[i].substring(4));
-
-          //filter for that contains ; so wont have errors for split further below
-          mountPointStrList =
-              mountPointStrList.where((s) => s.contains(';')).toList();
-
-          mountPointStrList.sort();
-          developer.log("mount_point_str_list: $mountPointStrList");
-
-          int nmpl = mountPointStrList.length;
-          await toast("Found $nmpl mountpoints...");
-          bool sortByNearest =
-              widget.prefService.get('list_nearest_streams_first') ?? false;
-          developer.log('sort_by_nearest: $sortByNearest');
-
-          List<Map<String, String>> mountPointMapList =
-              List.empty(growable: true);
-
-          for (String val in mountPointStrList) {
-            List<String> parts = val.split(";");
-            //ref https://software.rtcm-ntrip.org/wiki/STR
-            if (parts.length > 4) {
-              mountPointMapList.add({
-                "mountpoint": parts[0],
-                "identifier": parts[1],
-                "lat": parts[8],
-                "lon": parts[9],
-                "distance_km": "0",
-              });
+            //get list from native engine
+            List<dynamic> oriMpl = eventMap["callback_payload"];
+            developer.log("got mpl: $oriMpl");
+            if (oriMpl.isEmpty) {
+              await toast(
+                  "Failed to list mount-points list from server specified...");
+              return;
             }
-          }
 
-          bool lastPosValid = false;
-          if (sortByNearest) {
-            try {
-              double lastLat = 0;
-              double lastLon = 0;
-              String refLatLon = widget.prefService.get('ref_lat_lon') ?? "";
-              lastPosValid = false;
-              if (refLatLon.contains(",")) {
-                List<String> parts = refLatLon.split(",");
-                if (parts.length == 2) {
-                  try {
-                    lastLat = double.parse(parts[0]);
-                    lastLon = double.parse(parts[1]);
-                    lastPosValid = true;
-                  } catch (e) {
-                    developer.log("WARNING: parse last lat/lon exception {e}");
-                  }
-                }
-              }
-              developer.log('last_pos_valid: $lastPosValid $lastLat $lastLon');
+            //conv to List<String> and sort
+            List<String> mountPointStrList =
+            List<String>.generate(oriMpl.length, (i) => "${oriMpl[i]}");
 
-              if (lastPosValid) {
-                //calc distance into the map in the list
-                double distanceKm = 999999;
-                for (Map<String, String> vmap in mountPointMapList) {
-                  try {
-                    double lat = double.parse(vmap["lat"].toString());
-                    double lon = double.parse(vmap["lon"].toString());
-                    distanceKm = calculateDistance(lastLat, lastLon, lat, lon);
-                  } catch (e) {
-                    developer.log('parse lat/lon exception: $e');
-                  }
-                  vmap["distance_km"] =
-                      distanceKm.truncateToDouble().toString();
-                }
+            //filter startswith STR;
+            mountPointStrList =
+                mountPointStrList.where((s) => s.startsWith('STR;')).toList();
 
-                //sort the list according to distance: https://stackoverflow.com/questions/22177838/sort-a-list-of-maps-in-dart-second-level-sort-in-dart
-                mountPointMapList.sort((m1, m2) {
-                  return double.parse(m1["distance_km"].toString())
-                      .compareTo(double.parse(m2["distance_km"].toString()));
+            //remove starting STR; to sort by mountpoint name
+            mountPointStrList = List<String>.generate(mountPointStrList.length,
+                    (i) => mountPointStrList[i].substring(4));
+
+            //filter for that contains ; so wont have errors for split further below
+            mountPointStrList =
+                mountPointStrList.where((s) => s.contains(';')).toList();
+
+            mountPointStrList.sort();
+            developer.log("mount_point_str_list: $mountPointStrList");
+
+            int nmpl = mountPointStrList.length;
+            await toast("Found $nmpl mountpoints...");
+            bool sortByNearest =
+                widget.prefService.get('list_nearest_streams_first') ?? false;
+            developer.log('sort_by_nearest: $sortByNearest');
+
+            List<Map<String, String>> mountPointMapList =
+            List.empty(growable: true);
+
+            for (String val in mountPointStrList) {
+              List<String> parts = val.split(";");
+              //ref https://software.rtcm-ntrip.org/wiki/STR
+              if (parts.length > 4) {
+                mountPointMapList.add({
+                  "mountpoint": parts[0],
+                  "identifier": parts[1],
+                  "lat": parts[8],
+                  "lon": parts[9],
+                  "distance_km": "0",
                 });
-              } else {
-                await toast("Sort by distance failed: Invalid Ref lat,lon position");
               }
-            } catch (e) {
-              developer.log('sort_by_nearest exception: $e');
-              await toast("Sort by distance failed: $e");
             }
-          }
 
-          //make dialog to choose from mount_point_map_list
-          String? chosenMountpoint;
-          if (mounted) {
-            chosenMountpoint = await showDialog<String>(
-                context: context,
-                barrierDismissible: true,
-                builder: (BuildContext context) {
-                  return SimpleDialog(
-                    title: const Text('Select stream:'),
-                    children: mountPointMapList.map((valmap) {
-                      String dispText =
-                          "${valmap["mountpoint"]}: ${valmap["identifier"]} @ ${valmap["lat"]}, ${valmap["lon"]}";
+            bool lastPosValid = false;
+            if (sortByNearest) {
+              try {
+                double lastLat = 0;
+                double lastLon = 0;
+                String refLatLon = widget.prefService.get('ref_lat_lon') ?? "";
+                lastPosValid = false;
+                if (refLatLon.contains(",")) {
+                  List<String> parts = refLatLon.split(",");
+                  if (parts.length == 2) {
+                    try {
+                      lastLat = double.parse(parts[0]);
+                      lastLon = double.parse(parts[1]);
+                      lastPosValid = true;
+                    } catch (e) {
                       developer.log(
-                          "disp_text sort_by_nearest $sortByNearest last_pos_valid $lastPosValid");
-                      if (sortByNearest && lastPosValid) {
-                        dispText += ": ${valmap["distance_km"]} km";
-                      }
-                      return SimpleDialogOption(
-                          onPressed: () {
-                            Navigator.pop(context, "${valmap["mountpoint"]}");
-                          },
-                          child: Text(dispText));
-                    }).toList(),
-                  );
-                });
-          }
-          developer.log("chosen_mountpoint: $chosenMountpoint");
-          if (chosenMountpoint != null) {
-            widget.prefService.set('ntrip_mountpoint', chosenMountpoint);
+                          "WARNING: parse last lat/lon exception {e}");
+                    }
+                  }
+                }
+                developer.log(
+                    'last_pos_valid: $lastPosValid $lastLat $lastLon');
 
-            //force re-load of selected ntrip_mountpoint
+                if (lastPosValid) {
+                  //calc distance into the map in the list
+                  double distanceKm = 999999;
+                  for (Map<String, String> vmap in mountPointMapList) {
+                    try {
+                      double lat = double.parse(vmap["lat"].toString());
+                      double lon = double.parse(vmap["lon"].toString());
+                      distanceKm =
+                          calculateDistance(lastLat, lastLon, lat, lon);
+                    } catch (e) {
+                      developer.log('parse lat/lon exception: $e');
+                    }
+                    vmap["distance_km"] =
+                        distanceKm.truncateToDouble().toString();
+                  }
 
-            if (mounted) {
-              await Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (BuildContext context) {
-                return SettingsWidget(widget.prefService, widget.bdMap);
-              }));
+                  //sort the list according to distance: https://stackoverflow.com/questions/22177838/sort-a-list-of-maps-in-dart-second-level-sort-in-dart
+                  mountPointMapList.sort((m1, m2) {
+                    return double.parse(m1["distance_km"].toString())
+                        .compareTo(double.parse(m2["distance_km"].toString()));
+                  });
+                } else {
+                  await toast(
+                      "Sort by distance failed: Invalid Ref lat,lon position");
+                }
+              } catch (e) {
+                developer.log('sort_by_nearest exception: $e');
+                await toast("Sort by distance failed: $e");
+              }
             }
+
+            //make dialog to choose from mount_point_map_list
+            String? chosenMountpoint;
+            if (mounted) {
+              chosenMountpoint = await showDialog<String>(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (BuildContext context) {
+                    return SimpleDialog(
+                      title: const Text('Select stream:'),
+                      children: mountPointMapList.map((valmap) {
+                        String dispText =
+                            "${valmap["mountpoint"]}: ${valmap["identifier"]} @ ${valmap["lat"]}, ${valmap["lon"]}";
+                        developer.log(
+                            "disp_text sort_by_nearest $sortByNearest last_pos_valid $lastPosValid");
+                        if (sortByNearest && lastPosValid) {
+                          dispText += ": ${valmap["distance_km"]} km";
+                        }
+                        return SimpleDialogOption(
+                            onPressed: () {
+                              Navigator.pop(context, "${valmap["mountpoint"]}");
+                            },
+                            child: Text(dispText));
+                      }).toList(),
+                    );
+                  });
+            }
+            developer.log("chosen_mountpoint: $chosenMountpoint");
+            if (chosenMountpoint != null) {
+              widget.prefService.set('ntrip_mountpoint', chosenMountpoint);
+
+              //force re-load of selected ntrip_mountpoint
+
+              if (mounted) {
+                await Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (BuildContext context) {
+                      return SettingsWidget(widget.prefService, widget.bdMap);
+                    }));
+              }
+            }
+          } else if (eventMap["callback_src"] == "set_log_uri") {
+            String log_uri = eventMap["callback_payload"];
+            if (log_uri.isNotEmpty) {
+              developer.log("set log_uri: $log_uri");
+              widget.prefService.set('log_bt_rx', true);
+              widget.prefService.set('log_bt_rx_log_uri', log_uri);
+            } else {
+              developer.log("clear log_uri");
+              widget.prefService.set('log_bt_rx', false);
+              widget.prefService.set('log_bt_rx_log_uri', log_uri);
+            }
+            setState(() {
+              log_bt_rx_log_uri = Uri.decodeFull(log_uri ?? "");
+            });
           }
         }
-      }
-    }, onError: (dynamic error) {
-      developer.log('Received error: ${error.message}');
-    });
+      }, onError: (dynamic error) {
+        developer.log('Received error: ${error.message}');
+      });
+    }
+
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -238,10 +265,15 @@ class SettingsWidgetState extends State<SettingsWidget> {
                           "Check for Settings > 'Location' ON and 'High Accuracy'"),
                       pref: 'check_settings_location'),
                   PrefCheckbox(
-                      title: const Text(
-                          "Enable Logging (location/nmea/debug-trace)"),
+                      title: Text(
+                          "Enable Logging $log_bt_rx_log_uri"),
                       pref: 'log_bt_rx',
                       onChange: (bool? val) async {
+                        widget.prefService.set('log_bt_rx', false); //set to false first and await event from java callback to set to true if all perm/folder set pass
+                        widget.prefService.set("log_bt_rx_log_uri", "");
+                        setState(() {
+                          log_bt_rx_log_uri = "";
+                        });
                         bool enable = val!;
                         if (enable) {
                           bool writeEnabled = false;
@@ -260,10 +292,6 @@ class SettingsWidgetState extends State<SettingsWidget> {
                           } on PlatformException catch (e) {
                             await toast("WARNING: set_log_uri failed: $e");
                           }
-                          widget.prefService.set('log_bt_rx',
-                              false); //set by java-side mainactivity on success only
-                        } else {
-                          widget.prefService.set('log_uri', "");
                         }
                       }),
                   const PrefTitle(title: Text('RTK/NTRIP Server settings')),
