@@ -213,7 +213,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
               widget.prefService.set('log_bt_rx_log_uri', log_uri);
             }
             setState(() {
-              log_bt_rx_log_uri = Uri.decodeFull(log_uri ?? "");
+              log_bt_rx_log_uri = Uri.decodeFull(log_uri);
             });
           }
         }

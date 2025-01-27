@@ -854,6 +854,7 @@ class TabsState extends State<Tabs>
     String log_bt_rx_log_uri = PrefService.of(context).get('log_bt_rx_log_uri') ?? "";
     bool autostart = PrefService.of(context).get('autostart') ?? false;
     bool gapMode = PrefService.of(context).get('ble_gap_scan_mode') ?? false;
+    String log_uri = PrefService.of(context).get('log_bt_rx_log_uri');
 
     if (log_bt_rx_log_uri.isNotEmpty) {
       bool writeEnabled = false;
@@ -870,8 +871,11 @@ class TabsState extends State<Tabs>
 
       bool canCreateFile = false;
       try {
-        canCreateFile = await methodChannel
-            .invokeMethod('test_can_create_file_in_chosen_folder', {"log_bt_rx_log_uri": PrefService.of(context).get('log_bt_rx_log_uri')});
+
+          canCreateFile = await methodChannel.invokeMethod(
+              'test_can_create_file_in_chosen_folder',
+              {"log_bt_rx_log_uri": log_uri});
+
       } on PlatformException catch (e) {
         await toast(
             "WARNING: check test_can_create_file_in_chosen_folder failed: $e");
