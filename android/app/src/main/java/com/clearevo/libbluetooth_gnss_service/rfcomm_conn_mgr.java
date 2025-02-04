@@ -612,6 +612,11 @@ public class rfcomm_conn_mgr {
                 if (data == null) {
                     data = new byte[]{};
                 }
+                try {
+                    bluetooth_gnss_service.curInstance.log_bt_rx(data);
+                } catch (Exception e) {
+                    log(TAG, "chrc data log_bt_rx exception: "+Log.getStackTraceString(e));
+                }
                 Log.d(TAG, "onCharacteristicChanged data len: " + data.length + " data_hex: "+toHexString(data));
                 last_qstarz_packet_buffers.add(data);
                 while (last_qstarz_packet_buffers.size() > 4) {

@@ -305,14 +305,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             int n_sats = 0;
             double lat = loc.lat, lon = loc.lon, alt = 0.0, hdop = 0.0, speed = 0.0, bearing = 0.0 / 0.0;
             double accuracy = hdop * get_connected_device_CEP();
-            setMock(lat, lon, alt, (float) accuracy, (float) bearing, (float) speed, false, n_sats);
-
-            String talker = "GN";
-            m_gnss_parser.put_param(talker, "location_from_talker", talker);
             m_gnss_parser.put_param("GN", "time", loc.timestamp_str);
-            m_gnss_parser.put_param("", "lat", lat);
-            m_gnss_parser.put_param("", "lon", lon);
-            m_gnss_parser.put_param("", "mock_location_set_ts", System.currentTimeMillis());
+            setMock(lat, lon, alt, (float) accuracy, (float) bearing, (float) speed, false, n_sats, hdop, "GN", loc.timestamp);
+
             HashMap<String, Object> param_map = m_gnss_parser.getM_parsed_params_hashmap();
             log(TAG, "ble gap lat: " + param_map.get("lat_double_07_str"));
             log(TAG, "ble gap lon: " + param_map.get("lon_double_07_str"));
@@ -912,12 +907,28 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     double hdop = object.getDouble("hdop");
                     double accuracy = hdop * get_connected_device_CEP();
                     int satellite_count_used = object.getInt("satellite_count_used");
-                    String time_str = convertUnixTimeStampToSQLDateTime((object.getLong("timestamp_s")*1000L) + object.getLong("millisecond"));
+                    long new_ts = (object.getLong("timestamp_s")*1000L) + object.getLong("millisecond");
+                    String time_str = convertUnixTimeStampToSQLDateTime(new_ts);
                     object.put("time", time_str);
                     d(TAG, "time: "+time_str);
-                    setMock(lat, lon, float_height_m, (float) accuracy, (float) heading_degrees, (float) float_speed_kmh, false, satellite_count_used);
+                    setMock(lat, lon, float_height_m, (float) accuracy, (float) heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts);
                 }
-                m_activity_for_nmea_param_callbacks.onPositionUpdate(jsonToMap(object));
+                HashMap<String, Object> param_map = m_gnss_parser.getM_parsed_params_hashmap();
+                HashMap<String, Object> qstarz_param_map = jsonToMap(object);
+                for (String key : qstarz_param_map.keySet()) {
+                    Object value = qstarz_param_map.get(key);
+                    String talker = "QSTARZ";
+                    m_gnss_parser.put_param(talker, key, value);
+                }
+                log(TAG, "qstarz ble lat: " + param_map.get("lat_double_07_str"));
+                log(TAG, "qstarz ble lon: " + param_map.get("lon_double_07_str"));
+                try {
+                    if (m_activity_for_nmea_param_callbacks != null) {
+                        m_activity_for_nmea_param_callbacks.onPositionUpdate(param_map);
+                    }
+                } catch (Exception e) {
+                    log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: " + getStackTraceString(e));
+                }
                 d(TAG, "on_read_object ondevicemessage success");
             } catch (Exception e) {
                 Log.d(TAG, "WARNING: on_read_object m_ble_qstarz_mode exception: "+Log.getStackTraceString(e));
@@ -1263,7 +1274,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String POSITION_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE";
     public static final String PARSED_NMEA_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.PARSED_NMEA_UPDATE";
     public static final String INTENT_EXTRA_DATA_JSON_KEY = "data_json";
-    private void setMock(double latitude, double longitude, double altitude, float accuracy, float bearing, float speed, boolean alt_is_elipsoidal, int n_sats) {
+    private void setMock(double latitude, double longitude, double altitude, float accuracy, float bearing, float speed, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long new_ts) {
         if (closing) {
             d(TAG, "setmock ignore as already closing");
             return;
@@ -1333,6 +1344,48 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             log(TAG, "setMock satellites: " + newLocation.getExtras().getInt("satellites"));
         }
         locationManager.setTestProviderLocation(LocationManager.GPS_PROVIDER, newLocation);
+
+        //////////////hooks
+        m_gnss_parser.put_param("", "hdop", hdop);
+        m_gnss_parser.put_param("", "location_from_talker", talker);
+        m_gnss_parser.put_param("", "lat", latitude);
+        m_gnss_parser.put_param("", "lon", longitude);
+        m_gnss_parser.put_param("", "alt", altitude);
+        m_gnss_parser.put_param("", "alt_type", alt_is_elipsoidal?"ellipsoidal":"orthometric");
+        if (!Double.isNaN(bearing))
+            m_gnss_parser.put_param("", "course", bearing);
+        m_gnss_parser.put_param("", "n_sats", n_sats);
+        m_gnss_parser.put_param("", "accuracy", accuracy);
+        m_gnss_parser.put_param("", "mock_location_set_ts", System.currentTimeMillis());
+        if (log_file_uri != null) {
+            m_gnss_parser.put_param("", "logfile_uri", log_file_uri.toString());
+            log(TAG, "log_file_uri.toString() "+log_file_uri.toString());
+            String ls = log_file_uri.getLastPathSegment();
+            if (ls.contains("/")) {
+                String[] parts = ls.split("/");
+                if (parts.length > 1) {
+                    m_gnss_parser.put_param("", "logfile_folder", parts[0]);
+                    m_gnss_parser.put_param("", "logfile_name", parts[1]);
+                }
+            }
+            m_gnss_parser.put_param("", "logfile_n_bytes", log_bt_rx_bytes_written);
+        }
+        if (m_log_bt_rx_csv_fos != null) {
+            try {
+                String line = csv_sdf.format(new_ts)+","+latitude+","+longitude+","+altitude+"\n";
+                m_log_bt_rx_csv_fos.write(line.getBytes());
+                m_log_bt_rx_csv_fos.flush();
+            } catch (Exception e) {
+                log(TAG, "WARNING: write csv exception: "+ getStackTraceString(e));
+            }
+        }
+        if (m_log_bt_rx_fos != null) {
+            try {
+                m_log_bt_rx_fos.flush();
+            } catch (Exception e) {
+                log(TAG, "WARNING: write bt rx file exceptionn: "+Log.getStackTraceString(e));
+            }
+        }
     }
 
     private void deactivate_mock_location() {
@@ -1552,43 +1605,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         if (accuracy == -1.0) {
                             accuracy = hdop * get_connected_device_CEP();
                         }
-                        setMock(lat, lon, alt, (float) accuracy, (float) bearing, (float) speed, alt_is_ellipsoidal, n_sats);
-                        m_gnss_parser.put_param("", "hdop", hdop);
-                        m_gnss_parser.put_param("", "location_from_talker", talker);
-                        m_gnss_parser.put_param("", "lat", lat);
-                        m_gnss_parser.put_param("", "lon", lon);
-                        m_gnss_parser.put_param("", "alt", alt);
-                        m_gnss_parser.put_param("", "alt_type", alt_is_ellipsoidal?"ellipsoidal":"orthometric");
-                        if (!Double.isNaN(bearing))
-                            m_gnss_parser.put_param("", "course", bearing);
-                        m_gnss_parser.put_param("", "n_sats", n_sats);
-                        m_gnss_parser.put_param("", "accuracy", accuracy);
-                        m_gnss_parser.put_param("", "mock_location_set_ts", System.currentTimeMillis());
-                        if (log_file_uri != null) {
-                            m_gnss_parser.put_param("", "logfile_uri", log_file_uri.toString());
-                            log(TAG, "log_file_uri.toString() "+log_file_uri.toString());
-                            String ls = log_file_uri.getLastPathSegment();
-                            if (ls.contains("/")) {
-                                String[] parts = ls.split("/");
-                                if (parts.length > 1) {
-                                    m_gnss_parser.put_param("", "logfile_folder", parts[0]);
-                                    m_gnss_parser.put_param("", "logfile_name", parts[1]);
-                                }
-                            }
-                            m_gnss_parser.put_param("", "logfile_n_bytes", log_bt_rx_bytes_written);
-                        }
-                        if (m_log_bt_rx_csv_fos != null) {
-                            try {
-                                String line = csv_sdf.format(new_ts)+","+lat+","+lon+","+alt+"\n";
-                                m_log_bt_rx_csv_fos.write(line.getBytes());
-                                m_log_bt_rx_csv_fos.flush();
-                            } catch (Exception e) {
-                                log(TAG, "WARNING: write csv exception: "+ getStackTraceString(e));
-                            }
-                        }
-                        if (m_log_bt_rx_fos != null) {
-                            m_log_bt_rx_fos.flush();
-                        }
+                        setMock(lat, lon, alt, (float) accuracy, (float) bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, talker, new_ts);
                         break;
                     } else {
                         //omit as same ts as last
