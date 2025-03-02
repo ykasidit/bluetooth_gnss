@@ -17,14 +17,20 @@ Build instructions
 * In this folder run:
 `flutter pub get`
 
-* If you modify the rust code then update with (first install same ver to match that of flutter_rust_bridge in pubspec.yaml (replace 2.7.0 in below) - see https://cjycode.com/flutter_rust_bridge/quickstart)
+* Install Rust - follow instructions in:
+`https://rustup.rs/`
+
+* Install flutter_rust_bridge: match that of flutter_rust_bridge in pubspec.yaml (replace 2.7.0 in below) - see https://cjycode.com/flutter_rust_bridge/quickstart)
 example:
 ```
 rustup install 1.84
 rustup default 1.84
 cargo install flutter_rust_bridge_codegen --version 2.7.0
-flutter_rust_bridge_codegen generate
 ```
+
+* If you modify the rust code then update with:
+`flutter_rust_bridge_codegen generate`
+But you might have to restore `main.dart` after above command
 
 You might need below if above faces issues:
 ```
