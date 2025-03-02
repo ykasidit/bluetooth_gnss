@@ -69,187 +69,8 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                     child: const Icon(Icons.content_copy),
                   )
                 ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('Time from GNSS:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(paramMap['GN_time'] ?? paramMap['GP_time'] ?? waitingDev,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('Ellipsoidal Height:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      paramMap['GN_ellipsoidal_height_double_02_str'] ??
-                          paramMap['GP_ellipsoidal_height_double_02_str'] ??
-                          waitingDev,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('Orthometric (MSL) Height:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      paramMap['GN_gga_alt_double_02_str'] ??
-                          paramMap['GP_gga_alt_double_02_str'] ??
-                          waitingDev,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('Geoidal Height:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      paramMap['GN_geoidal_height_double_02_str'] ??
-                          paramMap['GP_geoidal_height_double_02_str'] ??
-                          waitingDev,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('Fix status:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      (paramMap["GN_status"] ??
-                          paramMap["GP_status"] ??
-                          "No data"),
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('Fix quality:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      paramMap["GN_fix_quality"] ??
-                          paramMap["GP_fix_quality"] ??
-                          waitingDev,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('UBLOX Fix Type:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(paramMap["UBX_POSITION_navStat"] ?? waitingDev,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('UBLOX XY Accuracy(m):',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(paramMap["UBX_POSITION_hAcc"] ?? waitingDev,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('UBLOX Z Accuracy(m):',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(paramMap["UBX_POSITION_vAcc"] ?? waitingDev,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('HDOP:', style: Theme.of(context).textTheme.bodySmall),
-                  Text(paramMap["hdop_str"] ?? waitingDev,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('Course:', style: Theme.of(context).textTheme.bodySmall),
-                  Text(paramMap["course_str"] ?? waitingDev,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              const Padding(
-                padding: EdgeInsets.all(5.0),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('N Sats used TOTAL:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      ((paramMap["GP_n_sats_used"] ?? 0) +
-                              (paramMap["GL_n_sats_used"] ?? 0) +
-                              (paramMap["GA_n_sats_used"] ?? 0) +
-                              (paramMap["GB_n_sats_used"] ?? 0) +
-                              (paramMap["GQ_n_sats_used"] ?? 0))
-                          .toString(),
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('N Galileo in use/view:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      "${paramMap["GA_n_sats_used_str"] ?? waitingDev} / ${paramMap["GA_n_sats_in_view_str"] ?? waitingDev}",
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('N GPS in use/view:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      "${paramMap["GP_n_sats_used_str"] ?? waitingDev} / ${paramMap["GP_n_sats_in_view_str"] ?? waitingDev}",
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('N GLONASS in use/view:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      "${paramMap["GL_n_sats_used_str"] ?? waitingDev} / ${paramMap["GL_n_sats_in_view_str"] ?? waitingDev}",
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('N BeiDou in use/view:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      "${paramMap["GB_n_sats_used_str"] ?? waitingDev} / ${paramMap["GB_n_sats_in_view_str"] ?? waitingDev}",
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('N QZSS in use/view:',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                      "${paramMap["GQ_n_sats_used_str"] ?? waitingDev} / ${paramMap["GQ_n_sats_in_view_str"] ?? waitingDev}",
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
+              )
+              ] + getDevSepcificRows(context, state) + [
               const Padding(
                 padding: EdgeInsets.all(5.0),
               ),
@@ -475,4 +296,373 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
       children: rows,
     ),
   ));
+}
+
+Map<String,String> QSTARZ_RCR_CHAR_TO_LOGTYPE_MAP = {
+'B':"POI",
+'T':"time",
+'D':'distance',
+'S':'speed'
+};
+
+String getQstarzRCRLogType(int? asciiCode) {
+  if (asciiCode == null) {
+    return "";
+  }
+  String character = String.fromCharCode(asciiCode);
+  String? lt = QSTARZ_RCR_CHAR_TO_LOGTYPE_MAP[character];
+  return "$character${lt==null?'':' ($lt)'}";
+}
+String getgetQstarzDateime(int? timestampS, int? millisecond) {
+  if (timestampS == null || millisecond == null) {
+    return "";
+  }
+  DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(timestampS * 1000 + millisecond);
+  return "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} "
+      "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}.${millisecond.toString().padLeft(3, '0')}";
+}
+
+List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
+  Map<dynamic, dynamic> paramMap = state.paramMap;
+
+  if (state.isQstarz) {
+    return [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('Device Time:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(getgetQstarzDateime(paramMap['QSTARZ_timestamp_s'], paramMap['QSTARZ_millisecond']),
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('Fix status:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_fix_status_matched'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('RCR:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              getQstarzRCRLogType(paramMap['QSTARZ_rcr']),
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('Float speed (km/h):',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_float_speed_kmh_double_02_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('Float height (m):',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_float_height_m_double_02_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('Heading (degrees):',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_heading_degrees_double_02_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('G-sensor X:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_g_sensor_x_double_02_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('G-sensor Y:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_g_sensor_y_double_02_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('G-sensor Z:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_g_sensor_z_double_02_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('Max SNR:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_max_snr_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('HDOP:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_hdop_double_02_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('VDOP:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_vdop_double_02_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('N Satellites in view:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_satellite_count_view_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('N Satellites used:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_satellite_count_used_str'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('Fix quality:',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['QSTARZ_fix_quality_matched'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text('Battery (%)',
+              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+              paramMap['battery_percent'] ?? waitingDev,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      )
+
+    ];
+  }
+
+  return [
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('Time from GNSS:',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(paramMap['GN_time'] ?? paramMap['GP_time'] ?? waitingDev,
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('Ellipsoidal Height:',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+            paramMap['GN_ellipsoidal_height_double_02_str'] ??
+                paramMap['GP_ellipsoidal_height_double_02_str'] ??
+                waitingDev,
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('Orthometric (MSL) Height:',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+            paramMap['GN_gga_alt_double_02_str'] ??
+                paramMap['GP_gga_alt_double_02_str'] ??
+                waitingDev,
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('Geoidal Height:', style: Theme.of(context).textTheme.bodySmall),
+        Text(
+            paramMap['GN_geoidal_height_double_02_str'] ??
+                paramMap['GP_geoidal_height_double_02_str'] ??
+                waitingDev,
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('Fix status:', style: Theme.of(context).textTheme.bodySmall),
+        Text((paramMap["GN_status"] ?? paramMap["GP_status"] ?? "No data"),
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('Fix quality:', style: Theme.of(context).textTheme.bodySmall),
+        Text(
+            paramMap["GN_fix_quality"] ??
+                paramMap["GP_fix_quality"] ??
+                waitingDev,
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('UBLOX Fix Type:', style: Theme.of(context).textTheme.bodySmall),
+        Text(paramMap["UBX_POSITION_navStat"] ?? waitingDev,
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('UBLOX XY Accuracy(m):',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(paramMap["UBX_POSITION_hAcc"] ?? waitingDev,
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('UBLOX Z Accuracy(m):',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(paramMap["UBX_POSITION_vAcc"] ?? waitingDev,
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('HDOP:', style: Theme.of(context).textTheme.bodySmall),
+        Text(paramMap["hdop_str"] ?? waitingDev,
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('Course:', style: Theme.of(context).textTheme.bodySmall),
+        Text(paramMap["course_str"] ?? waitingDev,
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    const Padding(
+      padding: EdgeInsets.all(5.0),
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('N Sats used TOTAL:',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+            ((paramMap["GP_n_sats_used"] ?? 0) +
+                    (paramMap["GL_n_sats_used"] ?? 0) +
+                    (paramMap["GA_n_sats_used"] ?? 0) +
+                    (paramMap["GB_n_sats_used"] ?? 0) +
+                    (paramMap["GQ_n_sats_used"] ?? 0))
+                .toString(),
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('N Galileo in use/view:',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+            "${paramMap["GA_n_sats_used_str"] ?? waitingDev} / ${paramMap["GA_n_sats_in_view_str"] ?? waitingDev}",
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('N GPS in use/view:',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+            "${paramMap["GP_n_sats_used_str"] ?? waitingDev} / ${paramMap["GP_n_sats_in_view_str"] ?? waitingDev}",
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('N GLONASS in use/view:',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+            "${paramMap["GL_n_sats_used_str"] ?? waitingDev} / ${paramMap["GL_n_sats_in_view_str"] ?? waitingDev}",
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('N BeiDou in use/view:',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+            "${paramMap["GB_n_sats_used_str"] ?? waitingDev} / ${paramMap["GB_n_sats_in_view_str"] ?? waitingDev}",
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text('N QZSS in use/view:',
+            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+            "${paramMap["GQ_n_sats_used_str"] ?? waitingDev} / ${paramMap["GQ_n_sats_in_view_str"] ?? waitingDev}",
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+  ];
 }

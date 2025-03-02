@@ -99,7 +99,6 @@ class TabsState extends State<Tabs>
   TabsState();
 
   ////////connect tab
-  List<String> talkerIds = ["GP", "GL", "GA", "GB", "GQ"];
   TabController? _controller;
   TabsDemoStyle _demoStyle = TabsDemoStyle.iconsAndText;
   final bool _customIndicator = false;
@@ -119,6 +118,7 @@ class TabsState extends State<Tabs>
   };
   Icon _floatingButtonIcon = const Icon(Icons.access_time);
   bool _isBtConnected = false;
+  bool isQstarz = false;
   bool get isBtConnected => _isBtConnected;
 
   String get status => _status;
@@ -1002,6 +1002,9 @@ class TabsState extends State<Tabs>
     String bdaddr = getSelectedBdaddr(prefService);
     //developer.log("get_selected_bd_summary selected bdaddr: $bdaddr");
     String bdname = await getSelectedBdname(prefService);
+    if (bdname.startsWith("QSTARZ")) {
+      isQstarz = true;
+    }
     if (bdaddr.isEmpty) {
       ret += "No device selected";
     } else {
