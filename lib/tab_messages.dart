@@ -11,9 +11,9 @@ class Message {
   factory Message.fromMap(Map<dynamic, dynamic> map) {
     developer.log("got Message map: $map");
     return Message(
-      tx: map['tx'] as bool,
-      name: map['name'] as String,
-      contents: map['contents'] as String,
+      tx: map['tx'] as bool? ?? false,
+      name: map['name'] as String? ?? "",
+      contents: map['contents'] as String? ?? "",
     );
   }
 }

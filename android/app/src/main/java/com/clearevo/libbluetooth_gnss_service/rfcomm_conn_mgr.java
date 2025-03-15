@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 
 public class rfcomm_conn_mgr {
@@ -472,25 +474,6 @@ public class rfcomm_conn_mgr {
 
     boolean m_ble_mode = false;
     private BluetoothGatt bluetoothGatt;
-    void close_gatt()
-    {
-        if (bluetoothGatt != null) {
-            try {
-                bluetoothGatt.disconnect();
-            } catch (Exception e) {}
-            try {
-                bluetoothGatt.close();
-            } catch (Exception e) {}
-        }
-        bluetoothGatt = null;
-    }
-
-    private void connect_ble(BluetoothDevice device) {
-        //close old bluetoothgatt
-        close_gatt();
-        bluetoothGatt = device.connectGatt(m_context, false, gattCallback);
-    }
-
     // Descriptor UUID for enabling notifications
     private static final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
@@ -508,18 +491,47 @@ public class rfcomm_conn_mgr {
 
     int m_ble_conn_state = BluetoothGatt.STATE_DISCONNECTED;
 
+    void close_gatt()
+    {
+        if (bluetoothGatt != null) {
+            try {
+                bluetoothGatt.disconnect();
+            } catch (Exception e) {}
+            try {
+                bluetoothGatt.close();
+            } catch (Exception e) {}
+        }
+        bluetoothGatt = null;
+    }
+
+    CountDownLatch ble_connecting_latch;
+    final int CONNECT_BLE_TIMEOUT_SECS = 15;
+    private void connect_ble(BluetoothDevice device) throws Exception {
+        close_gatt();
+        ble_connecting_latch = new CountDownLatch(1);
+        bluetoothGatt = device.connectGatt(m_context, false, gattCallback);
+        boolean success = ble_connecting_latch.await(CONNECT_BLE_TIMEOUT_SECS, TimeUnit.SECONDS);
+        if (!success) {
+            log(TAG, "connect gatt timed-out");
+            close_gatt();
+        } else {
+            log(TAG, "connect gatt completed");
+        }
+    }
 
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+
         @Override
         public void onConnectionStateChange(@NonNull BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
-            Log.d(TAG, "onConnectionStateChange: "+newState);
+            log(TAG, "ble onConnectionStateChange: "+newState);
             m_ble_conn_state = newState;
             if (newState == BluetoothGatt.STATE_CONNECTED) {
-                Log.d(TAG, "Connected to GATT server, discovering services...");
+                log(TAG, "Connected to GATT server, discovering services...");
                 gatt.discoverServices();
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                Log.d(TAG, "Disconnected from GATT server");
+                ble_connecting_latch.countDown();
+                log(TAG, "Disconnected from GATT server");
                 close();
             }
         }
@@ -527,23 +539,24 @@ public class rfcomm_conn_mgr {
         @Override
         public void onServicesDiscovered(@NonNull BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
-            log("gatt scan status: "+status);
+            ble_connecting_latch.countDown(); //connecting completed
+            log("ble onServicesDiscovered() gatt scan status: "+status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 // Get the Nordic UART Service
                 BluetoothGattService service = gatt.getService(nordic_uart_service_uuid);
 
                 if (service != null) {
-                    Log.d(TAG, "Nordic/qstarz UART Service discovered");
+                    log(TAG, "Nordic/qstarz UART Service discovered");
                     // Get the TX characteristic
                     BluetoothGattCharacteristic txCharacteristic = service.getCharacteristic(qstarz_chrc_tx_uuid);
                     if (txCharacteristic != null) {
-                        Log.d(TAG, "TX Characteristic found, enabling notifications...");
+                        log(TAG, "TX Characteristic found, enabling notifications...");
                         // Enable notifications on the TX characteristic
                         enableTxNotifications(gatt, txCharacteristic);
-
                         //notify connected
-                        if (m_rfcomm_to_tcp_callbacks != null)
+                        if (m_rfcomm_to_tcp_callbacks != null) {
                             m_rfcomm_to_tcp_callbacks.on_rfcomm_connected();
+                        }
 
                         //watch ble conn state
                         m_conn_state_watcher = new Thread() {
@@ -562,9 +575,9 @@ public class rfcomm_conn_mgr {
 
                                     } catch (Exception e) {
                                         if (e instanceof InterruptedException) {
-                                            Log.d(TAG, "rfcomm_to_tcp m_conn_state_watcher ble ending with signal from close()");
+                                            log(TAG, "rfcomm_to_tcp m_conn_state_watcher ble ending with signal from close()");
                                         } else {
-                                            Log.d(TAG, "rfcomm_to_tcp m_conn_state_watcher ble ending with exception: " + Log.getStackTraceString(e));
+                                            log(TAG, "rfcomm_to_tcp m_conn_state_watcher ble ending with exception: " + Log.getStackTraceString(e));
                                             try {
                                                 if (m_rfcomm_to_tcp_callbacks != null)
                                                     m_rfcomm_to_tcp_callbacks.on_rfcomm_disconnected();
@@ -587,6 +600,8 @@ public class rfcomm_conn_mgr {
         }
 
 
+
+
         @Override
         public void onCharacteristicRead(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
@@ -597,7 +612,7 @@ public class rfcomm_conn_mgr {
                 if (data == null) {
                     data = new byte[]{};
                 }
-                Log.d(TAG, "onCharacteristicRead data len: " + data.length);
+                //Log.d(TAG, "onCharacteristicRead data len: " + data.length);
             }
         }
 
@@ -617,7 +632,7 @@ public class rfcomm_conn_mgr {
                 } catch (Exception e) {
                     log(TAG, "chrc data log_bt_rx exception: "+Log.getStackTraceString(e));
                 }
-                Log.d(TAG, "onCharacteristicChanged data len: " + data.length + " data_hex: "+toHexString(data));
+                //Log.d(TAG, "onCharacteristicChanged data len: " + data.length + " data_hex: "+toHexString(data));
                 last_qstarz_packet_buffers.add(data);
                 while (last_qstarz_packet_buffers.size() > 4) {
                     last_qstarz_packet_buffers.remove(0);
@@ -645,9 +660,9 @@ public class rfcomm_conn_mgr {
                                 last_qstarz_packet_buffers.remove(0);
                             }
                             byte[] pkt_bytes = pkt.toByteArray();
-                            Log.d(TAG, "got qstarz pkt len: "+pkt.size()+" pkt hex: "+toHexString(pkt_bytes));
+                            //Log.d(TAG, "got qstarz pkt len: "+pkt.size()+" pkt hex: "+toHexString(pkt_bytes));
                             String ret_json = parse_qstarz_pkt(pkt_bytes);
-                            Log.d(TAG, "got parse_qstarz_pkt ret: "+ret_json);
+                            //Log.d(TAG, "got parse_qstarz_pkt ret: "+ret_json);
                             JSONObject object = new JSONObject(ret_json);
                             m_rfcomm_to_tcp_callbacks.on_read_object(object);
 

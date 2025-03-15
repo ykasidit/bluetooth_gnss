@@ -9,6 +9,12 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude: [build/**]
+  language:
+    strict-casts: true
+    strict-raw-types: true
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`
@@ -26,8 +32,16 @@ linter:
     constant_identifier_names: false # allow non-lowercamelcase (snake_case) for const
     unawaited_futures: true
     avoid_void_async: true
-    avoid_web_libraries_in_flutter: false
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
+    unnecessary_brace_in_string_interps: false
+    unnecessary_string_interpolations: false
+    prefer_is_empty: false
+    avoid_init_to_null: true
+    unnecessary_underscores: false
+    no_leading_underscores_for_local_identifiers: false
+    prefer_is_not_operator: false
+    camel_case_types: false
+    prefer_interpolation_to_compose_strings: false
+    avoid_unnecessary_containers: false
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
 # Additional information about this file can be found at

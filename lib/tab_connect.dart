@@ -26,7 +26,7 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Lat:',
                       style: Theme.of(context).textTheme.headlineSmall),
-                  Text((paramMap['lat_double_07_str'] ?? waitingDev),
+                  Text(paramMap['lat_double_07_str'] as String? ?? waitingDev,
                       style: Theme.of(context).textTheme.headlineSmall),
                 ],
               ),
@@ -35,7 +35,7 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Lon:',
                       style: Theme.of(context).textTheme.headlineSmall),
-                  Text((paramMap['lon_double_07_str'] ?? waitingDev),
+                  Text(paramMap['lon_double_07_str'] as String? ?? waitingDev,
                       style: Theme.of(context).textTheme.headlineSmall),
                 ],
               ),
@@ -88,7 +88,7 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Alt type used:',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(paramMap["alt_type"] ?? waitingDev,
+                  Text(paramMap["alt_type"] as String? ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -101,8 +101,8 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Total GGA Count:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      paramMap["GN_GGA_count_str"] ??
-                          paramMap["GP_GGA_count_str"] ??
+                      paramMap["GN_GGA_count_str"] as String? ??
+                          paramMap["GP_GGA_count_str"] as String? ??
                           waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
@@ -113,8 +113,8 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                   Text('Total RMC Count:',
                       style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                      paramMap["GN_RMC_count_str"] ??
-                          paramMap["GP_RMC_count_str"] ??
+                      paramMap["GN_RMC_count_str"] as String? ??
+                          paramMap["GP_RMC_count_str"] as String? ??
                           waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
@@ -124,7 +124,7 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Current log folder:',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(paramMap["logfile_folder"] ?? waitingDev,
+                  Text(paramMap["logfile_folder"] as String? ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -133,7 +133,7 @@ Widget buildTabConnectUi(BuildContext context, TabsState state) {
                 children: <Widget>[
                   Text('Current log name:',
                       style: Theme.of(context).textTheme.bodySmall),
-                  Text(paramMap["logfile_name"] ?? waitingDev,
+                  Text(paramMap["logfile_name"] as String? ?? waitingDev,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -332,7 +332,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
         children: <Widget>[
           Text('Device Time:',
               style: Theme.of(context).textTheme.bodySmall),
-          Text(getgetQstarzDateime(paramMap['QSTARZ_timestamp_s'], paramMap['QSTARZ_millisecond']),
+          Text(getgetQstarzDateime(paramMap['QSTARZ_timestamp_s'] as int? ?? 0, paramMap['QSTARZ_millisecond'] as int? ?? 0),
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -342,7 +342,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('Fix status:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_fix_status_matched'] ?? waitingDev,
+              (paramMap['QSTARZ_fix_status_matched'] ?? waitingDev).toString(),
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -352,7 +352,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('RCR:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              getQstarzRCRLogType(paramMap['QSTARZ_rcr']),
+              getQstarzRCRLogType(paramMap['QSTARZ_rcr'] as int?),
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -362,7 +362,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('Float speed (km/h):',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_float_speed_kmh_double_02_str'] ?? waitingDev,
+              paramMap['QSTARZ_float_speed_kmh_double_02_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -372,7 +372,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('Float height (m):',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_float_height_m_double_02_str'] ?? waitingDev,
+              paramMap['QSTARZ_float_height_m_double_02_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -382,7 +382,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('Heading (degrees):',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_heading_degrees_double_02_str'] ?? waitingDev,
+              paramMap['QSTARZ_heading_degrees_double_02_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -392,7 +392,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('G-sensor X:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_g_sensor_x_double_02_str'] ?? waitingDev,
+              paramMap['QSTARZ_g_sensor_x_double_02_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -402,7 +402,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('G-sensor Y:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_g_sensor_y_double_02_str'] ?? waitingDev,
+              paramMap['QSTARZ_g_sensor_y_double_02_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -412,7 +412,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('G-sensor Z:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_g_sensor_z_double_02_str'] ?? waitingDev,
+              paramMap['QSTARZ_g_sensor_z_double_02_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -422,7 +422,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('Max SNR:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_max_snr_str'] ?? waitingDev,
+              paramMap['QSTARZ_max_snr_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -432,7 +432,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('HDOP:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_hdop_double_02_str'] ?? waitingDev,
+              paramMap['QSTARZ_hdop_double_02_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -442,7 +442,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('VDOP:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_vdop_double_02_str'] ?? waitingDev,
+              paramMap['QSTARZ_vdop_double_02_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -452,7 +452,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('N Satellites in view:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_satellite_count_view_str'] ?? waitingDev,
+              paramMap['QSTARZ_satellite_count_view_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -462,7 +462,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('N Satellites used:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_satellite_count_used_str'] ?? waitingDev,
+              paramMap['QSTARZ_satellite_count_used_str'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -472,7 +472,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('Fix quality:',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['QSTARZ_fix_quality_matched'] ?? waitingDev,
+              paramMap['QSTARZ_fix_quality_matched'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
@@ -482,7 +482,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
           Text('Battery (%)',
               style: Theme.of(context).textTheme.bodySmall),
           Text(
-              paramMap['battery_percent'] ?? waitingDev,
+              paramMap['battery_percent'] as String? ?? waitingDev,
               style: Theme.of(context).textTheme.bodySmall),
         ],
       )
@@ -496,7 +496,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
       children: <Widget>[
         Text('Time from GNSS:',
             style: Theme.of(context).textTheme.bodySmall),
-        Text(paramMap['GN_time'] ?? paramMap['GP_time'] ?? waitingDev,
+        Text(paramMap['GN_time'] as String? ?? paramMap['GP_time'] as String? ?? waitingDev,
             style: Theme.of(context).textTheme.bodySmall),
       ],
     ),
@@ -506,8 +506,8 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
         Text('Ellipsoidal Height:',
             style: Theme.of(context).textTheme.bodySmall),
         Text(
-            paramMap['GN_ellipsoidal_height_double_02_str'] ??
-                paramMap['GP_ellipsoidal_height_double_02_str'] ??
+            paramMap['GN_ellipsoidal_height_double_02_str'] as String? ??
+                paramMap['GP_ellipsoidal_height_double_02_str'] as String? ??
                 waitingDev,
             style: Theme.of(context).textTheme.bodySmall),
       ],
@@ -518,8 +518,8 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
         Text('Orthometric (MSL) Height:',
             style: Theme.of(context).textTheme.bodySmall),
         Text(
-            paramMap['GN_gga_alt_double_02_str'] ??
-                paramMap['GP_gga_alt_double_02_str'] ??
+            paramMap['GN_gga_alt_double_02_str'] as String? ??
+                paramMap['GP_gga_alt_double_02_str'] as String? ??
                 waitingDev,
             style: Theme.of(context).textTheme.bodySmall),
       ],
@@ -529,8 +529,8 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
       children: <Widget>[
         Text('Geoidal Height:', style: Theme.of(context).textTheme.bodySmall),
         Text(
-            paramMap['GN_geoidal_height_double_02_str'] ??
-                paramMap['GP_geoidal_height_double_02_str'] ??
+            paramMap['GN_geoidal_height_double_02_str'] as String? ??
+                paramMap['GP_geoidal_height_double_02_str'] as String? ??
                 waitingDev,
             style: Theme.of(context).textTheme.bodySmall),
       ],
@@ -539,7 +539,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         Text('Fix status:', style: Theme.of(context).textTheme.bodySmall),
-        Text((paramMap["GN_status"] ?? paramMap["GP_status"] ?? "No data"),
+        Text((paramMap["GN_status"] as String? ?? paramMap["GP_status"] as String? ?? "No data"),
             style: Theme.of(context).textTheme.bodySmall),
       ],
     ),
@@ -548,8 +548,8 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
       children: <Widget>[
         Text('Fix quality:', style: Theme.of(context).textTheme.bodySmall),
         Text(
-            paramMap["GN_fix_quality"] ??
-                paramMap["GP_fix_quality"] ??
+            paramMap["GN_fix_quality"] as String? ??
+                paramMap["GP_fix_quality"] as String? ??
                 waitingDev,
             style: Theme.of(context).textTheme.bodySmall),
       ],
@@ -558,7 +558,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         Text('UBLOX Fix Type:', style: Theme.of(context).textTheme.bodySmall),
-        Text(paramMap["UBX_POSITION_navStat"] ?? waitingDev,
+        Text(paramMap["UBX_POSITION_navStat"] as String? ?? waitingDev,
             style: Theme.of(context).textTheme.bodySmall),
       ],
     ),
@@ -567,7 +567,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
       children: <Widget>[
         Text('UBLOX XY Accuracy(m):',
             style: Theme.of(context).textTheme.bodySmall),
-        Text(paramMap["UBX_POSITION_hAcc"] ?? waitingDev,
+        Text(paramMap["UBX_POSITION_hAcc"] as String? ?? waitingDev,
             style: Theme.of(context).textTheme.bodySmall),
       ],
     ),
@@ -576,7 +576,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
       children: <Widget>[
         Text('UBLOX Z Accuracy(m):',
             style: Theme.of(context).textTheme.bodySmall),
-        Text(paramMap["UBX_POSITION_vAcc"] ?? waitingDev,
+        Text(paramMap["UBX_POSITION_vAcc"] as String? ?? waitingDev,
             style: Theme.of(context).textTheme.bodySmall),
       ],
     ),
@@ -584,7 +584,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         Text('HDOP:', style: Theme.of(context).textTheme.bodySmall),
-        Text(paramMap["hdop_str"] ?? waitingDev,
+        Text(paramMap["hdop_str"] as String? ?? waitingDev,
             style: Theme.of(context).textTheme.bodySmall),
       ],
     ),
@@ -592,7 +592,7 @@ List<Widget> getDevSepcificRows(BuildContext context, TabsState state) {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         Text('Course:', style: Theme.of(context).textTheme.bodySmall),
-        Text(paramMap["course_str"] ?? waitingDev,
+        Text(paramMap["course_str"] as String? ?? waitingDev,
             style: Theme.of(context).textTheme.bodySmall),
       ],
     ),

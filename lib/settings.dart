@@ -41,7 +41,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
     event_stream = eventChannel.receiveBroadcastStream();
     if (true) {
       event_stream!.listen((dynamic event) async {
-        Map<dynamic, dynamic> eventMap = event;
+        Map<dynamic, dynamic> eventMap = event as Map<dynamic, dynamic>? ?? {};
 
         if (eventMap.containsKey('callback_src')) {
           try {
@@ -58,7 +58,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
             });
 
             //get list from native engine
-            List<dynamic> oriMpl = eventMap["callback_payload"];
+            List<dynamic> oriMpl = eventMap["callback_payload"] as List<dynamic>? ?? [];
             developer.log("got mpl: $oriMpl");
             if (oriMpl.isEmpty) {
               await toast(
@@ -202,7 +202,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
               }
             }
           } else if (eventMap["callback_src"] == "set_log_uri") {
-            String log_uri = eventMap["callback_payload"];
+            String log_uri = eventMap["callback_payload"] as String? ?? "";
             if (log_uri.isNotEmpty) {
               developer.log("set log_uri: $log_uri");
               widget.prefService.set('log_bt_rx', true);
@@ -228,10 +228,10 @@ class SettingsWidgetState extends State<SettingsWidget> {
   @override
   Widget build(BuildContext context) {
 //create matching radiopreflist
-    List<DropdownMenuItem> devlist = List.empty(growable: true);
-    for (String bdaddr in widget.bdMap.keys) {
+    List<DropdownMenuItem<String>> devlist = List.empty(growable: true);
+    for (dynamic bdaddr in widget.bdMap.keys) {
       devlist.add(DropdownMenuItem(
-          value: bdaddr, child: Text(widget.bdMap[bdaddr].toString())));
+          value: bdaddr.toString(), child: Text(widget.bdMap[bdaddr.toString()].toString())));
     }
 
     return PrefService(
@@ -278,8 +278,8 @@ class SettingsWidgetState extends State<SettingsWidget> {
                         if (enable) {
                           bool writeEnabled = false;
                           try {
-                            writeEnabled = await methodChannel
-                                .invokeMethod('is_write_enabled');
+                            writeEnabled = (await methodChannel
+                                .invokeMethod('is_write_enabled')) as bool? ?? false;
                           } on PlatformException catch (e) {
                             await toast("WARNING: check _is_connecting failed: $e");
                           }
@@ -376,13 +376,13 @@ class SettingsWidgetState extends State<SettingsWidget> {
                           //make sure dialog shows first otherwise if no internet the .dismoiss wont work if immediate fail and progress dialog would block forever
                           Future.delayed(const Duration(seconds: 0), () async {
                             try {
-                              retCode = await methodChannel
+                              retCode = (await methodChannel
                                   .invokeMethod("get_mountpoint_list", {
                                 'ntrip_host': host,
                                 'ntrip_port': port,
                                 'ntrip_user': user,
                                 'ntrip_pass': pass,
-                              });
+                              })) as int? ?? -1;
                               developer.log(
                                   "get_mountpoint_list req waiting callback ret: $retCode");
                             } catch (e) {
@@ -422,7 +422,7 @@ int? intParse(String input) {
 }
 
 //https://stackoverflow.com/questions/54138750/total-distance-calculation-from-latlng-list
-double calculateDistance(lat1, lon1, lat2, lon2) {
+double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
   var p = 0.017453292519943295;
   var c = cos;
   var a = 0.5 -

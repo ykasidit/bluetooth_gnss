@@ -896,7 +896,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
              "gsv_fields":[{"prn":0,"elevation":8194,"azimuth":35,"snr":33},{"prn":0,"elevation":7168,"azimuth":39,"snr":98},{"prn":0,"elevation":7958,"azimuth":45,"snr":47}]}
 * */
             try {
-                d(TAG, "on_read_object ondevicemessage start");
+                //d(TAG, "on_read_object ondevicemessage start");
                 if (object.getInt("fix_status") >= 3) {
                     //3D so fix is ok now - get lat lon to send mock location
                     double lat = object.getDouble("latitude");
