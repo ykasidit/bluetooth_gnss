@@ -9,4 +9,7 @@ public class NativeParser {
     // Declare the native function
     public static native String parse_qstarz_pkt(byte[] byteArray);
 
+
+    public static native String parse_gnss_dev_buffer(byte[] byteArray);
+
 }

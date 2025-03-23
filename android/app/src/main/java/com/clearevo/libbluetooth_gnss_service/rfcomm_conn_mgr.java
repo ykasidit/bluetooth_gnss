@@ -273,16 +273,7 @@ public class rfcomm_conn_mgr {
                 m_cleanup_closables.add(bs_is);
                 m_cleanup_closables.add(bs_os);
 
-                //start thread to read from bluetooth socket to incoming_buffer
-                inputstream_to_queue_reader_thread incoming_thread = null;
-                if (m_readline_callback_mode) {
-                    incoming_thread = new inputstream_to_queue_reader_thread(bs_is, m_rfcomm_to_tcp_callbacks);
-                } else {
-                    incoming_thread = new inputstream_to_queue_reader_thread(bs_is, m_incoming_buffers);
-                }
-                m_cleanup_closables.add(incoming_thread);
-                incoming_thread.start();
-
+		
                 //start thread to read from m_outgoing_buffers to bluetooth socket
                 queue_to_outputstream_writer_thread outgoing_thread = new queue_to_outputstream_writer_thread(m_outgoing_buffers, bs_os);
                 m_cleanup_closables.add(outgoing_thread);
@@ -331,8 +322,12 @@ public class rfcomm_conn_mgr {
 
                 final inputstream_to_queue_reader_thread sock_is_reader_thread = tmp_sock_is_reader_thread;
                 final queue_to_outputstream_writer_thread sock_os_writer_thread = tmp_sock_os_writer_thread;
-
-
+		//TODO: can run in android_app/browser and get bt dev+ntrip payload directly + integrate with mapgl or google earth, can replay/combine/show data in kepler, works both online and offline
+		//TODO: see flutter rfcomm/ble-uart services that can handle both web and mobile/tablet so no need to re-code java stuff in dart/rs later
+		//TODO: bs_is loop here and call native parse_gnss_dev_buffer directly, on ret call setmock and send to ui as required
+		//TODO: ui use rxstring to update parts individually - print() on each build to ensure no full rebuilds
+		//TODO: ui optimize message list to be very performant can do live or replay from jetstream
+		//TODO: ui adj to match real gnss device screens + take photos w gnss stamp metadata, take vdo w gnss stamp metadata and disp onto video, can replay on web - get real common use cases
                 //watch bluetooth socket state and both threads above
                 m_conn_state_watcher = new Thread() {
                     public void run() {
