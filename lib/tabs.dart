@@ -1003,6 +1003,8 @@ class TabsState extends State<Tabs>
     String bdname = await getSelectedBdname(prefService);
     if (bdname.startsWith("QSTARZ")) {
       isQstarz = true;
+    } else {
+      isQstarz = false;
     }
     if (bdaddr.isEmpty) {
       ret += "No device selected";
