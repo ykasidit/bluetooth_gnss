@@ -534,11 +534,11 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
                 log(TAG, "using dev bdaddr:" + bdaddr);
                 HashMap<String, String> bdaddr_to_name_map = get_bd_map(m_handler, getApplicationContext(), null);
-                String name = null;
+                String name = ""+bdaddr; //set default name to bdaddr and dont raise exception if not found name
                 if (bdaddr_to_name_map.containsKey(bdaddr)) {
                     name = bdaddr_to_name_map.get(bdaddr);
                 } else {
-                    throw new Exception("Unknown device - please re-select device in settings");
+                    log(TAG, "warning: bdaddr_to_name_map doesnt contain key of selected bdaddr: "+bdaddr);
                 }
                 if (name == null) {
                     throw new Exception("invalid state - device name is null");

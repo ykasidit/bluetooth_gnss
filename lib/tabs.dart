@@ -414,24 +414,24 @@ class TabsState extends State<Tabs>
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.settings),
-              onPressed: () {
-                getBdMap().then((bdmap) {
+              onPressed: () async {
+
                   if (_isBtConnected || _isBtConnThreadConnecting) {
-                    toast(
+                    await toast(
                         "Please Disconnect first - cannot change settings during live connection...");
                     return;
                   } else {
+                    Map<dynamic, dynamic> bdmap = await getBdMap();
                     if (context.mounted) {
-                      Navigator.push(
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) {
-                          developer.log("sw.bdaddr_to_name_map: $getBdMap()");
+                          developer.log("sw.bdaddr_to_name_map: $bdmap)");
                           return SettingsWidget(widget.prefService, bdmap);
                         }),
                       );
                     }
                   }
-                });
               },
             ),
             // overflow menu
@@ -986,7 +986,7 @@ class TabsState extends State<Tabs>
   }
 
   Future<String> getSelectedBdname(BasePrefService prefService) async {
-    String? bdaddr = getSelectedBdaddr(prefService);
+    String bdaddr = getSelectedBdaddr(prefService);
     //developer.log("get_selected_bdname: bdaddr: $bdaddr");
     Map<dynamic, dynamic> bdMap = await getBdMap();
     if (!(bdMap.containsKey(bdaddr))) {
@@ -1022,9 +1022,9 @@ class TabsState extends State<Tabs>
       ret =
           await methodChannel.invokeMethod<Map<dynamic, dynamic>>('get_bd_map');
       //developer.log("got bt_map: $ret");
-    } on PlatformException {
-      //String status = "get_bd_map exception: '${e.message}'.";
-      //developer.log(status);
+    } on PlatformException catch (e) {
+      String status = "warning: get_bd_map exception: '${e.message}'.";
+      developer.log(status);
     }
     return ret ?? {};
   }
