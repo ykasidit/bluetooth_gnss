@@ -1350,7 +1350,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 log("WARNING: setTestProviderLocation for provider: "+provider+" exception: "+tr);
             }
         }
-        
+
         //////////////hooks
         m_gnss_parser.put_param("", "hdop", hdop);
         m_gnss_parser.put_param("", "location_from_talker", talker);
