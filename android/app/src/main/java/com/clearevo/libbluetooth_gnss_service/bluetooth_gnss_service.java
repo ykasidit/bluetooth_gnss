@@ -1343,8 +1343,14 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         if (newLocation.getExtras() != null) {
             log(TAG, "setMock satellites: " + newLocation.getExtras().getInt("satellites"));
         }
-        locationManager.setTestProviderLocation(LocationManager.GPS_PROVIDER, newLocation);
-
+        for (String provider : new String[]{LocationManager.GPS_PROVIDER, LocationManager.FUSED_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER}) {
+            try {
+                locationManager.setTestProviderLocation(provider, newLocation);
+            } catch (Throwable tr) {
+                log("WARNING: setTestProviderLocation for provider: "+provider+" exception: "+tr);
+            }
+        }
+        
         //////////////hooks
         m_gnss_parser.put_param("", "hdop", hdop);
         m_gnss_parser.put_param("", "location_from_talker", talker);

@@ -46,6 +46,7 @@ import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugins.GeneratedPluginRegistrant;
 import io.flutter.plugin.common.EventChannel;
+import android.content.pm.PermissionInfo;
 
 public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks, EventChannel.StreamHandler {
 public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
@@ -635,7 +636,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                     }
                 }
             }
-            List<String> notGrantedPermission = getNotGrantedPermissions(needed);
+            List<String> notGrantedPermission = getNotGrantedPermissions(getApplicationContext(), needed);
             if (notGrantedPermission.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 notGrantedPermission.remove(Manifest.permission.WRITE_EXTERNAL_STORAGE); //not always required, only required if user enables logging
             }
@@ -659,50 +660,50 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
 
     boolean isRequestingPermission = false;
 
-    public List<String> getNotGrantedPermissions(List<String> needed_ori) {
-        List<String> needed = new ArrayList<>(needed_ori); //make a copy as we need to mutate this list before return
-        List<String> noNeedToAskList = new ArrayList<>();
-        noNeedToAskList.addAll(
-                Arrays.asList(
-                        "android.permission.WRITE_SETTINGS",
-                        "android.permission.READ_LOGS",
-                        "android.permission.BATTERY_STATS",
-                        "android.permission.MODIFY_PHONE_STATE",
-                        "android.permission.READ_NETWORK_USAGE_HISTORY",
-                        "android.permission.READ_PRIVILEGED_PHONE_STATE",
-                        "android.permission.LOCAL_MAC_ADDRESS",
-                        "android.permission.SYSTEM_ALERT_WINDOW",
-                        "android.permission.ACCESS_MOCK_LOCATION",
-                        "android.permission.PACKAGE_USAGE_STATS"
-                )
-        );
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            noNeedToAskList.add("android.permission.ANSWER_PHONE_CALLS");
-        }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            noNeedToAskList.add("android.permission.FOREGROUND_SERVICE");
-        }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            noNeedToAskList.add("android.permission.FOREGROUND_SERVICE_LOCATION");
-        }
-        if (Build.VERSION.SDK_INT < 31) { //If your app targets Android 12 (API level 31) or higher, declare the following permissions in your app's manifest file:
+    public List<String> getNotGrantedPermissions(Context context, List<String> needed_ori) {
+        PackageManager pm = context.getPackageManager();
+        List<String> needed = new ArrayList<>(needed_ori); // Copy for mutation
+        List<String> filtered = new ArrayList<>();
 
-            noNeedToAskList.add("android.permission.BLUETOOTH_SCAN");
-            noNeedToAskList.add("android.permission.BLUETOOTH_ADVERTISE");
-            noNeedToAskList.add("android.permission.BLUETOOTH_CONNECT");
-        }
-        if (Build.VERSION.SDK_INT < 33) {
-            noNeedToAskList.add("android.permission.POST_NOTIFICATIONS");
-        }
-        List<String> removeList = new ArrayList<>();
         for (String perm : needed) {
-            if (noNeedToAskList.contains(perm)) {
-                removeList.add(perm);
+            try {
+                // Check if permission is declared in manifest
+                PackageInfo info = pm.getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS);
+                String[] declaredPerms = info.requestedPermissions;
+                if (declaredPerms == null || !Arrays.asList(declaredPerms).contains(perm)) {
+                    // Permission not in manifest, cannot be granted
+                    continue;
+                }
+
+                // Check if permission is already granted
+                if (ContextCompat.checkSelfPermission(context, perm) == PackageManager.PERMISSION_GRANTED) {
+                    continue;
+                }
+
+                // Check if system will prompt (true = can prompt, false = system silently denies)
+                if (ActivityCompat.shouldShowRequestPermissionRationale((Activity) context, perm)
+                        || !isSystemOnlyPermission(perm)) {
+                    filtered.add(perm);
+                }
+
+            } catch (PackageManager.NameNotFoundException e) {
+                log("getNotGrantedPermissions: exception: "+e); // Defensive
             }
         }
-        needed.removeAll(removeList);
-        return needed;
+
+        return filtered;
     }
+
+    private boolean isSystemOnlyPermission(String permission) {
+        try {
+            PermissionInfo info = getApplicationContext().getPackageManager().getPermissionInfo(permission, 0);
+            return (info.protectionLevel & PermissionInfo.PROTECTION_FLAG_PRIVILEGED) != 0
+                    || (info.protectionLevel & PermissionInfo.PROTECTION_FLAG_SYSTEM) != 0;
+        } catch (PackageManager.NameNotFoundException e) {
+            return true; // Treat unknown permissions as system-level (can't be granted)
+        }
+    }
+
 
 
     public static HashMap<String, String> get_bd_map(Handler handler, Context context, Activity activity) {
