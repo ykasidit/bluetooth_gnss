@@ -1,0 +1,1 @@
+Collega il tuo telefono a ricevitori GPS, GLONASS, Galileo and BeiDou via Bluetooth impostando questa applicazione come "App di posizione fittizia" nelle "Opzioni sviluppatore".
