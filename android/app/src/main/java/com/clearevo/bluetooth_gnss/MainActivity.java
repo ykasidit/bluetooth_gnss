@@ -31,8 +31,6 @@ import com.clearevo.libbluetooth_gnss_service.ntrip_conn_mgr;
 import com.clearevo.libbluetooth_gnss_service.rfcomm_conn_mgr;
 import com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -621,7 +619,6 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
 
     public List<String> check_permissions_not_granted()
     {
-        {
             //check/ask manifest permissions
             PackageInfo info = null;
             try {
@@ -655,7 +652,6 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                 });
             }
             return notGrantedPermission;
-        }
     }
 
     boolean isRequestingPermission = false;
@@ -681,8 +677,8 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                 }
 
                 // Check if system will prompt (true = can prompt, false = system silently denies)
-                if (ActivityCompat.shouldShowRequestPermissionRationale((Activity) context, perm)
-                        || !isSystemOnlyPermission(perm)) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale((Activity) MainActivity.this, perm)
+                        || !isPermissionNotAlwaysRequired(perm)) {
                     filtered.add(perm);
                 }
 
@@ -694,8 +690,15 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         return filtered;
     }
 
-    private boolean isSystemOnlyPermission(String permission) {
+    public static final List<String> NOT_ALWAYS_REQUIRED_PERMISSIONS = Arrays.asList(new String[] {
+            "android.permission.ACCESS_MOCK_LOCATION",
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    });
+
+    private boolean isPermissionNotAlwaysRequired(String permission) {
         try {
+            if (NOT_ALWAYS_REQUIRED_PERMISSIONS.contains(permission))
+                return true;
             PermissionInfo info = getApplicationContext().getPackageManager().getPermissionInfo(permission, 0);
             return (info.protectionLevel & PermissionInfo.PROTECTION_FLAG_PRIVILEGED) != 0
                     || (info.protectionLevel & PermissionInfo.PROTECTION_FLAG_SYSTEM) != 0;
