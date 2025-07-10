@@ -48,8 +48,12 @@ dependencies:
   flutter_rust_bridge: 2.7.0
   rust_lib_bluetooth_gnss:
     path: rust_builder
+  flutter_map: ^8.1.1
+  latlong2: ^0.9.1
+  geolocator: ^14.0.2
 
 dev_dependencies:
+  flutter_launcher_icons: 0.14.4
   flutter_test:
     sdk: flutter
 
@@ -61,6 +65,19 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   integration_test:
     sdk: flutter
+
+
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/icons/ic_launcher.png"
+  adaptive_icon_background: "#31A3A0"
+  adaptive_icon_foreground: "assets/icons/ic_launcher.png"
+  adaptive_icon_maskable: true
+  android_enable_round_icon: true
+  android_adaptive_icon_background: "#31A3A0"
+  android_adaptive_icon_foreground: "assets/icons/ic_launcher.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  remove_alpha_ios: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

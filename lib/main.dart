@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
 
+import 'home_screen.dart';
 import 'tabs.dart';
 
 const String bleUartModeKey = 'ble_uart_mode';
@@ -52,9 +53,14 @@ class AppState extends State<App> {
     return PrefService(
         service: widget.prefService,
         child: MaterialApp(
-          title: 'Bluetooth GNSS',
-          home: mWidget,
-    ));
+          title: 'Hybrid GNSS',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+            useMaterial3: true,
+          ),
+          home: const HomeScreen(),
+        )
+    );
   }
 }
 

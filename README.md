@@ -67,6 +67,10 @@ If all went well, it would create the apk file in the folder:
 
 * Use the `flutter build apk` command when you want to build a release apk file.
 
+Regen icons
+------------
+
+`dart run flutter_launcher_icons`
 
 Initiate connection using external intent
 -----------------------------------------

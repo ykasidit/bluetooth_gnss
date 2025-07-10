@@ -410,7 +410,7 @@ class TabsState extends State<Tabs>
     _scaffold = Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: const Text('Bluetooth GNSS'),
+          title: const Text('Hybrid GNSS'),
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.settings),
@@ -763,9 +763,9 @@ class TabsState extends State<Tabs>
 
     if (!(await isMockLocationEnabled())) {
       String msg =
-          "Please go to phone Settings > Developer Options > Under 'Debugging', set 'Mock Location app' to 'Bluetooth GNSS'...";
+          "Please go to phone Settings > Developer Options > Under 'Debugging', set 'Mock Location app' to 'Hybrid GNSS'...";
       setState(() {
-        _checkStateMapIcon["'Mock Location app' not 'Bluetooth GNSS'\n"] =
+        _checkStateMapIcon["'Mock Location app' not 'Hybrid GNSS'\n"] =
             iconFail;
         _status = msg;
       });
@@ -783,7 +783,7 @@ class TabsState extends State<Tabs>
     }
     //developer.log('check_and_update_selected_device15');
     _checkStateMapIcon[
-            "'Mock Location app' is 'Bluetooth GNSS'\n$notHowToDisableMockLocation"] =
+            "'Mock Location app' is 'Hybrid GNSS'\n$notHowToDisableMockLocation"] =
         iconOk;
 
     if (_isBtConnected == false && _isBtConnThreadConnecting) {

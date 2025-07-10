@@ -10,7 +10,7 @@ import 'tabs.dart';
 
 Widget createAboutView(String version) {
   String md = """
-Bluetooth GNSS
+Hybrid GNSS
 ==============
 App version: $version
   

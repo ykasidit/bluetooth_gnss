@@ -1194,7 +1194,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             NotificationChannel channel = new NotificationChannel(notification_channel_id,
                     notification_name,
                     NotificationManager.IMPORTANCE_DEFAULT);
-            channel.setDescription("Bluetooth GNSS Status");
+            channel.setDescription("Hybrid GNSS Status");
             mNotificationManager.createNotificationChannel(channel);
         }
 
@@ -1420,7 +1420,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             public void run() {
                                 log(TAG, "deactivate_mock_location toast");
                                 toast("Deactivated Mock location provider...");
-                                updateNotification("Bluetooth GNSS - Not active...", "Deactivated", "");
+                                updateNotification("Hybrid GNSS - Not active...", "Deactivated", "");
                             }
                         }
                 );
@@ -1458,7 +1458,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             public void run() {
                                 log(TAG, "activate_mock_location 1");
                                 toast("Activated Mock location provider...");
-                                updateNotification("Bluetooth GNSS - Active...", "Connected to: "+get_connected_device_alias(), "");
+                                updateNotification("Hybrid GNSS - Active...", "Connected to: "+get_connected_device_alias(), "");
                             }
                         }
                 );
@@ -1474,7 +1474,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                 @Override
                                 public void run() {
                                     toast("Activated Mock location provider...");
-                                    updateNotification("Bluetooth GNSS - Active...", "Connected to: "+get_connected_device_alias(), "");
+                                    updateNotification("Hybrid GNSS - Active...", "Connected to: "+get_connected_device_alias(), "");
                                 }
                             }
                     );
@@ -1684,6 +1684,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         log(TAG, "onDestroy()");
         boolean was_connected = close();
         stop_auto_reconnect_thread();
-        toast("Stopped Bluetooth GNSS Service...");
+        toast("Stopped Hybrid GNSS Service...");
     }
 }
