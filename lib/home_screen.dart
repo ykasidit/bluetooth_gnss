@@ -1,3 +1,4 @@
+import 'package:bluetooth_gnss/settings.dart';
 import 'package:flutter/material.dart';
 import 'map_screen.dart';
 import 'history_screen.dart';
@@ -16,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final screens = const [
     MapScreen(),
     HistoryScreen(),
-    SettingsScreen(),
+    SettingsWidget(),
   ];
 
   @override

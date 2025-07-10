@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
 
 import 'home_screen.dart';
-import 'tabs.dart';
+import 'engine.dart';
 
 const String bleUartModeKey = 'ble_uart_mode';
 const String bleQstarzModeKey = 'ble_qstarz_mode';
@@ -44,12 +44,8 @@ class App extends StatefulWidget {
 }
 
 class AppState extends State<App> {
-
-  Tabs? mWidget;
-
   @override
   Widget build(BuildContext context) {
-    mWidget = Tabs(widget.prefService);
     return PrefService(
         service: widget.prefService,
         child: MaterialApp(

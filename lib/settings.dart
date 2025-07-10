@@ -7,7 +7,7 @@ import 'dart:math' show cos, sqrt, asin;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
 class SettingsWidget extends StatefulWidget {
-  const SettingsWidget(this.prefService, this.bdMap, {super.key});
+  const SettingsWidget(this.prefService, {super.key});
   final BasePrefService prefService;
   final Map<dynamic, dynamic> bdMap;
   final String title = "Settings";

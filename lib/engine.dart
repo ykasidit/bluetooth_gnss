@@ -14,8 +14,6 @@ import 'settings.dart';
 import 'tab_rtk.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-enum TabsDemoStyle { iconsAndText, iconsOnly, textOnly }
-
 const String waitingDev = "No data";
 const String tabConnect = 'Connect';
 const String tabRtk = 'RTK/NTRIP';
@@ -61,61 +59,24 @@ const iconFail = Icon(
   color: Colors.blueGrey,
   size: defaultChecklistIconSize,
 );
-
-class _Page {
-  const _Page({this.icon, this.text});
-  final IconData? icon;
-  final String? text;
-}
-
-const List<_Page> _allPages = <_Page>[
-  _Page(icon: Icons.bluetooth, text: tabConnect),
-  _Page(icon: Icons.cloud_download, text: tabRtk),
-  _Page(icon: Icons.view_list, text: tabMsg),
-  /*
-  TODO: add more pages?
-  _Page(icon: Icons.location_on, text: 'Location'),
-  _Page(icon: Icons.landscape, text: 'Map'),
-  //Take photo with geo metadata + write on img
-  //take vdo with geo metadata + write on vdo    
-   */
-];
-
-class Tabs extends StatefulWidget {
-  const Tabs(this.prefService, {super.key});
-  final BasePrefService prefService;
-  @override
-  TabsState createState() => TabsState();
-}
-
-class TabsState extends State<Tabs>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  static const methodChannel =
+const methodChannel =
       MethodChannel("com.clearevo.bluetooth_gnss/engine");
-  static const eventChannel =
+const eventChannel =
       EventChannel("com.clearevo.bluetooth_gnss/engine_events");
-  static const uninitState = "Loading state...";
+const uninitState = "Loading state...";
 
-  TabsState();
-
-  ////////connect tab
-  TabController? _controller;
-  TabsDemoStyle _demoStyle = TabsDemoStyle.iconsAndText;
-  final bool _customIndicator = false;
-  Timer? timer;
-  static String notHowToDisableMockLocation = "";
-  //params
-  Map<dynamic, dynamic> _paramMap = <dynamic, dynamic>{};
-  Map<dynamic, dynamic> get paramMap => _paramMap;
-  String _status = "Loading status...";
-  String _selectedDevice = "Loading selected device...";
-  //Map<String, String> _check_state_map =
-  final Map<String, Icon> _checkStateMapIcon = {
-    "Bluetooth On": iconLoading,
-    "Bluetooth Device Paired": iconLoading,
-    "Bluetooth Device Selected": iconLoading,
-    "Mock location enabled": iconLoading,
-  };
+//params
+Map<dynamic, dynamic> _paramMap = <dynamic, dynamic>{};
+Map<dynamic, dynamic> get paramMap => _paramMap;
+String _status = "Loading status...";
+String _selectedDevice = "Loading selected device...";
+//Map<String, String> _check_state_map =
+final Map<String, Icon> _checkStateMapIcon = {
+  "Bluetooth On": iconLoading,
+  "Bluetooth Device Paired": iconLoading,
+  "Bluetooth Device Selected": iconLoading,
+  "Mock location enabled": iconLoading,
+};
   Icon _floatingButtonIcon = const Icon(Icons.access_time);
   bool _isBtConnected = false;
   bool isQstarz = false;
@@ -128,7 +89,7 @@ class TabsState extends State<Tabs>
     _mockLocationSetTs = value;
   }
 
-  String mockLocationSetStatus = waitingDev;
+  RxString mockLocationSetStatus = waitingDev;
   /////////////////////
 
   /// ntrip tab
@@ -157,70 +118,6 @@ class TabsState extends State<Tabs>
     return matchesIsTx && matchesName && matchesContents;
   }
 
-  void filterMessages() {
-    filteredMessages = msgList.where((message) {
-      return isMessageInFilter(message);
-    }).toList();
-  }
-
-  void showDialogMessage(Message message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text(message.name),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: contentsController,
-                    decoration: const InputDecoration(
-                      hintText: 'Search in message...',
-                    ),
-                    onChanged: (query) {
-                      // Implement search and highlight within the dialog
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Text(message.contents),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.share),
-                  onPressed: () {
-                    // Implement share functionality
-                  },
-                ),
-                TextButton(
-                  child: const Text('Close'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  ScrollController scrollController = ScrollController();
-  void scrollToBottom() {
-    if (autoScroll &&
-        filteredMessages.isNotEmpty &&
-        scrollController.hasClients) {
-      scrollController.jumpTo(scrollController.position.maxScrollExtent);
-    }
-  }
-  ///////////////////
 
   Future<void> wakelockEnable() async {
     if (await WakelockPlus.enabled == false) {
@@ -236,45 +133,8 @@ class TabsState extends State<Tabs>
     }
   }
 
-  bool isInBackground = false;
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-    // These are the callbacks
-    switch (state) {
-      case AppLifecycleState.resumed:
-        // widget is resumed
-        isInBackground = false;
-        break;
-      case AppLifecycleState.inactive:
-        isInBackground = true;
-        // widget is inactive
-        break;
-      case AppLifecycleState.paused:
-        // widget is paused
-        isInBackground = true;
-        break;
-      case AppLifecycleState.detached:
-        isInBackground = true;
-        // widget is detached
-        break;
-      case AppLifecycleState.hidden:
-        // TODO: Handle this case.
-        isInBackground = true;
-        // widget is detached
-        break;
-    }
-  }
-
-  @override
   void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    timer = Timer.periodic(
-        const Duration(seconds: 2), (Timer t) => checkUpdateSelectedDev());
-    _controller = TabController(vsync: this, length: _allPages.length);
     checkUpdateSelectedDev();
 
     eventChannel.receiveBroadcastStream().listen((dynamic event) {
@@ -323,242 +183,14 @@ class TabsState extends State<Tabs>
 
   void cleanup() {
     developer.log('cleanup()');
-    if (timer != null) {
-      timer!.cancel();
-    }
   }
 
-  @override
-  void dispose() {
-    developer.log('dispose()');
-    cleanup();
-
-    _controller!.dispose();
-    // Remove the observer
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  void changeDemoStyle(TabsDemoStyle style) {
-    setState(() {
-      _demoStyle = style;
-    });
-  }
-
-  Decoration? getIndicator() {
-    if (!_customIndicator) {
-      return const UnderlineTabIndicator();
-    }
-
-    switch (_demoStyle) {
-      case TabsDemoStyle.iconsAndText:
-        return ShapeDecoration(
-          shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                side: BorderSide(
-                  color: Colors.white24,
-                  width: 2.0,
-                ),
-              ) +
-              const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                side: BorderSide(
-                  color: Colors.transparent,
-                  width: 4.0,
-                ),
-              ),
-        );
-
-      case TabsDemoStyle.iconsOnly:
-        return ShapeDecoration(
-          shape: const CircleBorder(
-                side: BorderSide(
-                  color: Colors.white24,
-                  width: 4.0,
-                ),
-              ) +
-              const CircleBorder(
-                side: BorderSide(
-                  color: Colors.transparent,
-                  width: 4.0,
-                ),
-              ),
-        );
-
-      case TabsDemoStyle.textOnly:
-        return ShapeDecoration(
-          shape: const StadiumBorder(
-                side: BorderSide(
-                  color: Colors.white24,
-                  width: 2.0,
-                ),
-              ) +
-              const StadiumBorder(
-                side: BorderSide(
-                  color: Colors.transparent,
-                  width: 4.0,
-                ),
-              ),
-        );
-    }
-  }
-
-  Scaffold? _scaffold;
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
-  @override
-  Widget build(BuildContext context) {
-    _scaffold = Scaffold(
-        key: _scaffoldKey,
-        appBar: AppBar(
-          title: const Text('Hybrid GNSS'),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () async {
-
-                  if (_isBtConnected || _isBtConnThreadConnecting) {
-                    await toast(
-                        "Please Disconnect first - cannot change settings during live connection...");
-                    return;
-                  } else {
-                    Map<dynamic, dynamic> bdmap = await getBdMap();
-                    if (context.mounted) {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) {
-                          developer.log("sw.bdaddr_to_name_map: $bdmap)");
-                          return SettingsWidget(widget.prefService, bdmap);
-                        }),
-                      );
-                    }
-                  }
-              },
-            ),
-            // overflow menu
-            PopupMenuButton(
-              itemBuilder: (_) => <PopupMenuItem<String>>[
-                const PopupMenuItem<String>(
-                  value: 'disconnect',
-                  child: Text('Disconnect/Stop'),
-                ),
-                const PopupMenuItem<String>(
-                    value: 'issues', child: Text('Issues/Suggestions')),
-                const PopupMenuItem<String>(
-                    value: 'project', child: Text('Project page')),
-                const PopupMenuItem<String>(
-                    value: 'about', child: Text('About')),
-              ],
-              onSelected: menuSelected,
-            ),
-          ],
-          bottom: TabBar(
-            controller: _controller,
-            isScrollable: true,
-            indicator: getIndicator(),
-            tabs: _allPages.map<Tab>((_Page page) {
-              switch (_demoStyle) {
-                case TabsDemoStyle.iconsAndText:
-                  return Tab(text: page.text, icon: Icon(page.icon));
-                case TabsDemoStyle.iconsOnly:
-                  return Tab(icon: Icon(page.icon));
-                case TabsDemoStyle.textOnly:
-                  return Tab(text: page.text);
-              }
-            }).toList(),
-          ),
-        ),
-        floatingActionButton: Visibility(
-            visible: !_isBtConnected,
-            child: FloatingActionButton(
-              onPressed: connect,
-              tooltip: 'Connect',
-              child: _floatingButtonIcon,
-            )), // This trailing comma makes auto-formatting nicer for build methods.
-        body: SafeArea(
-          child: TabBarView(
-            controller: _controller,
-            children: _allPages.map<Widget>((_Page page) {
-              String pname = page.text.toString();
-              switch (pname) {
-                case tabConnect:
-                  return buildTabConnectUi(context, this);
-                case tabRtk:
-                  return buildTabRtkUi(context, this);
-                case tabMsg:
-                  return buildTabMsg(context, this);
-              }
-              return SingleChildScrollView(
-                  child: Padding(
-                padding: const EdgeInsets.all(25.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "<UNDER DEVELOPMENT/>\n\nSorry, dev not done yet - please check again after next update...",
-                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                            fontFamily: 'GoogleSans',
-                            color: Colors.blueGrey,
-                          ),
-                    ),
-                  ],
-                ),
-              ));
-            }).toList(),
-          ),
-        ));
-
-    return _scaffold!;
-  }
-
-  /////////////functions
-  Future<void> menuSelected(String menu) async {
-    print('menu_selected start: $menu');
-    switch (menu) {
-      case "disconnect":
-        await disconnect();
-        break;
-      case "about":
-        final packageInfo = await PackageInfo.fromPlatform();
-        if (mounted) {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) {
-              return Scaffold(
-                  appBar: AppBar(
-                    title: const Text("About"),
-                  ),
-                  body: createAboutView(packageInfo.version.toString()));
-            }),
-          );
-        }
-        break;
-      case "issues":
-        await launchUrl(
-            Uri.parse("https://github.com/ykasidit/bluetooth_gnss/issues"));
-        break;
-      case "project":
-        await launchUrl(
-            Uri.parse("https://github.com/ykasidit/bluetooth_gnss"));
-        break;
-    }
-    print('menu_selected done: $menu');
-  }
-
-  void clearDispText() {
-    _selectedDevice = "";
-    _status = "";
-  }
 
   //return settings_widget that can be used to get selected bdaddr
   Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
       [bool userPressedSettingsTakeActionAndRetSw = false,
       bool userPressedConnectTakeActionAndRetSw = false]) async {
     _floatingButtonIcon = iconBluetoothSettings;
-
-    if (isInBackground) {
-      developer.log('isInBackground so not refreshing state...');
-      return null;
-    }
 
     try {
       _isBtConnected = (await methodChannel.invokeMethod('is_bt_connected')) as bool? ?? false;
@@ -1105,4 +737,3 @@ class TabsState extends State<Tabs>
   int get ntripPacketCount => ntripPacketsCount;
 
   bool get isBtConnThreadConnecting => _isBtConnThreadConnecting;
-}

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'tabs.dart';
+import 'engine.dart';
 
 Widget createAboutView(String version) {
   String md = """
