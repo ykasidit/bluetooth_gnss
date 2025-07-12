@@ -30,7 +30,7 @@ Future<void> main() async {
           }
   );
 
-  initEventChannel();
+  initEventChannels();
 
   runApp(App(prefservice));
 }
