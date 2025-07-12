@@ -3,22 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
-class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
-
-  @override
-  State<MapScreen> createState() => _MapScreenState();
-}
-
-class _MapScreenState extends State<MapScreen> {
-  final ValueNotifier<LatLng?> androidLocation = ValueNotifier(null);
-  final ValueNotifier<LatLng?> bluetoothLocation = ValueNotifier(null);
-
-  @override
-  void initState() {
-    super.initState();
-    _startLocationUpdates();
-  }
+class MapScreen extends StatelessWidget {
+  MapScreen({super.key});
 
   Future<void> _startLocationUpdates() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -26,12 +12,10 @@ class _MapScreenState extends State<MapScreen> {
       await Geolocator.openLocationSettings();
       return;
     }
-
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
       permission = await Geolocator.requestPermission();
     }
-
     Geolocator.getPositionStream(
       locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
     ).listen((Position position) {
@@ -46,6 +30,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _startLocationUpdates();
     return ValueListenableBuilder<LatLng?>(
       valueListenable: androidLocation,
       builder: (context, androidPos, _) {
@@ -89,11 +74,8 @@ class _MapScreenState extends State<MapScreen> {
       },
     );
   }
-
-  @override
-  void dispose() {
-    androidLocation.dispose();
-    bluetoothLocation.dispose();
-    super.dispose();
-  }
 }
+
+final ValueNotifier<LatLng?> androidLocation = ValueNotifier(null);
+final ValueNotifier<LatLng?> bluetoothLocation = ValueNotifier(null);
+

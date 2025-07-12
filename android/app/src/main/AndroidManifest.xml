@@ -24,7 +24,7 @@
 
     <application
 
-        android:label="Hybrid GNSS"
+        android:label="Bluetooth GNSS"
         tools:replace="android:label"
         android:icon="@mipmap/ic_launcher">
 

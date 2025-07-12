@@ -16,43 +16,53 @@ const eventChannel =
       EventChannel("com.clearevo.bluetooth_gnss/engine_events");
 const settingsEventChannel = EventChannel("com.clearevo.bluetooth_gnss/settings_events");
 
+Map<String, ValueNotifier<Map<DateTime, dynamic>>> paramMap = {};
+
+class Message {
+    final bool tx;
+    final String name;
+    final String contents;
+    Message({required this.tx, required this.name, required this.contents});
+    // Factory constructor to create a Message from a Map<String, Object>
+    factory Message.fromMap(Map<dynamic, dynamic> map) {
+      developer.log("got Message map: $map");
+      return Message(
+        tx: map['tx'] as bool? ?? false,
+        name: map['name'] as String? ?? "",
+        contents: map['contents'] as String? ?? "",
+      );
+    }
+}
+
+List MESSAGE_NAMES_CACHE = [];
+List MESSAGE_LIST_CACHE = [];
+const maxMsgListSize = 1000;
+
 void initEventChannels() {
     eventChannel.receiveBroadcastStream().listen((dynamic event) {
-      Map<dynamic, dynamic> paramMap = event as Map<dynamic, dynamic>? ?? {};
-      if (paramMap.containsKey("is_dev_msg_map")) {
-        developer.log("got event is_dev_msg_parse");
+      Map<String, Map<DateTime, dynamic>> channel_paramMap = event as Map<String, Map<DateTime, dynamic>>? ?? {};
+      if (channel_paramMap.containsKey("is_dev_msg_map")) {
         try {
-          Message msg = Message.fromMap(paramMap);
-          if (!uniqueNames.contains(msg.name)) {
-            uniqueNames.add(msg.name);
+          Message msg = Message.fromMap(channel_paramMap);
+          if (!MESSAGE_NAMES_CACHE.contains(msg.name)) {
+            MESSAGE_NAMES_CACHE.add(msg.name);
           }
-          msgList.add(msg);
-          if (msgList.length > maxMsgListSize) {
-            msgList.removeAt(0);
-          }
-          if (filteredMessages.length > maxMsgListSize) {
-            filteredMessages.removeAt(0);
-          }
-          if (isMessageInFilter(msg)) {
-            setState(() {
-              filteredMessages.add(msg);
-            });
+          MESSAGE_LIST_CACHE.add(msg);
+          if (MESSAGE_LIST_CACHE.length > maxMsgListSize) {
+            MESSAGE_LIST_CACHE.removeAt(0);
           }
         } catch (e) {
           developer.log('parse msg exception: $e');
         }
         return; //update messages only
       } else {
-        developer.log("got event pos update");
-        setState(() {
-          _paramMap = paramMap;
-        });
-        // 660296614
-        if (paramMap.containsKey('mock_location_set_ts')) {
-          try {
-            _mockLocationSetTs = (paramMap['mock_location_set_ts'] ?? 0) as int? ?? 0;
-          } catch (e) {
-            developer.log('get parsed param exception: $e');
+        for (MapEntry<String, Map<DateTime, dynamic>> entry in channel_paramMap.entries) {
+          String k = entry.key;
+          Map<DateTime, dynamic> v = entry.value;
+          if (!paramMap.containsKey(k)) {
+            paramMap[k] = ValueNotifier(v);
+          } else {
+            paramMap[k]!.value  = entry.value;
           }
         }
       }
@@ -61,9 +71,12 @@ void initEventChannels() {
     });
 }
 
+String getSelectedBdaddr(BasePrefService prefService) {
+  return prefService.get("target_bdaddr") ?? "";
+}
+
 Future<String> getSelectedBdname(BasePrefService prefService) async {
   String bdaddr = getSelectedBdaddr(prefService);
-  //developer.log("get_selected_bdname: bdaddr: $bdaddr");
   Map<dynamic, dynamic> bdMap = await getBdMap();
   if (!(bdMap.containsKey(bdaddr))) {
     return "";
@@ -71,38 +84,17 @@ Future<String> getSelectedBdname(BasePrefService prefService) async {
   return (bdMap[bdaddr] ?? "").toString();
 }
 
-Future<String> getSelectedBdSummary(BasePrefService prefService) async {
-  //developer.log("get_selected_bd_summary 0");
-  String ret = '';
-  String bdaddr = getSelectedBdaddr(prefService);
-  //developer.log("get_selected_bd_summary selected bdaddr: $bdaddr");
-  String bdname = await getSelectedBdname(prefService);
-  if (bdname.startsWith("QSTARZ")) {
-    isQstarz = true;
-  } else {
-    isQstarz = false;
-  }
-  if (bdaddr.isEmpty) {
-    ret += "No device selected";
-  } else {
-    ret += bdname;
-    ret += " ($bdaddr)";
-  }
-  //developer.log("get_selected_bd_summary ret $ret");
-  return ret;
-}
+
 
 Future<Map<dynamic, dynamic>> getBdMap() async {
-  Map<dynamic, dynamic>? ret;
+  Map<String, String> ret = {};
   try {
-    ret =
-    await methodChannel.invokeMethod<Map<dynamic, dynamic>>('get_bd_map');
-    //developer.log("got bt_map: $ret");
+    ret = (await methodChannel.invokeMethod<Map<String, String>>('get_bd_map')) ?? {};
   } on PlatformException catch (e) {
     String status = "warning: get_bd_map exception: '${e.message}'.";
     developer.log(status);
   }
-  return ret ?? {};
+  return ret;
 }
 
 Future<bool> isBluetoothOn() async {

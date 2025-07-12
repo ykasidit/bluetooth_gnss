@@ -1,40 +1,30 @@
 import 'dart:developer' as developer;
 
+import 'package:bluetooth_gnss/utils_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' show cos, sqrt, asin;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
+import 'main.dart';
 import 'native_channels.dart';
 
-class SettingsWidget extends StatefulWidget {
-  const SettingsWidget(this.prefService, {super.key});
-  final BasePrefService prefService;
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
   final String title = "Settings";
 
   @override
-  SettingsWidgetState createState() => SettingsWidgetState();
+  _SettingsScreenState createState() => _SettingsScreenState();
 }
 
-class SettingsWidgetState extends State<SettingsWidget> {
+class _SettingsScreenState extends State<SettingsScreen> {
   bool loading = false;
   String log_bt_rx_log_uri = "";
-
-  static bool eventChannelRegDone = false;
-  Future<void> toast(String msg) async {
-    try {
-      developer.log("toast: $msg");
-      await methodChannel.invokeMethod("toast", {"msg": msg});
-    } catch (e) {
-      developer.log("WARNING: toast failed exception: $e");
-    }
-  }
-
   Stream<dynamic>? event_stream;
   @override
   void initState() {
     super.initState();
-    log_bt_rx_log_uri = widget.prefService.get('log_bt_rx_log_uri') ?? "";
+    log_bt_rx_log_uri = prefService.get('log_bt_rx_log_uri') ?? "";
     event_stream = eventChannel.receiveBroadcastStream();
     if (true) {
       event_stream!.listen((dynamic event) async {
@@ -225,14 +215,14 @@ class SettingsWidgetState extends State<SettingsWidget> {
   @override
   Widget build(BuildContext context) {
 //create matching radiopreflist
-    List<DropdownMenuItem<String>> devlist = List.empty(growable: true);
-    for (dynamic bdaddr in widget.bdMap.keys) {
+    /*List<DropdownMenuItem<String>> devlist = List.empty(growable: true);
+    for (dynamic bdaddr in getBdMap()) {
       devlist.add(DropdownMenuItem(
-          value: bdaddr.toString(), child: Text(widget.bdMap[bdaddr.toString()].toString())));
-    }
+          value: bdaddr.toString(), child: Text(bdMap[bdaddr.toString()].toString())));
+    }*/
 
     return PrefService(
-        service: widget.prefService,
+        service: prefService,
         child: MaterialApp(
           title: 'Settings',
           home: Scaffold(
@@ -351,13 +341,13 @@ class SettingsWidgetState extends State<SettingsWidget> {
                       ),
                       onPressed: () async {
                         String host =
-                            widget.prefService.get('ntrip_host') ?? "";
+                            prefService.get('ntrip_host') ?? "";
                         String port =
-                            widget.prefService.get('ntrip_port') ?? "";
+                            prefService.get('ntrip_port') ?? "";
                         String user =
-                            widget.prefService.get('ntrip_user') ?? "";
+                            prefService.get('ntrip_user') ?? "";
                         String pass =
-                            widget.prefService.get('ntrip_pass') ?? "";
+                            prefService.get('ntrip_pass') ?? "";
                         if (host.isEmpty || port.isEmpty) {
                           await toast(
                               "Please specify the ntrip_host and ntrip_port first...");

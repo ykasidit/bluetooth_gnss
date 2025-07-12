@@ -8,12 +8,12 @@ import 'native_channels.dart';
 
 const String bleUartModeKey = 'ble_uart_mode';
 const String bleQstarzModeKey = 'ble_qstarz_mode';
+late final PrefServiceShared prefService;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); //https://stackoverflow.com/questions/57689492/flutter-unhandled-exception-servicesbinding-defaultbinarymessenger-was-accesse
-
-  final prefservice = await PrefServiceShared.init(prefix: "pref_");
-  await prefservice.setDefaultValues(
+  prefService = await PrefServiceShared.init(prefix: "pref_");
+  await prefService.setDefaultValues(
           {
             'reconnect': false,
             'secure': true,
@@ -29,32 +29,20 @@ Future<void> main() async {
             'ntrip_port': "2101"
           }
   );
-
   initEventChannels();
-
-  runApp(App(prefservice));
+  runApp(App());
 }
 
 
-class App extends StatefulWidget {
-  // This widget is the root of your application.
-
-  const App(this.prefService, {super.key});
-  final BasePrefService prefService;
-
-  @override
-  AppState createState() => AppState();
-}
-
-class AppState extends State<App> {
+class App extends StatelessWidget {
+  const App({super.key});
   @override
   Widget build(BuildContext context) {
     return PrefService(
-        service: widget.prefService,
+        service: prefService,
         child: MaterialApp(
-          title: 'Hybrid GNSS',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+          title: 'Bluetooth GNSS',
+          theme: ThemeData.dark(
             useMaterial3: true,
           ),
           home: const HomeScreen(),

@@ -1,8 +1,7 @@
+import 'package:bluetooth_gnss/connect_screen.dart';
 import 'package:bluetooth_gnss/screen_settings.dart';
 import 'package:flutter/material.dart';
 import 'screen_map.dart';
-import 'history_screen.dart';
-import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,17 +13,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
 
-  final screens = const [
+  final screens = [
+    ConnectScreen(),
     MapScreen(),
-    HistoryScreen(),
-    SettingsWidget(),
+    SettingsScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hybrid GNSS'),
+        title: const Text('Bluetooth GNSS'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -54,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 showAboutDialog(
                   context: context,
-                  applicationName: 'Hybrid GNSS',
+                  applicationName: 'Bluetooth GNSS',
                   applicationVersion: '1.0.0',
                 );
               },
