@@ -1,6 +1,6 @@
-import 'package:bluetooth_gnss/settings.dart';
+import 'package:bluetooth_gnss/screen_settings.dart';
 import 'package:flutter/material.dart';
-import 'map_screen.dart';
+import 'screen_map.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
 

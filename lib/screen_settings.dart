@@ -5,11 +5,11 @@ import 'package:pref/pref.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' show cos, sqrt, asin;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
+import 'native_channels.dart';
 
 class SettingsWidget extends StatefulWidget {
   const SettingsWidget(this.prefService, {super.key});
   final BasePrefService prefService;
-  final Map<dynamic, dynamic> bdMap;
   final String title = "Settings";
 
   @override
@@ -19,10 +19,7 @@ class SettingsWidget extends StatefulWidget {
 class SettingsWidgetState extends State<SettingsWidget> {
   bool loading = false;
   String log_bt_rx_log_uri = "";
-  static const methodChannel =
-      MethodChannel("com.clearevo.bluetooth_gnss/engine");
-  static const eventChannel =
-      EventChannel("com.clearevo.bluetooth_gnss/settings_events");
+
   static bool eventChannelRegDone = false;
   Future<void> toast(String msg) async {
     try {
@@ -197,7 +194,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
               if (mounted) {
                 await Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (BuildContext context) {
-                      return SettingsWidget(widget.prefService, widget.bdMap);
+                      return SettingsWidget(widget.prefService);
                     }));
               }
             }

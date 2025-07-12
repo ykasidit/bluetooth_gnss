@@ -3,14 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
 
-import 'home_screen.dart';
-import 'engine.dart';
+import 'home.dart';
+import 'native_channels.dart';
 
 const String bleUartModeKey = 'ble_uart_mode';
 const String bleQstarzModeKey = 'ble_qstarz_mode';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); //https://stackoverflow.com/questions/57689492/flutter-unhandled-exception-servicesbinding-defaultbinarymessenger-was-accesse
+
   final prefservice = await PrefServiceShared.init(prefix: "pref_");
   await prefservice.setDefaultValues(
           {
@@ -28,6 +29,8 @@ Future<void> main() async {
             'ntrip_port': "2101"
           }
   );
+
+  initEventChannel();
 
   runApp(App(prefservice));
 }
