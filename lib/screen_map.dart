@@ -4,7 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
 class MapScreen extends StatelessWidget {
-  MapScreen({super.key});
+  const MapScreen({super.key});
 
   Future<void> _startLocationUpdates() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

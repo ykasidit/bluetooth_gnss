@@ -14,10 +14,10 @@ class SettingsScreen extends StatefulWidget {
   final String title = "Settings";
 
   @override
-  _SettingsScreenState createState() => _SettingsScreenState();
+  SettingsScreenState createState() => SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class SettingsScreenState extends State<SettingsScreen> {
   bool loading = false;
   String log_bt_rx_log_uri = "";
   Stream<dynamic>? event_stream;
@@ -75,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             int nmpl = mountPointStrList.length;
             await toast("Found $nmpl mountpoints...");
             bool sortByNearest =
-                widget.prefService.get('list_nearest_streams_first') ?? false;
+                prefService.get('list_nearest_streams_first') ?? false;
             developer.log('sort_by_nearest: $sortByNearest');
 
             List<Map<String, String>> mountPointMapList =
@@ -100,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               try {
                 double lastLat = 0;
                 double lastLon = 0;
-                String refLatLon = widget.prefService.get('ref_lat_lon') ?? "";
+                String refLatLon = prefService.get('ref_lat_lon') ?? "";
                 lastPosValid = false;
                 if (refLatLon.contains(",")) {
                   List<String> parts = refLatLon.split(",");
@@ -177,14 +177,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             }
             developer.log("chosen_mountpoint: $chosenMountpoint");
             if (chosenMountpoint != null) {
-              widget.prefService.set('ntrip_mountpoint', chosenMountpoint);
+              prefService.set('ntrip_mountpoint', chosenMountpoint);
 
               //force re-load of selected ntrip_mountpoint
 
               if (mounted) {
                 await Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (BuildContext context) {
-                      return SettingsWidget(widget.prefService);
+                      return SettingsScreen();
                     }));
               }
             }
@@ -192,12 +192,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             String log_uri = eventMap["callback_payload"] as String? ?? "";
             if (log_uri.isNotEmpty) {
               developer.log("set log_uri: $log_uri");
-              widget.prefService.set('log_bt_rx', true);
-              widget.prefService.set('log_bt_rx_log_uri', log_uri);
+              prefService.set('log_bt_rx', true);
+              prefService.set('log_bt_rx_log_uri', log_uri);
             } else {
               developer.log("clear log_uri");
-              widget.prefService.set('log_bt_rx', false);
-              widget.prefService.set('log_bt_rx_log_uri', log_uri);
+              prefService.set('log_bt_rx', false);
+              prefService.set('log_bt_rx_log_uri', log_uri);
             }
             setState(() {
               log_bt_rx_log_uri = Uri.decodeFull(log_uri);
@@ -236,7 +236,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   PrefDropdown(
                       title: const Text(
                           "Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)"),
-                      items: devlist,
+                      items: [], //TODO
                       pref: 'target_bdaddr'),
                   const PrefTitle(title: Text('Bluetooth Connection settings')),
                   const PrefCheckbox(
@@ -256,8 +256,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           "Enable Logging $log_bt_rx_log_uri"),
                       pref: 'log_bt_rx',
                       onChange: (bool? val) async {
-                        widget.prefService.set('log_bt_rx', false); //set to false first and await event from java callback to set to true if all perm/folder set pass
-                        widget.prefService.set("log_bt_rx_log_uri", "");
+                        prefService.set('log_bt_rx', false); //set to false first and await event from java callback to set to true if all perm/folder set pass
+                        prefService.set("log_bt_rx_log_uri", "");
                         setState(() {
                           log_bt_rx_log_uri = "";
                         });

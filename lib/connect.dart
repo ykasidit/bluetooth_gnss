@@ -17,6 +17,7 @@ ValueNotifier<bool> isNtripConnected = ValueNotifier(false);
 ValueNotifier<int> ntripPacketsCount = ValueNotifier(0);
 
 
+
 Future<void> disconnect() async {
   try {
     //call it in any case just to be sure service it is stopped (.close()) method called

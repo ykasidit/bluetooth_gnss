@@ -1,15 +1,15 @@
-import 'package:bluetooth_gnss/connect.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:pref/pref.dart';
-import 'package:share_plus/share_plus.dart';
 import 'dart:developer' as developer;
 
+import 'package:bluetooth_gnss/connect.dart';
+import 'package:bluetooth_gnss/utils.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:pref/pref.dart';
+import 'package:share_plus/share_plus.dart';
+
 import 'const.dart';
+import 'home.dart';
+import 'main.dart';
 import 'native_channels.dart';
 import 'utils_ui.dart';
 
@@ -28,7 +28,7 @@ class ConnectScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> rows = List.empty();
+    List<Widget> rows = [];
     rows.add(
         ValueListenableBuilder<bool>(
           valueListenable: isBtConnThreadConnecting,
@@ -69,14 +69,14 @@ class ConnectScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       String content =
                           "${paramMap['lat_double_07_str'] ?? waitingDev},${paramMap['lon_double_07_str'] ?? waitingDev}"; //no space after comma for sharing to gmaps
-                      Share.share(
-                          'https://www.google.com/maps/search/?api=1&query=$content')
-                          .then((result) {
+                      await Share.share(
+                          'https://www.google.com/maps/search/?api=1&query=$content');
+                      if (context.mounted) {
                         snackbar(context, 'Shared: $content');
-                      });
+                      }
                     },
                     child: const Icon(Icons.share),
                   ),
@@ -84,14 +84,13 @@ class ConnectScreen extends StatelessWidget {
                     padding: EdgeInsets.all(2.0),
                   ),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       String content =
                           "${paramMap['lat_double_07_str'] ?? waitingDev},${paramMap['lon_double_07_str'] ?? waitingDev}";
-                      Clipboard.setData(ClipboardData(text: content))
-                          .then((result) {
-                        snackbar(
-                            context, 'Copied to clipboard: $content');
-                      });
+                      await Clipboard.setData(ClipboardData(text: content));
+                      if (context.mounted) {
+                        snackbar(context, 'Copied to clipboard: $content');
+                      }
                     },
                     child: const Icon(Icons.content_copy),
                   )
@@ -352,49 +351,47 @@ class ConnectScreen extends StatelessWidget {
     ];
     rows.addAll(bottomWidgets);
     return rows;
-  } 
+  }
+
+
 
 Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
       [bool userPressedSettingsTakeActionAndRetSw = false,
       bool userPressedConnectTakeActionAndRetSw = false]) async {
-    _floatingButtonIcon = iconBluetoothSettings;
 
     try {
-      _isBtConnected =
+      isBtConnected.value =
           (await methodChannel.invokeMethod('is_bt_connected')) as bool? ??
               false;
-      _isNtripConnected =
+      isNtripConnected.value =
           (await methodChannel.invokeMethod('is_ntrip_connected')) as bool? ??
               false;
-      ntripPacketsCount =
+      ntripPacketsCount.value =
           (await methodChannel.invokeMethod('get_ntrip_cb_count')) as int? ?? 0;
 
-      if (_isBtConnected) {
+      if (isBtConnected.value) {
         await wakelockEnable();
       } else {
         await wakelockDisable();
       }
 
-      if (_isBtConnected) {
-        _status = "Connected";
-        _floatingButtonIcon = iconConnect;
+      if (isBtConnected.value) {
+        connectStatus.value = "Connected";
 
         try {
           int mockSetMillisAgo;
           DateTime now = DateTime.now();
           int nowts = now.millisecondsSinceEpoch;
-          mockLocationSetStatus = "";
-          mockSetMillisAgo = nowts - _mockLocationSetTs;
+          mockLocationSetStatus.value = "";
+          mockSetMillisAgo = nowts - mockLocationSetTs.value;
           //developer.log("mock_location_set_ts $mock_set_ts, nowts $nowts");
 
           double secsAgo = mockSetMillisAgo / 1000.0;
 
-          if (_mockLocationSetTs == 0) {
+          if (mockLocationSetTs.value == 0) {
               mockLocationSetStatus.value = "Never";
           } else {
-
               mockLocationSetStatus.value = "${secsAgo.toStringAsFixed(3)} Seconds ago";
-
           }
         } catch (e, trace) {
           developer.log('get parsed param exception: $e $trace');
@@ -404,24 +401,24 @@ Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
       }
     } on PlatformException catch (e) {
       await toast("WARNING: check _is_bt_connected failed: $e");
-      _isBtConnected.value = false;
+      isBtConnected.value = false;
     }
 
     try {
-      _isBtConnThreadConnecting.value =
+      isBtConnThreadConnecting.value =
           await methodChannel.invokeMethod('is_conn_thread_alive') as bool? ??
               false;
       developer.log(
-          "_is_bt_conn_thread_alive_likely_connecting: $_isBtConnThreadConnecting");
-      if (_isBtConnThreadConnecting) {
-        setState(() {
-          _status = "Connecting...";
-        });
+          "_is_bt_conn_thread_alive_likely_connecting: ${isBtConnThreadConnecting.value}");
+      if (isBtConnThreadConnecting.value) {
+
+          connectStatus.value = "Connecting...";
+
         return null;
       }
     } on PlatformException catch (e) {
       await toast("WARNING: check _is_connecting failed: $e");
-      _isBtConnThreadConnecting = false;
+      isBtConnThreadConnecting.value = false;
     }
     //developer.log('check_and_update_selected_device1');
 
@@ -433,10 +430,8 @@ Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
     if (notGrantedPermissions.isNotEmpty) {
       String msg =
           "Please allow required app permissions... Re-install app if declined earlier and not seeing permission request pop-up: $notGrantedPermissions";
-      setState(() {
-        _checkStateMapIcon["App permissions"] = iconFail;
-        _status = msg;
-      });
+      _checkStateMapIcon["App permissions"] = iconFail;
+        connectStatus.value = msg;
       return null;
     }
 
@@ -444,10 +439,8 @@ Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
 
     if (!(await isBluetoothOn())) {
       String msg = "Please turn ON Bluetooth...";
-      setState(() {
         _checkStateMapIcon["Bluetooth is OFF"] = iconFail;
-        _status = msg;
-      });
+        connectStatus.value = msg;
       //developer.log('check_and_update_selected_device4');
 
       if (userPressedConnectTakeActionAndRetSw ||
@@ -466,14 +459,11 @@ Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
     //developer.log('check_and_update_selected_device5');
 
     Map<dynamic, dynamic> bdMap = await getBdMap();
-    String bdsum = await getSelectedBdSummary(widget.prefService);
+    String bdsum = await getSelectedBdSummary(prefService);
     if (userPressedSettingsTakeActionAndRetSw) {
       return null;
     }
-    if (!mounted) {
-      return null;
-    }
-    bool gapMode = PrefService.of(context).get('ble_gap_scan_mode') ?? false;
+    bool gapMode = prefService.get('ble_gap_scan_mode') ?? false;
     if (gapMode) {
       //bt ble gap broadcast mode
       _checkStateMapIcon["EcoDroidGPS-Broadcast device mode"] = iconOk;
@@ -482,11 +472,9 @@ Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
       if (bdMap.isEmpty) {
         String msg =
             "Please pair your Bluetooth GPS/GNSS Receiver in phone Settings > Bluetooth first.\n\nClick floating button to go there...";
-        setState(() {
           _checkStateMapIcon["No paired Bluetooth devices"] = iconFail;
-          _status = msg;
-          _selectedDevice = "No paired Bluetooth devices yet...";
-        });
+          connectStatus.value = msg;
+          connectSelectedDevice.value = "No paired Bluetooth devices yet...";
         //developer.log('check_and_update_selected_device6');
         if (userPressedConnectTakeActionAndRetSw ||
             userPressedSettingsTakeActionAndRetSw) {
@@ -494,7 +482,7 @@ Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
             await methodChannel.invokeMethod('open_phone_blueooth_settings');
             await toast("Please pair your Bluetooth GPS/GNSS Device...");
           } on PlatformException {
-            //developer.log("Please open phone Settings and change first (can't redirect screen: $e)");
+            developer.log("Please open phone Settings and change first (can't redirect screen)");
           }
         }
         return null;
@@ -506,43 +494,36 @@ Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
 
       //developer.log('check_and_update_selected_device9');
 
-      if (getSelectedBdaddr(widget.prefService).isEmpty ||
-          (await getSelectedBdname(widget.prefService)).isEmpty) {
+      if (getSelectedBdaddr(prefService).isEmpty ||
+          (await getSelectedBdname(prefService)).isEmpty) {
         String msg =
             "Please select your Bluetooth GPS/GNSS Receiver in Settings (the gear icon on top right)";
         /*Fluttertoast.showToast(
             msg: msg
         );*/
-        setState(() {
+
           _checkStateMapIcon[
                   "No device selected\n(select in top-right settings/gear icon)"] =
               iconFail;
-          _selectedDevice = bdsum;
-          _status = msg;
-        });
+          connectSelectedDevice.value = bdsum;
+          connectStatus.value = msg;
+
         //developer.log('check_and_update_selected_device10');
 
         return null;
       }
-      _checkStateMapIcon["Target device selected:\n$selectedDevice"] = iconOk;
-    }
-
-    //developer.log('check_and_update_selected_device11');
-    if (!mounted) {
-      return null;
+      _checkStateMapIcon["Target device selected:\n${connectSelectedDevice.value}"] = iconOk;
     }
     bool checkLocation =
-        PrefService.of(context).get('check_settings_location') ?? true;
+        prefService.get('check_settings_location') ?? true;
 
     if (checkLocation) {
       if (!(await isLocationEnabled())) {
         String msg =
             "Location needs to be on and set to 'High Accuracy Mode' - Please go to phone Settings > Location to change this...";
-        setState(() {
           _checkStateMapIcon["Location must be ON and 'High Accuracy'"] =
               iconFail;
-          _status = msg;
-        });
+          connectStatus.value = msg;
 
         //developer.log('pre calling open_phone_location_settings() user_pressed_connect_take_action_and_ret_sw $user_pressed_connect_take_action_and_ret_sw');
 
@@ -566,11 +547,9 @@ Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
     if (!(await isMockLocationEnabled())) {
       String msg =
           "Please go to phone Settings > Developer Options > Under 'Debugging', set 'Mock Location app' to 'Bluetooth GNSS'...";
-      setState(() {
         _checkStateMapIcon["'Mock Location app' not 'Bluetooth GNSS'\n"] =
             iconFail;
-        _status = msg;
-      });
+        connectStatus.value = msg;
       //developer.log('check_and_update_selected_device14');
       if (userPressedConnectTakeActionAndRetSw) {
         try {
@@ -585,26 +564,23 @@ Future<Map<dynamic, dynamic>?> checkUpdateSelectedDev(
     }
     //developer.log('check_and_update_selected_device15');
     _checkStateMapIcon[
-            "'Mock Location app' is 'Bluetooth GNSS'\n$notHowToDisableMockLocation"] =
+            "'Mock Location app' is 'Bluetooth GNSS'\n"] =
         iconOk;
 
-    if (_isBtConnected == false && _isBtConnThreadConnecting) {
-      setState(() {
-        _floatingButtonIcon = iconConnecting;
-      });
+    if (isBtConnected.value == false && isBtConnThreadConnecting.value) {
+      floatingButtonIcon.value = iconConnecting.icon!;
       //developer.log('check_and_update_selected_device16');
     } else {
       //ok - ready to connect
-      setState(() {
-        _status = "Please press the floating button to connect...";
-        _floatingButtonIcon = iconConnect;
-      });
+
+        connectStatus.value = "Please press the floating button to connect...";
+        floatingButtonIcon.value = iconConnect.icon!;
+
       //developer.log('check_and_update_selected_device17');
     }
 
-    setState(() {
-      _selectedDevice = bdsum;
-    });
+
+      connectSelectedDevice.value = bdsum;
 
     //setState((){});
     //developer.log('check_and_update_selected_device18');
@@ -912,11 +888,7 @@ List<Widget> getDevSepcificRows(BuildContext context) {
         Text('N Sats used TOTAL:',
             style: Theme.of(context).textTheme.bodySmall),
         Text(
-            ((paramMap["GP_n_sats_used"] ?? 0) +
-                    (paramMap["GL_n_sats_used"] ?? 0) +
-                    (paramMap["GA_n_sats_used"] ?? 0) +
-                    (paramMap["GB_n_sats_used"] ?? 0) +
-                    (paramMap["GQ_n_sats_used"] ?? 0))
+            (paramMap["n_sats_used"] ?? 0)
                 .toString(),
             style: Theme.of(context).textTheme.bodySmall),
       ],

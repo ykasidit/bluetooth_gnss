@@ -1,6 +1,10 @@
+import 'dart:developer' as developer;
+
 import 'package:bluetooth_gnss/connect_screen.dart';
 import 'package:bluetooth_gnss/screen_settings.dart';
+import 'package:bluetooth_gnss/utils_ui.dart';
 import 'package:flutter/material.dart';
+import 'connect.dart';
 import 'screen_map.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,9 +18,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
 
   final screens = [
-    ConnectScreen(),
-    MapScreen(),
-    SettingsScreen(),
+    const MapScreen(),
+    const ConnectScreen(),
+    const SettingsScreen(),
   ];
 
   @override
@@ -71,13 +75,19 @@ class _HomeScreenState extends State<HomeScreen> {
           NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.play_arrow),
-        label: const Text('Start GPS'),
-        onPressed: () {
-          // Start GNSS logic here
+      floatingActionButton:  FloatingActionButton(
+        onPressed: () async {
+          try {
+            await connect();
+          } catch (ex, tr) {
+            developer.log("connect exception: $ex: $tr");
+          }
         },
+        tooltip: "Connect",
+        child: reactiveIcon(floatingButtonIcon),
       ),
     );
   }
 }
+
+ValueNotifier<IconData> floatingButtonIcon = ValueNotifier(Icons.bluetooth);

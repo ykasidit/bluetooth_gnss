@@ -3,12 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pref/pref.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-import 'screen_settings.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 const methodChannel =
       MethodChannel("com.clearevo.bluetooth_gnss/engine");
@@ -34,8 +29,8 @@ class Message {
     }
 }
 
-List MESSAGE_NAMES_CACHE = [];
-List MESSAGE_LIST_CACHE = [];
+List<String> MESSAGE_NAMES_CACHE = [];
+List<Message> MESSAGE_LIST_CACHE = [];
 const maxMsgListSize = 1000;
 
 void initEventChannels() {
