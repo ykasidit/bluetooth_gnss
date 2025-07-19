@@ -40,7 +40,7 @@ public class test_nmea_parse_multi_gsv_signal_ids {
         n_sats = (Integer) params.get("GP_n_sats_in_view");
         System.out.println("n_sats: "+n_sats);
         assertTrue(n_sats == 14);
-        assertTrue(params.get("GP_gsv_signal_id_list_str").equals("[1, 6, 0]"));
+        assertTrue(params.get("GP_gsv_signal_id_list").toString().equals("[1, 6, 0]"));
 
 
         //simulate second set of less sats
@@ -60,7 +60,7 @@ public class test_nmea_parse_multi_gsv_signal_ids {
         n_sats = (Integer) params.get("GP_n_sats_in_view");
         System.out.println("n_sats: "+n_sats);
         assertTrue(n_sats == 12);
-        assertTrue(params.get("GP_gsv_signal_id_list_str").equals("[1, 6]"));
+        assertTrue(params.get("GP_gsv_signal_id_list").toString().equals("[1, 6]"));
 
 
         //geoff example 1 assert
@@ -79,7 +79,7 @@ public class test_nmea_parse_multi_gsv_signal_ids {
         n_sats = (Integer) params.get("GP_n_sats_in_view");
         System.out.println("n_sats: "+n_sats);
         assertTrue(n_sats == 9);
-        assertTrue(params.get("GP_gsv_signal_id_list_str").equals("[1, 6]"));
+        assertTrue(params.get("GP_gsv_signal_id_list").toString().equals("[1, 6]"));
 
 
         //geoff example 2 assert
@@ -99,7 +99,7 @@ public class test_nmea_parse_multi_gsv_signal_ids {
         n_sats = (Integer) params.get("GL_n_sats_in_view");
         System.out.println("GL n_sats: "+n_sats);
         assertTrue(n_sats == 10);
-        assertTrue(params.get("GL_gsv_signal_id_list_str").equals("[1, 3, 0]"));
+        assertTrue(params.get("GL_gsv_signal_id_list").toString().equals("[1, 3, 0]"));
 
 
     }

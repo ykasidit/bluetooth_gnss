@@ -15,4 +15,5 @@ public class GnssConnectionParams implements Serializable {
     public boolean ble_uart_mode;
     public boolean autostart;
     public final Map<String, String> extraParams = new HashMap<>();
+    public long mock_location_timestamp_offset_millis;
 }

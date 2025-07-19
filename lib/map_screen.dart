@@ -4,7 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
 class MapScreen extends StatelessWidget {
-  const MapScreen({super.key});
+  MapScreen({super.key});
+  final mapController = MapController();
 
   Future<void> _startLocationUpdates() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -13,28 +14,60 @@ class MapScreen extends StatelessWidget {
       return;
     }
     LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
       permission = await Geolocator.requestPermission();
     }
     Geolocator.getPositionStream(
       locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
     ).listen((Position position) {
+      var pos = LatLng(position.latitude, position.longitude);
+      mapController.move(pos, 12);
       androidLocation.value = LatLng(position.latitude, position.longitude);
-    });
-
-    // Simulate external GNSS device update
-    Future.delayed(const Duration(seconds: 3), () {
-      bluetoothLocation.value = const LatLng(13.7570, 100.5025);
+      bluetoothLocation.value = LatLng(position.latitude, position.longitude);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     _startLocationUpdates();
-    return ValueListenableBuilder<LatLng?>(
+
+    MapOptions mapOptions = MapOptions(
+      keepAlive: true,
+      cameraConstraint: const CameraConstraint.containLatitude(),
+    );
+    return FlutterMap(
+      mapController: mapController,
+      options: mapOptions,
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.clearevo.bluetooth_gnss',
+        ),
+        MarkerLayer(
+          markers: [
+            if (androidLocation.value != null)
+              Marker(
+                point: androidLocation.value!,
+                width: 40,
+                height: 40,
+                child: const Icon(Icons.phone_android, color: Colors.green),
+              ),
+            if (bluetoothLocation.value != null)
+              Marker(
+                point: bluetoothLocation.value!,
+                width: 40,
+                height: 40,
+                child: const Icon(Icons.bluetooth, color: Colors.blue),
+              ),
+          ],
+        )
+      ],
+    );
+    /*ValueListenableBuilder<LatLng?>(
       valueListenable: androidLocation,
       builder: (context, androidPos, _) {
-        final center = androidPos ?? const LatLng(13.7563, 100.5018);
+        final center = androidPos ?? const LatLng(0, 0);
 
         return FlutterMap(
           options: MapOptions(
@@ -44,7 +77,7 @@ class MapScreen extends StatelessWidget {
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.hybrid_gnss',
+              userAgentPackageName: 'com.clearevo.bluetooth_gnss',
             ),
             ValueListenableBuilder<LatLng?>(
               valueListenable: bluetoothLocation,
@@ -56,14 +89,14 @@ class MapScreen extends StatelessWidget {
                         point: androidPos,
                         width: 40,
                         height: 40,
-                        child: const Icon(Icons.phone_android, color: Colors.blue),
+                        child: const Icon(Icons.phone_android, color: Colors.green),
                       ),
                     if (btPos != null)
                       Marker(
                         point: btPos,
                         width: 40,
                         height: 40,
-                        child: const Icon(Icons.gps_fixed, color: Colors.green),
+                        child: const Icon(Icons.bluetooth, color: Colors.blue),
                       ),
                   ],
                 );
@@ -72,10 +105,9 @@ class MapScreen extends StatelessWidget {
           ],
         );
       },
-    );
+    );*/
   }
 }
 
 final ValueNotifier<LatLng?> androidLocation = ValueNotifier(null);
 final ValueNotifier<LatLng?> bluetoothLocation = ValueNotifier(null);
-

@@ -71,6 +71,7 @@ public class Util {
         intent.putExtra("disable_ntrip", gnssConnectionParams.disableNtrip);
         intent.putExtra(ble_qstarz_mode, gnssConnectionParams.ble_qstarz_mode);
         intent.putExtra(ble_uart_mode, gnssConnectionParams.ble_uart_mode);
+        intent.putExtra("mock_location_timestamp_offset_millis", gnssConnectionParams.mock_location_timestamp_offset_millis);
         Log.d(TAG, "gnssConnectionParams.isGapMode(): "+ gnssConnectionParams.gapMode);
         intent.putExtra(bluetooth_gnss_service.BLE_GAP_SCAN_MODE, gnssConnectionParams.gapMode);
         Log.d(TAG, "mainact extra_params: " + gnssConnectionParams.extraParams);
@@ -108,5 +109,7 @@ public class Util {
         Log.d(TAG, "connect(): startservice ssret: " + ssret.flattenToString());
         return 0;
     }
+
+
 
 }

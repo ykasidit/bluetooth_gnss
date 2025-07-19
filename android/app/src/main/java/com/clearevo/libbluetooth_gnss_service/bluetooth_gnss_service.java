@@ -3,9 +3,14 @@ package com.clearevo.libbluetooth_gnss_service;
 
 import static android.app.PendingIntent.FLAG_IMMUTABLE;
 import static android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+import static com.clearevo.bluetooth_gnss.MainActivity.get_bd_map;
+import static com.clearevo.libbluetooth_gnss_service.Log.LogObserver;
+import static com.clearevo.libbluetooth_gnss_service.Log.d;
+import static com.clearevo.libbluetooth_gnss_service.Log.e;
+import static com.clearevo.libbluetooth_gnss_service.Log.getStackTraceString;
+import static com.clearevo.libbluetooth_gnss_service.Log.m_log_operations_fos;
+import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.AppOpsManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -14,41 +19,26 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanRecord;
-import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.location.provider.ProviderProperties;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.ParcelUuid;
-
-
-
-import android.widget.Toast;
-import android.location.LocationManager;
-import android.location.LocationProvider;
-import android.os.Build;
 import android.os.SystemClock;
-import android.location.Location;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.documentfile.provider.DocumentFile;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.OutputStream;
@@ -64,19 +54,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import static com.clearevo.bluetooth_gnss.MainActivity.get_bd_map;
-import static com.clearevo.libbluetooth_gnss_service.Log.*;
-import static com.clearevo.libbluetooth_gnss_service.Log.m_log_operations_fos;
-import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
-import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.toHexString;
-
-
-import com.clearevo.bluetooth_gnss.MainActivity;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 //import com.flutter_rust_bridge.rust_lib_bluetooth_gnss.BuildConfig; //test that it can access
 
 
@@ -88,27 +65,15 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
     static final String TAG = "btgnss_service";
-    static final long BLE_GAP_SCAN_LOOP_DURAITON_MILLIS = 3000;
-    String ECODROIDGPS_BROADCAST_MODE = "ECODROIDGPS_BROADCAST";
     public static final String BLE_GAP_SCAN_MODE = "ble_gap_scan_mode";
-    public static final UUID eddystone_service_uuid = UUID.fromString("0000feaa-0000-1000-8000-00805f9b34fb");  //https://proandroiddev.com/scanning-google-eddystone-in-android-application-cf181e0a8648
     public static final UUID nordic_uart_service_uuid = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
-    public static final UUID nordic_chrc_rx_uuid = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E");
-    public static final UUID nordic_chrc_tx_uuid = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
     public static final UUID qstarz_chrc_tx_uuid = UUID.fromString("6E400004-B5A3-F393-E0A9-E50E24DCCA9E");
-    public static final long BLE_GAP_SCAN_MODE_SETMOCK_INTERVAL = 1000;
     String[] SATS_USED_KEYS = new String[]{"GP_n_sats_used", "GL_n_sats_used", "GA_n_sats_used", "GB_n_sats_used", "GQ_n_sats_used"};
-
-
-    public long m_last_BLE_GAP_SCAN_MODE_SETMOCK_ts = 0;
-    public String m_last_BLE_GAP_DEV_NAME = "";
 
     rfcomm_conn_mgr g_rfcomm_mgr = null;
     ntrip_conn_mgr m_ntrip_conn_mgr = null;
     private gnss_sentence_parser m_gnss_parser = new gnss_sentence_parser();
 
-    final String EDG_DEVICE_PREFIX = "EcoDroidGPS";
-    public static final String BROADCAST_ACTION_NMEA = "com.clearevo.bluetooth_gnss.NMEA";
     Thread m_connecting_thread = null;
     Thread m_ntrip_connecting_thread = null;
     Handler m_handler = new Handler();
@@ -123,7 +88,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     boolean m_ubx_mode = true;
     boolean m_ubx_send_enable_extra_used_packets = true;
-    boolean m_ubx_send_disable_extra_used_packets = false;
     boolean m_send_gga_to_ntrip = true;
     boolean m_all_ntrip_params_specified = false;
     long m_last_ntrip_gga_send_ts = 0;
@@ -131,16 +95,20 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String[] REQUIRED_INTENT_EXTRA_PARAM_KEYS = {"ntrip_host", "ntrip_port", "ntrip_mountpoint", "ntrip_user", "ntrip_pass"};
     String m_log_bt_rx_log_uri = "";
     boolean m_disable_ntrip = false;
-    boolean m_ble_gap_scan_mode = false;
     boolean m_ble_qstarz_mode = false;
     OutputStream m_log_bt_rx_fos = null;
     OutputStream m_log_bt_rx_csv_fos = null;
     long log_bt_rx_bytes_written = 0;
     public static bluetooth_gnss_service curInstance = null;
-
+    long mock_location_timestamp_offset_millis = 0;
 
     public static final String ble_uart_mode = "ble_uart_mode";
     public static final String ble_qstarz_mode = "ble_qstarz_mode";
+
+    File bt_gnss_test_debug_mock_location_1_1_mode_flag = new File("/sdcard/bt_gnss_test_debug_mock_location_1_1_mode_flag");
+    public static final String POSITION_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE";
+    public static final String PARSED_NMEA_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.PARSED_NMEA_UPDATE";
+    public static final String INTENT_EXTRA_DATA_JSON_KEY = "data_json";
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -154,7 +122,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         if (intent != null) {
             try {
 
-                m_ble_gap_scan_mode = intent.getBooleanExtra(BLE_GAP_SCAN_MODE, false);
+
                 m_ble_qstarz_mode = intent.getBooleanExtra(ble_qstarz_mode, false);
 
                 {
@@ -165,6 +133,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
                     m_log_bt_rx_log_uri = intent.getStringExtra("log_bt_rx_log_uri");
                     m_disable_ntrip = intent.getBooleanExtra("disable_ntrip", false);
+                    mock_location_timestamp_offset_millis = intent.getLongExtra("mock_location_timestamp_offset_millis", 0);
                     log(TAG, "m_secure_rfcomm: " + m_secure_rfcomm);
                     log(TAG, "m_log_bt_rx_log_uri: " + m_log_bt_rx_log_uri);
                     log(TAG, "m_disable_ntrip: " + m_disable_ntrip);
@@ -210,12 +179,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String log_uri_pref_key = "flutter.pref_log_uri";
 
     void connect() {
-        if (m_ble_gap_scan_mode) {
-            log(TAG, "onStartCommand pre call start_forground m_ble_gap_scan_mode " + m_ble_gap_scan_mode);
-            start_foreground("Scanning GPS broadcasts...", "", "");
-            log(TAG, "onStartCommand post call start_forground m_ble_gap_scan_mode " + m_ble_gap_scan_mode);
-            handle_ble_gap_scan_enable_changed();
-        } else {
+        {
             if (m_bdaddr == null) {
                 String msg = "bluetooth_gnss_service: startservice: Target Bluetooth device not specifed - cannot start...";
                 log(TAG, msg);
@@ -237,147 +201,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 log(TAG, "m_all_ntrip_params_specified: " + m_all_ntrip_params_specified);
                 //ntrip connection would start after we get next gga bashed on this m_all_ntrip_params_specified flag
             }
-        }
-    }
-
-    Thread ble_gap_scan_thread = null;
-
-    public boolean is_ble_gap_scan_thread_running() {
-        return ble_gap_scan_thread != null && ble_gap_scan_thread.isAlive();
-    }
-
-    //credit to https://github.com/joelwass/Android-BLE-Scan-Example/blob/master/app/src/main/java/com/example/joelwasserman/androidbletutorial/MainActivity.java
-    private ScanCallback leScanCallback = new ScanCallback() {
-
-        @SuppressLint("MissingPermission")
-        //we already have permissions if we have the scan result called back
-        @Override
-        public void onScanResult(int callbackType, ScanResult result) {
-            super.onScanResult(callbackType, result);
-            if (result == null) {
-                log(TAG, "WARNING: onScanResult got null result");
-                return;
-            }
-            log(TAG, "lescancallback onScanResult Device Name: " + result.getDevice().getName() + " rssi: " + result.getRssi());
-            if (m_ble_gap_scan_mode) {
-                byte[] scan_record_bytes = null;
-                ScanRecord scanRecord = result.getScanRecord();
-                scan_record_bytes = scanRecord.getBytes();
-                if (scan_record_bytes == null) {
-                    scan_record_bytes = new byte[0];
-                }
-                log(TAG, "onScanResult Device Name: " + result.getDevice().getName() + " rssi: " + result.getRssi() + " scanrecord bytes: " + toHexString(scan_record_bytes));
-                //ex: 02 01 1A 04 09 45 44 47 03 03 AA FE 12 16 AA FE 30 00 E1 6A 6D FD 03 10 9B 91 3C 38 50 32 28 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-                parse_scan_record_bytes_and_set_location(scan_record_bytes);
-                m_last_BLE_GAP_DEV_NAME = result.getDevice().getName();
-            }
-        }
-    };
-
-
-
-
-    public void parse_scan_record_bytes_and_set_location(byte[] gap_buffer) {
-
-        if (closing) {
-            d(TAG, "parse_scan_record_bytes_and_set_location ignore as already closing");
-            return;
-        }
-
-        long now = System.currentTimeMillis();
-
-        //handle system time change
-        if (m_last_BLE_GAP_SCAN_MODE_SETMOCK_ts != 0) {
-            if (now < m_last_BLE_GAP_SCAN_MODE_SETMOCK_ts || now > (m_last_BLE_GAP_SCAN_MODE_SETMOCK_ts + 2 * BLE_GAP_SCAN_MODE_SETMOCK_INTERVAL)) {
-                m_last_BLE_GAP_SCAN_MODE_SETMOCK_ts = 0;
-            }
-        }
-
-        if (now - m_last_BLE_GAP_SCAN_MODE_SETMOCK_ts > BLE_GAP_SCAN_MODE_SETMOCK_INTERVAL) {
-            m_last_BLE_GAP_SCAN_MODE_SETMOCK_ts = now; //ok
-        } else {
-            return; //dont parse/announce locaiton yet
-        }
-        try {
-            ecodroidgps_gap_buffer_parser.ecodroidgps_broadcasted_location loc = ecodroidgps_gap_buffer_parser.parse(gap_buffer);
-            log(TAG, "ECODROIDGPS_BROADCAST_MODE got broadcast: lat: " + loc.lat + " lon: " + loc.lon + " timestamp: " + loc.timestamp);
-
-            int n_sats = 0;
-            double lat = loc.lat, lon = loc.lon, alt = 0.0, hdop = 0.0, speed = 0.0, bearing = 0.0 / 0.0;
-            double accuracy = hdop * get_connected_device_CEP();
-            m_gnss_parser.put_param("GN", "time", loc.timestamp_str);
-            setMock(lat, lon, alt, (float) accuracy, (float) bearing, (float) speed, false, n_sats, hdop, "GN", loc.timestamp);
-
-            HashMap<String, Object> param_map = m_gnss_parser.getM_parsed_params_hashmap();
-            log(TAG, "ble gap lat: " + param_map.get("lat_double_07_str"));
-            log(TAG, "ble gap lon: " + param_map.get("lon_double_07_str"));
-            try {
-                if (m_activity_for_nmea_param_callbacks != null) {
-                    m_activity_for_nmea_param_callbacks.onPositionUpdate(param_map);
-                }
-            } catch (Exception e) {
-                log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: " + getStackTraceString(e));
-            }
-
-        } catch (Throwable tr) {
-            log(TAG, "parse_scan_record_bytes_and_set_location exception: " + getStackTraceString(tr));
-        }
-    }
-
-    public void handle_ble_gap_scan_enable_changed() {
-        log(TAG, "handle_ble_gap_scan_enable_changed() m_ble_gap_scan_mode " + m_ble_gap_scan_mode);
-        if (m_ble_gap_scan_mode || m_ble_qstarz_mode) {
-            if (is_ble_gap_scan_thread_running()) {
-                log(TAG, "handle_ble_gap_scan_enable_changed() m_ble_gap_scan_mode " + m_ble_gap_scan_mode + " already running so omit");
-            } else {
-                ble_gap_scan_thread = new Thread() {
-                    public void run() {
-                        log(TAG, "ble_gap_scan_thread START");
-                        BluetoothLeScanner btLeScanner = null;
-                        boolean scan_stopped = false;
-                        try {
-
-                            //credit to https://github.com/joelwass/Android-BLE-Scan-Example/blob/master/app/src/main/java/com/example/joelwasserman/androidbletutorial/MainActivity.java
-                            BluetoothManager btManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-                            BluetoothAdapter btAdapter = btManager.getAdapter();
-                            List<ScanFilter> filters = new ArrayList<>();
-
-                            if (m_ble_gap_scan_mode) {
-                                filters.add(
-                                        new ScanFilter.Builder()
-                                                .setServiceUuid(new ParcelUuid(eddystone_service_uuid))
-                                                .build());
-                                ScanSettings settings = new ScanSettings.Builder()
-                                        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                                        .build();
-
-                                btLeScanner = btAdapter.getBluetoothLeScanner();
-
-                                while (ble_gap_scan_thread == this) {
-                                    log(TAG, "btLeScanner.startScan(leScanCallback); START");
-                                    btLeScanner.startScan(filters, settings, leScanCallback);
-                                    log(TAG, "btLeScanner.startScan(leScanCallback); DONE");
-                                    Thread.sleep(BLE_GAP_SCAN_LOOP_DURAITON_MILLIS);
-                                }
-                            }
-                        } catch (Throwable tr) {
-                            log(TAG, "ble_gap_scan_thread hash " + this.hashCode() + " failed with exception: " + getStackTraceString(tr));
-                        } finally {
-                            try {
-                                if (btLeScanner != null) {
-                                    btLeScanner.stopScan(leScanCallback);
-                                }
-                            } catch (Throwable tr) {
-                            }
-                            close();
-                        }
-                        log(TAG, "ble_gap_scan_thread END");
-                    }
-                };
-                ble_gap_scan_thread.start();
-            }
-        } else {
-            close();
         }
     }
 
@@ -425,12 +248,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     long last_ntrip_connect_retry = 0;
 
     public boolean is_bt_connected() {
-        if (m_ble_gap_scan_mode) {
-            if (System.currentTimeMillis() - m_last_BLE_GAP_SCAN_MODE_SETMOCK_ts < BLE_GAP_SCAN_MODE_SETMOCK_INTERVAL * 3) {
-                return true;
-            }
-            return false;
-        }
         if (g_rfcomm_mgr != null && g_rfcomm_mgr.is_bt_connected()) {
             return true;
         }
@@ -438,8 +255,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
     public boolean is_trying_bt_connect() {
-        if (is_ble_gap_scan_thread_running())
-            return true;
         return m_connecting_thread != null && m_connecting_thread.isAlive();
     }
 
@@ -554,8 +369,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 if (g_rfcomm_mgr != null) {
                     g_rfcomm_mgr.close();
                 }
-
-                BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+                try {
+                    BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+                } catch (Throwable tr) {}
                 BluetoothDevice dev = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(bdaddr);
 
                 if (dev == null) {
@@ -663,12 +479,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         log(TAG, "close()0");
         deactivate_mock_location();
 
-        if (is_ble_gap_scan_thread_running()) {
-            try {
-                ble_gap_scan_thread.interrupt();
-            } catch (Throwable tr) {}
-            ble_gap_scan_thread = null;
-        }
 
         boolean was_connected = false;
 
@@ -915,13 +725,22 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 }
                 HashMap<String, Object> param_map = m_gnss_parser.getM_parsed_params_hashmap();
                 HashMap<String, Object> qstarz_param_map = jsonToMap(object);
+                String talker = "QSTARZ";
                 for (String key : qstarz_param_map.keySet()) {
                     Object value = qstarz_param_map.get(key);
-                    String talker = "QSTARZ";
                     m_gnss_parser.put_param(talker, key, value);
                 }
-                log(TAG, "qstarz ble lat: " + param_map.get("lat_double_07_str"));
-                log(TAG, "qstarz ble lon: " + param_map.get("lon_double_07_str"));
+                {
+                    String ts = QstarzUtils.getQstarzDatetime((Integer) param_map.get("QSTARZ_timestamp_s"), (Integer) param_map.get("QSTARZ_millisecond"));
+                    m_gnss_parser.put_param(talker, "timestamp", ts);
+                }
+                {
+                    String rcr = QstarzUtils.getQstarzRCRLogType((int) param_map.get("QSTARZ_rcr").toString().charAt(0));
+                    m_gnss_parser.put_param(talker, "rcr_logtype", rcr);
+                }
+
+                //log(TAG, "qstarz ble lat: " + param_map.get("lat"));
+                //log(TAG, "qstarz ble lon: " + param_map.get("lon"));
                 try {
                     if (m_activity_for_nmea_param_callbacks != null) {
                         m_activity_for_nmea_param_callbacks.onPositionUpdate(param_map);
@@ -931,7 +750,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 }
                 d(TAG, "on_read_object ondevicemessage success");
             } catch (Exception e) {
-                Log.d(TAG, "WARNING: on_read_object m_ble_qstarz_mode exception: "+Log.getStackTraceString(e));
+                log(TAG, "WARNING: on_read_object m_ble_qstarz_mode exception: "+Log.getStackTraceString(e));
             }
         }
     }
@@ -1002,7 +821,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             return test_can_create_file(context, log_uri);
         } catch (Throwable tr) {
             String msg = "WARNING: test_can_create_file_in_chosen_folder failed exception: "+ getStackTraceString(tr);
-            android.util.Log.d(TAG, msg);
+            log(TAG, msg);
             return false;
         }
     }
@@ -1018,7 +837,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             }
         } catch (Throwable tr) {
             String msg = "WARNING: test_can_create_file failed exception: "+ getStackTraceString(tr);
-            android.util.Log.d(TAG, msg);
+            log(TAG, msg);
             return false;
         }
         return false;
@@ -1052,7 +871,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         return getApplicationContext().getContentResolver().openOutputStream(df.getUri());
     }
 
-    public boolean prepare_log_output_streams(String log_folder_uri_str) {
+    public void prepare_log_output_streams(String log_folder_uri_str) {
         try {
             if (log_folder_uri_str == null) {
                 throw new Exception("no log folder set in settings");
@@ -1079,12 +898,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             m_log_bt_rx_csv_fos.write("time,lat,lon,alt\n".getBytes());
             m_log_bt_rx_csv_fos.flush();
             log(TAG, "log_bt_rx: m_log_bt_rx_fos ready");
-            return true;
         } catch (Throwable tr) {
             String msg = "WARNING: Logging failed - pls re-tick 'Settings' > 'Enable logging' - error:\n"+ getStackTraceString(tr);
             toast(msg);
-            android.util.Log.d(TAG, msg);
-            return false;
+            log(TAG, msg);
         }
     }
 
@@ -1118,7 +935,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     }
                 }
             }
-            m_activity_for_nmea_param_callbacks.onDeviceMessage(gnss_sentence_parser.MessageType.NMEA, parsed_nmea);
+            if (parsed_nmea != null) {
+                m_activity_for_nmea_param_callbacks.onDeviceMessage(gnss_sentence_parser.MessageType.NMEA, parsed_nmea);
+            }
         } catch (Exception e) {
             log(TAG, "bluetooth_gnss_service on_readline parse exception: "+ getStackTraceString(e));
         }
@@ -1264,22 +1083,23 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 mock_enabled = !android.provider.Settings.Secure.getString(context.getContentResolver(), "mock_location").equals("0");
             }
         } catch(Exception e) {
-            log(TAG, "check mock_enabled exception: "+ getStackTraceString(e));
+            if (e instanceof java.lang.SecurityException) {
+                //no need to print - expected
+            } else {
+                log(TAG, "check mock_enabled exception: " + getStackTraceString(e));
+            }
+            mock_enabled = false;
         }
         //log(TAG,"is_mock_location_enabled ret "+mock_enabled);
         return mock_enabled;
     }
 
-    File bt_gnss_test_debug_mock_location_1_1_mode_flag = new File("/sdcard/bt_gnss_test_debug_mock_location_1_1_mode_flag");
-    public static final String POSITION_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE";
-    public static final String PARSED_NMEA_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.PARSED_NMEA_UPDATE";
-    public static final String INTENT_EXTRA_DATA_JSON_KEY = "data_json";
+
     private void setMock(double latitude, double longitude, double altitude, float accuracy, float bearing, float speed, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long new_ts) {
         if (closing) {
             d(TAG, "setmock ignore as already closing");
             return;
         }
-        long ts = System.currentTimeMillis();
 
         try {
             if (bt_gnss_test_debug_mock_location_1_1_mode_flag.isFile()) {
@@ -1291,31 +1111,14 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             log(TAG, "WARNING: check bt_gnss_test_debug_mock_location_1_1_mode_flag exception: "+ getStackTraceString(tr));
         }
 
-        try {
-            Intent intent = new Intent();
-            intent.setAction(POSITION_UPDATE_INTENT_ACTION);
-            JSONObject jo = new JSONObject();
-            try {jo.put("java_ts", ts);} catch (Exception e) {}
-            try {jo.put("latitude", latitude);} catch (Exception e) {}
-            try {jo.put("longitude", longitude);} catch (Exception e) {}
-            try {jo.put("altitude", altitude);} catch (Exception e) {}
-            try {jo.put("accuracy", accuracy);} catch (Exception e) {}
-            try {jo.put("bearing", bearing);} catch (Exception e) {}
-            try {jo.put("speed", speed);} catch (Exception e) {}
-            try {jo.put("n_sats", n_sats);} catch (Exception e) {}
-            intent.putExtra(INTENT_EXTRA_DATA_JSON_KEY, jo.toString());
-            getApplicationContext().sendBroadcast(intent);
-        } catch (Throwable tr) {
-            log(TAG, "WARNING: broadcast position intent failed exception: "+ getStackTraceString(tr));
-        }
-
-        log(TAG, "setMock accuracy_meters: "+accuracy);
-
         activate_mock_location(); //this will check a static flag and not re-activate if already active
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
+        long mock_ts = new_ts + mock_location_timestamp_offset_millis;
+        m_gnss_parser.put_param("", "mock_location_actual_ts", new_ts);
+        m_gnss_parser.put_param("", "mock_location_set_ts", mock_ts);
+        m_gnss_parser.put_param("", "mock_location_timestamp_offset_millis", mock_location_timestamp_offset_millis);
         Location newLocation = new Location(LocationManager.GPS_PROVIDER);
-        newLocation.setTime(System.currentTimeMillis());
+        newLocation.setTime(mock_ts);
         newLocation.setLatitude(latitude);
         newLocation.setLongitude(longitude);
         newLocation.setAccuracy(accuracy);
@@ -1335,21 +1138,51 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             newLocation.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
 
         }
+
+        /// //////////// legacy way
+        /*This method was deprecated in API level 29.
+         This method has no effect.*/
         locationManager.setTestProviderStatus(LocationManager.GPS_PROVIDER,
                 LocationProvider.AVAILABLE,
-                null,System.currentTimeMillis());
-        log(TAG, "setMock lat: "+newLocation.getLatitude());
-        log(TAG, "setMock lon: "+newLocation.getLongitude());
-        if (newLocation.getExtras() != null) {
-            log(TAG, "setMock satellites: " + newLocation.getExtras().getInt("satellites"));
-        }
+                null, mock_ts);
+        /// ///////////////////
+
+        /// ////// modern way
         for (String provider : new String[]{LocationManager.GPS_PROVIDER, LocationManager.FUSED_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER}) {
             try {
                 locationManager.setTestProviderLocation(provider, newLocation);
             } catch (Throwable tr) {
-                log("WARNING: setTestProviderLocation for provider: "+provider+" exception: "+tr);
+                if (!provider.equals(LocationManager.GPS_PROVIDER) && (""+tr).contains("unknown")) {
+                    //ok
+                } else {
+                    log("WARNING: setTestProviderLocation for provider: " + provider + " exception: " + tr);
+                }
             }
         }
+        /// /////////////////
+
+
+        long intent_pos_broadcast_ts = System.currentTimeMillis();
+        try {
+            Intent intent = new Intent();
+            intent.setAction(POSITION_UPDATE_INTENT_ACTION);
+            JSONObject jo = new JSONObject();
+            try {jo.put("java_ts", intent_pos_broadcast_ts);} catch (Exception e) {}
+            try {jo.put("system_ts", intent_pos_broadcast_ts);} catch (Exception e) {}
+            try {jo.put("gnss_ts", new_ts);} catch (Exception e) {}
+            try {jo.put("latitude", latitude);} catch (Exception e) {}
+            try {jo.put("longitude", longitude);} catch (Exception e) {}
+            try {jo.put("altitude", altitude);} catch (Exception e) {}
+            try {jo.put("accuracy", accuracy);} catch (Exception e) {}
+            try {jo.put("bearing", bearing);} catch (Exception e) {}
+            try {jo.put("speed", speed);} catch (Exception e) {}
+            try {jo.put("n_sats", n_sats);} catch (Exception e) {}
+            intent.putExtra(INTENT_EXTRA_DATA_JSON_KEY, jo.toString());
+            getApplicationContext().sendBroadcast(intent);
+        } catch (Throwable tr) {
+            log(TAG, "WARNING: broadcast position intent failed exception: "+ getStackTraceString(tr));
+        }
+        m_gnss_parser.put_param("", "intent_pos_broadcast_ts", intent_pos_broadcast_ts);
 
         //////////////hooks
         m_gnss_parser.put_param("", "hdop", hdop);
@@ -1362,7 +1195,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             m_gnss_parser.put_param("", "course", bearing);
         m_gnss_parser.put_param("", "n_sats", n_sats);
         m_gnss_parser.put_param("", "accuracy", accuracy);
-        m_gnss_parser.put_param("", "mock_location_set_ts", System.currentTimeMillis());
+
+        //intent_pos_broadcast_ts
         if (log_file_uri != null) {
             m_gnss_parser.put_param("", "logfile_uri", log_file_uri.toString());
             log(TAG, "log_file_uri.toString() "+log_file_uri.toString());
@@ -1373,12 +1207,17 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     m_gnss_parser.put_param("", "logfile_folder", parts[0]);
                     m_gnss_parser.put_param("", "logfile_name", parts[1]);
                 }
+            } else {
+                log(TAG, "ls: "+log_file_uri.toString());
+                m_gnss_parser.put_param("", "logfile_folder", log_file_uri.toString());
+                m_gnss_parser.put_param("", "logfile_name", ls);
             }
             m_gnss_parser.put_param("", "logfile_n_bytes", log_bt_rx_bytes_written);
+            m_gnss_parser.put_param("", "logfile_size_mb", ((double)log_bt_rx_bytes_written)/1_000_000.0);
         }
         if (m_log_bt_rx_csv_fos != null) {
             try {
-                String line = csv_sdf.format(new_ts)+","+latitude+","+longitude+","+altitude+"\n";
+                String line = csv_sdf.format(mock_ts)+","+latitude+","+longitude+","+altitude+"\n";
                 m_log_bt_rx_csv_fos.write(line.getBytes());
                 m_log_bt_rx_csv_fos.flush();
             } catch (Exception e) {
@@ -1494,16 +1333,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     public String get_connected_device_alias()
     {
-        if (m_ble_gap_scan_mode) {
-            return m_last_BLE_GAP_DEV_NAME;
-        }
         return ""+m_bdaddr;
     }
 
     // Binder given to clients
     private final IBinder m_binder = new LocalBinder();
     gnss_sentence_parser.gnss_parser_callbacks m_activity_for_nmea_param_callbacks;
-    long last_set_mock_location_ts = 0;
 
     public void set_callback(gnss_sentence_parser.gnss_parser_callbacks cb)
     {
@@ -1538,7 +1373,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             return;
         }
 
-        log(TAG, "service: onPositionUpdate() start");
+        //log(TAG, "service: onPositionUpdate() start");
         try {
             Intent intent = new Intent();
             intent.setAction(PARSED_NMEA_UPDATE_INTENT_ACTION);
@@ -1560,8 +1395,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
             try {
                 if (params_map.containsKey(talker+"_lat_ts")) {
-                    long new_ts = (long) params_map.get(talker+"_lat_ts");
-                    if (new_ts != last_set_mock_location_ts) {
+                    long new_ts = (long) params_map.get(talker+"_rmc_ts");
+                    if (new_ts > 0) {
                         lat = (double) params_map.get(talker+"_lat");
                         lon = (double) params_map.get(talker+"_lon");
                         String ellips_height_key = talker+"_ellipsoidal_height";
@@ -1569,10 +1404,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         if (params_map.containsKey(ellips_height_key)) {
                             alt_is_ellipsoidal = true;
                             alt = (double) params_map.get(ellips_height_key);
-                            log(TAG, "ellips_height_key valid");
+                            //log(TAG, "ellips_height_key valid");
                         } else {
                             alt = (double) params_map.get(talker+"_alt");
-                            log(TAG, "ellips_height_key not valid");
+                            //log(TAG, "ellips_height_key not valid");
                         }
 
                         for (String sk : SATS_USED_KEYS) {
@@ -1593,7 +1428,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             } else if (params_map.containsKey(talker+"_course")) {  // value from RMC (RMC course = VTG true course)
                                 course = params_map.get(talker+"_course");
                             }
-                            log(TAG, "course: "+course);
+                            //log(TAG, "course: "+course);
                             if (course != null) {
                                 bearing = (double) course;
                             }
@@ -1622,7 +1457,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             }
         }
 
-        log(TAG, "service: on_updated_nmea_params() act");
+        //log(TAG, "service: on_updated_nmea_params() act");
 
         //report params to activity
         try {

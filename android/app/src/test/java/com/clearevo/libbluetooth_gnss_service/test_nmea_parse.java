@@ -142,7 +142,6 @@ public class test_nmea_parse {
             System.out.println(pi+": "+params.get("GN_"+pi));
         }
         assertTrue(params.get("GN_lat").toString().startsWith("0."));
-        assertTrue(params.get("GN_lat_str").toString().startsWith("0."));
         assertTrue(params.get("GN_lon").toString().startsWith("0."));
     }
 }

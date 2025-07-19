@@ -9,6 +9,7 @@ import net.sf.marineapi.nmea.sentence.RMCSentence;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.TalkerId;
 import net.sf.marineapi.nmea.sentence.VTGSentence;
+import net.sf.marineapi.nmea.util.Date;
 import net.sf.marineapi.nmea.util.Position;
 import net.sf.marineapi.nmea.util.SatelliteInfo;
 import net.sf.marineapi.nmea.util.Units;
@@ -37,6 +38,7 @@ public class gnss_sentence_parser {
             "$"+ TalkerId.GQ, //QZSS
             "$PUBX",
     };
+    public static final String TALKER_ID_ANY = "ANY";
     gnss_parser_callbacks m_cb;
     SentenceFactory m_sf = SentenceFactory.getInstance();
 
@@ -205,7 +207,10 @@ public class gnss_sentence_parser {
                             Set<Integer> that_talker_sats_in_view_unique_id_list_all_signals = new HashSet<Integer>();
                             for (Integer signal_id : signal_ids) {
                                 String key = that_talker+"_"+"sats_in_view_id_list"+"_signal_id_"+signal_id;
-                                that_talker_sats_in_view_unique_id_list_all_signals.addAll((ArrayList<Integer>) m_parsed_params_hashmap.get(key));
+                                List<Integer> phm = (ArrayList<Integer>) m_parsed_params_hashmap.get(key);
+                                if (phm != null) {
+                                    that_talker_sats_in_view_unique_id_list_all_signals.addAll(phm);
+                                }
                             }
                             put_param(that_talker, "n_sats_in_view", that_talker_sats_in_view_unique_id_list_all_signals.size());
                         }
@@ -312,6 +317,8 @@ public class gnss_sentence_parser {
                     RMCSentence rmc = (RMCSentence) sentence;
 
                     try {
+                        Date rmc_date = rmc.getDate();
+                        put_param(talker_id, "rmc_ts", rmc.getTime().toDate(rmc_date.toDate()).getTime());
                         put_param(talker_id, "time", rmc.getTime().toISO8601());
                     } catch (Exception pe) {
                         Log.d(TAG, "parse/put rmc nmea: [" + nmea + "] got exception: " + Log.getStackTraceString(pe));
@@ -352,25 +359,25 @@ public class gnss_sentence_parser {
 
                     //update on RMC
                     if (m_cb != null) {
-                        Log.d(TAG, "calling m_cb callback with parsed params");
+                        //Log.d(TAG, "calling m_cb callback with parsed params");
                         m_cb.onPositionUpdate(m_parsed_params_hashmap);
                     }
                 } else if (sentence instanceof GSASentence) {
                     GSASentence gsa = (GSASentence) sentence;
                     try {
-                        Log.d(TAG, "gsa sentence:" +gsa.toString());
+                        //Log.d(TAG, "gsa sentence:" +gsa.toString());
                         String[] sids = gsa.getSatelliteIds();
                         String gsa_talker_id = get_gsa_talker_id_from_gsa_nmea(nmea, sids);
-                        Log.d(TAG, "gsa_talker_id: "+gsa_talker_id);
+                        //Log.d(TAG, "gsa_talker_id: "+gsa_talker_id);
                         if (gsa_talker_id != null && talker_id.equals(TalkerId.GN.toString())) {
-                            Log.d(TAG, "gsa_talker_id not null sids.length "+sids.length);
+                            //Log.d(TAG, "gsa_talker_id not null sids.length "+sids.length);
                             put_param(gsa_talker_id, "n_sats_used", sids.length);
                             put_param(gsa_talker_id, "sat_used_ids", str_list_to_csv(Arrays.asList(sids)));
                             put_param(gsa_talker_id, "gsa_hdop", gsa.getHorizontalDOP());
                             put_param(gsa_talker_id, "gsa_pdop", gsa.getPositionDOP());
                             put_param(gsa_talker_id, "gsa_vdop", gsa.getVerticalDOP());
                         } else {
-                            Log.d(TAG, "gsa_talker_id null sids.length "+sids.length);
+                            //Log.d(TAG, "gsa_talker_id null sids.length "+sids.length);
                             put_param(talker_id, "n_sats_used", sids.length);
                             put_param(talker_id, "sats_used_ids", str_list_to_csv(Arrays.asList(sids)));
                             put_param(talker_id, "gsa_hdop", gsa.getHorizontalDOP());
@@ -413,13 +420,15 @@ public class gnss_sentence_parser {
                                     if (last_part.contains("*")) {
                                         String[] lp_parts = last_part.split("\\*");
                                         if (lp_parts.length > 0) {
-                                            signal_id_str = lp_parts[0];
-                                            signal_id = Integer.parseInt(signal_id_str.trim());
+                                            signal_id_str = lp_parts[0].trim();
+                                            if (!signal_id_str.isEmpty()) {
+                                                signal_id = Integer.parseInt(signal_id_str);
+                                            }
                                         }
                                     }
                                 }
                             }
-                            System.out.println("gsv n_fields "+n_fields+" has_signal_id "+has_signal_id+" signal_id_str "+signal_id_str+" signal_id "+signal_id);
+                            //System.out.println("gsv n_fields "+n_fields+" has_signal_id "+has_signal_id+" signal_id_str "+signal_id_str+" signal_id "+signal_id);
                         } catch (Exception e) {
                             Log.d(TAG, "extract signal_id from gsv exception: "+Log.getStackTraceString(e));
                         }
@@ -434,11 +443,13 @@ public class gnss_sentence_parser {
 
                         //Log.d(TAG, "gsv talker " + talker_id + " page " + gsv.getSentenceIndex() + " n sats in view " + gsv.getSatelliteCount() + " n sat info: " + gsv.getSatelliteInfo().size());
                         for (SatelliteInfo si : gsv.getSatelliteInfo()) {
-                            ((List<String>) m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_id])).add(si.getId());
-                            ((List<Integer>) m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_noise])).add(si.getNoise());
-                            ((List<Integer>) m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_elevation])).add(si.getElevation());
-                            ((List<Integer>) m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_azimuth])).add(si.getAzimuth());
-                            ((List<Integer>) m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_signal_id])).add(signal_id);
+                            if (m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_id]) != null) {
+                                ((List<String>) m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_id])).add(si.getId());
+                                ((List<Integer>) m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_noise])).add(si.getNoise());
+                                ((List<Integer>) m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_elevation])).add(si.getElevation());
+                                ((List<Integer>) m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_azimuth])).add(si.getAzimuth());
+                                ((List<Integer>) m_parsed_params_hashmap.get(tmp_list_keys_to_flush[tmp_list_keys_to_flush_offset_signal_id])).add(signal_id);
+                            }
                         }
 
                         if (gsv.isLast()) {
@@ -484,22 +495,18 @@ public class gnss_sentence_parser {
             return; //not supported
         }
 
-        String key = ""+talker_id+"_"+param_name;
-        if (talker_id.length() == 0)
-            key = param_name;
-
-        if (val instanceof Double) {
-            m_parsed_params_hashmap.put(key+"_double_02_str", String.format("%.2f", val));
-            m_parsed_params_hashmap.put(key+"_double_07_str", String.format("%.7f", val));
+        String _key = talker_id+"_"+param_name;
+        String _key_any = TALKER_ID_ANY+"_"+param_name;
+        if (talker_id.isEmpty())
+            _key = param_name;
+        for (String key : new String[] {_key, _key_any}) {
+            if (val instanceof Double || val instanceof Integer || val instanceof Long || val instanceof List) {
+                m_parsed_params_hashmap.put(key, val);
+            } else {
+                m_parsed_params_hashmap.put(key, val.toString());
+            }
+            m_parsed_params_hashmap.put(key + "_ts", System.currentTimeMillis());
         }
-        if (val instanceof Double || val instanceof Integer || val instanceof Long || val instanceof List) {
-            m_parsed_params_hashmap.put(key, val);
-        } else {
-            m_parsed_params_hashmap.put(key, val.toString());
-        }
-
-        m_parsed_params_hashmap.put(key+"_str", val.toString());
-        m_parsed_params_hashmap.put(key+"_ts", System.currentTimeMillis());
     }
 
     //for counters

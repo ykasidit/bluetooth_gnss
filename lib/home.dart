@@ -1,11 +1,13 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:bluetooth_gnss/connect_screen.dart';
-import 'package:bluetooth_gnss/screen_settings.dart';
+import 'package:bluetooth_gnss/settings_screen.dart';
 import 'package:bluetooth_gnss/utils_ui.dart';
 import 'package:flutter/material.dart';
+import 'channels.dart';
 import 'connect.dart';
-import 'screen_map.dart';
+import 'map_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,10 +20,34 @@ class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
 
   final screens = [
-    const MapScreen(),
     const ConnectScreen(),
+    MapScreen(),
     const SettingsScreen(),
   ];
+
+  Timer? _checkConnectTimer;
+  StreamSubscription<dynamic>? _eventChannelSubscription;
+
+  @override
+  void initState()
+  {
+    super.initState();
+    developer.log("home initState()");
+    developer.log("home event stream sub");
+    _eventChannelSubscription = initEventChannels();
+    Timer.periodic(const Duration(seconds: 2), (timer) {
+      checkConnectState();
+    });
+  }
+
+  @override
+  void dispose() {
+    developer.log("home dispose()");
+    developer.log("home event stream cancel");
+    _checkConnectTimer?.cancel();
+    _eventChannelSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,14 +55,14 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Bluetooth GNSS'),
         actions: [
-          IconButton(
+          /*IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {},
           ),
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {},
-          ),
+          ),*/
         ],
       ),
       drawer: Drawer(
@@ -70,24 +96,23 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIndex: currentIndex,
         onDestinationSelected: (index) => setState(() => currentIndex = index),
         destinations: const [
+          NavigationDestination(icon: Icon(Icons.bluetooth), label: 'Connect'),
           NavigationDestination(icon: Icon(Icons.map), label: 'Map'),
-          NavigationDestination(icon: Icon(Icons.history), label: 'History'),
           NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
-      floatingActionButton:  FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
-            await connect();
+            await onFloatingButtonTap();
           } catch (ex, tr) {
-            developer.log("connect exception: $ex: $tr");
+            developer.log("onFloatingButtonTap exception: $ex: $tr");
           }
         },
-        tooltip: "Connect",
         child: reactiveIcon(floatingButtonIcon),
       ),
     );
   }
 }
 
-ValueNotifier<IconData> floatingButtonIcon = ValueNotifier(Icons.bluetooth);
+ValueNotifier<IconData> floatingButtonIcon = ValueNotifier(Icons.access_time_filled_rounded);

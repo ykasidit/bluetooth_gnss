@@ -5,6 +5,7 @@ import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.log;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -35,18 +36,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugins.GeneratedPluginRegistrant;
 import io.flutter.plugin.common.EventChannel;
 import android.content.pm.PermissionInfo;
 
-public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks, EventChannel.StreamHandler {
+public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks {
 public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
     private static final String ENGINE_METHOD_CHANNEL = "com.clearevo.bluetooth_gnss/engine";
     private static final String ENGINE_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/engine_events";
@@ -67,12 +70,23 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine);
+        BinaryMessenger messenger = flutterEngine.getDartExecutor().getBinaryMessenger();
+        new EventChannel(messenger, ENGINE_EVENTS_CHANNEL).setStreamHandler(
+            new EventChannel.StreamHandler() {
+                @Override
+                public void onListen(Object args, final EventChannel.EventSink events) {
+                    m_events_sink = events;
+                    Log.d(TAG, "ENGINE_EVENTS_CHANNEL added listener: " + events + " args: " + args);
+                }
 
-        new EventChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), ENGINE_EVENTS_CHANNEL).setStreamHandler(
-                MainActivity.this
+                @Override
+                public void onCancel(Object args) {
+                    m_events_sink = null;
+                    Log.d(TAG, "ENGINE_EVENTS_CHANNEL cancelled listener args: " + args);
+                }
+            }
         );
-
-        new EventChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), SETTINGS_EVENTS_CHANNEL).setStreamHandler(
+        new EventChannel(messenger, SETTINGS_EVENTS_CHANNEL).setStreamHandler(
                 new EventChannel.StreamHandler() {
                     @Override
                     public void onListen(Object args, final EventChannel.EventSink events) {
@@ -105,6 +119,8 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
                                     gnssConnectionParams.gapMode = (Boolean.TRUE.equals(call.argument("ble_gap_scan_mode")));
                                     gnssConnectionParams.ble_uart_mode = (Boolean.TRUE.equals(call.argument(ble_uart_mode)));
                                     gnssConnectionParams.ble_qstarz_mode = (Boolean.TRUE.equals(call.argument(ble_qstarz_mode)));
+                                    String om = call.argument("mock_location_timestamp_offset_millis");
+                                    gnssConnectionParams.mock_location_timestamp_offset_millis = Long.parseLong(om);
                                     Util.save_last_connect_dev(getApplicationContext(), gnssConnectionParams);
 
                                     for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
@@ -403,8 +419,10 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                                 //params_map = ((HashMap) params_map).clone();
                                 //Log.d(TAG, "cloned HashMap to prevent ConcurrentModificationException...");
                             }
+
                             m_events_sink.success(params_map);
-                            Log.d(TAG, "mainactivity sent "+((inputMessage.what == MESSAGE_PARAMS_MAP)?"params_map":"dev_msg"));
+                            //Log.d(TAG, "mainactivity sent "+((inputMessage.what == MESSAGE_PARAMS_MAP)?"params_map: "+params_map:"dev_msg"));
+
                         }
                     } catch (Exception e) {
                         Log.d(TAG, "handlemessage MESSAGE_PARAMS_MAP exception: " + Log.getStackTraceString(e));
@@ -426,17 +444,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         };
     }
 
-    @Override
-    public void onListen(Object args, final EventChannel.EventSink events) {
-        m_events_sink = events;
-        Log.d(TAG, "ENGINE_EVENTS_CHANNEL added listener: " + events);
-    }
 
-    @Override
-    public void onCancel(Object args) {
-        m_events_sink = null;
-        Log.d(TAG, "ENGINE_EVENTS_CHANNEL cancelled listener");
-    }
 
     public ArrayList<String> get_mountpoint_list(String host, int port, String user, String pass) {
         ArrayList<String> ret = null;
@@ -498,7 +506,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
     }
 
     public void onPositionUpdate(HashMap<String, Object> params_map) {
-        Log.d(TAG, "mainactivity onPositionUpdate()");
+        //Log.d(TAG, "mainactivity onPositionUpdate()");
         try {
             Message msg = m_handler.obtainMessage(MESSAGE_PARAMS_MAP, params_map);
             msg.sendToTarget();
@@ -709,28 +717,12 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
 
 
 
+    @SuppressLint("MissingPermission")
     public static HashMap<String, String> get_bd_map(Handler handler, Context context, Activity activity) {
         HashMap<String, String> ret = new HashMap<String, String>();
         try {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             if (adapter != null) {
-                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    if (handler !=null && activity != null) {
-                        handler.post(
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ActivityCompat.requestPermissions(activity, new String[]{
-                                                Manifest.permission.BLUETOOTH_CONNECT
-                                        }, 1);
-                                    }
-                                }
-                        );
-                    } else {
-                        log("WARNING: get_bd_map() abort - BLUETOOTH_CONNECT not granted but either handler or activity is null");
-                        return ret;
-                    }
-                }
                 Set<BluetoothDevice> bonded_devs = adapter.getBondedDevices();
                 for (BluetoothDevice bonded_dev : bonded_devs) {
                     ret.put(bonded_dev.getAddress(), bonded_dev.getName());

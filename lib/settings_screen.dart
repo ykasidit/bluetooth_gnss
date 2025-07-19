@@ -1,13 +1,18 @@
+import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:math' show cos, sqrt, asin;
 
 import 'package:bluetooth_gnss/utils_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:pref/pref.dart';
 import 'package:flutter/services.dart';
-import 'dart:math' show cos, sqrt, asin;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
+import 'package:pref/pref.dart';
+
+import 'channels.dart';
+import 'connect.dart';
 import 'main.dart';
-import 'native_channels.dart';
+
+const _settingsEventChannel = EventChannel("com.clearevo.bluetooth_gnss/settings_events");
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -21,13 +26,23 @@ class SettingsScreenState extends State<SettingsScreen> {
   bool loading = false;
   String log_bt_rx_log_uri = "";
   Stream<dynamic>? event_stream;
+  StreamSubscription<dynamic>? event_stream_sub;
+  @override
+  void dispose()
+  {
+    developer.log("settings event stream cancel");
+    event_stream_sub?.cancel();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
     log_bt_rx_log_uri = prefService.get('log_bt_rx_log_uri') ?? "";
-    event_stream = eventChannel.receiveBroadcastStream();
+    event_stream = _settingsEventChannel.receiveBroadcastStream();
     if (true) {
-      event_stream!.listen((dynamic event) async {
+      developer.log("settings event stream sub");
+      event_stream_sub = event_stream!.listen((dynamic event) async {
         Map<dynamic, dynamic> eventMap = event as Map<dynamic, dynamic>? ?? {};
 
         if (eventMap.containsKey('callback_src')) {
@@ -45,7 +60,8 @@ class SettingsScreenState extends State<SettingsScreen> {
             });
 
             //get list from native engine
-            List<dynamic> oriMpl = eventMap["callback_payload"] as List<dynamic>? ?? [];
+            List<dynamic> oriMpl =
+                eventMap["callback_payload"] as List<dynamic>? ?? [];
             developer.log("got mpl: $oriMpl");
             if (oriMpl.isEmpty) {
               await toast(
@@ -55,7 +71,7 @@ class SettingsScreenState extends State<SettingsScreen> {
 
             //conv to List<String> and sort
             List<String> mountPointStrList =
-            List<String>.generate(oriMpl.length, (i) => "${oriMpl[i]}");
+                List<String>.generate(oriMpl.length, (i) => "${oriMpl[i]}");
 
             //filter startswith STR;
             mountPointStrList =
@@ -63,7 +79,7 @@ class SettingsScreenState extends State<SettingsScreen> {
 
             //remove starting STR; to sort by mountpoint name
             mountPointStrList = List<String>.generate(mountPointStrList.length,
-                    (i) => mountPointStrList[i].substring(4));
+                (i) => mountPointStrList[i].substring(4));
 
             //filter for that contains ; so wont have errors for split further below
             mountPointStrList =
@@ -79,7 +95,7 @@ class SettingsScreenState extends State<SettingsScreen> {
             developer.log('sort_by_nearest: $sortByNearest');
 
             List<Map<String, String>> mountPointMapList =
-            List.empty(growable: true);
+                List.empty(growable: true);
 
             for (String val in mountPointStrList) {
               List<String> parts = val.split(";");
@@ -110,13 +126,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                       lastLon = double.parse(parts[1]);
                       lastPosValid = true;
                     } catch (e) {
-                      developer.log(
-                          "WARNING: parse last lat/lon exception {e}");
+                      developer
+                          .log("WARNING: parse last lat/lon exception {e}");
                     }
                   }
                 }
-                developer.log(
-                    'last_pos_valid: $lastPosValid $lastLat $lastLon');
+                developer
+                    .log('last_pos_valid: $lastPosValid $lastLat $lastLon');
 
                 if (lastPosValid) {
                   //calc distance into the map in the list
@@ -184,8 +200,8 @@ class SettingsScreenState extends State<SettingsScreen> {
               if (mounted) {
                 await Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (BuildContext context) {
-                      return SettingsScreen();
-                    }));
+                  return SettingsScreen();
+                }));
               }
             }
           } else if (eventMap["callback_src"] == "set_log_uri") {
@@ -208,9 +224,7 @@ class SettingsScreenState extends State<SettingsScreen> {
         developer.log('Received error: ${error.message}');
       });
     }
-
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -233,11 +247,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                 inAsyncCall: loading,
                 child: PrefPage(children: [
                   const PrefTitle(title: Text('Target device:')),
-                  PrefDropdown(
-                      title: const Text(
-                          "Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)"),
-                      items: [], //TODO
-                      pref: 'target_bdaddr'),
+                  reactivePrefDropDown('target_bdaddr', "Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)", bdMapNotifier),
                   const PrefTitle(title: Text('Bluetooth Connection settings')),
                   const PrefCheckbox(
                       title: Text("Secure RFCOMM connection"), pref: 'secure'),
@@ -251,12 +261,21 @@ class SettingsScreenState extends State<SettingsScreen> {
                       title: Text(
                           "Check for Settings > 'Location' ON and 'High Accuracy'"),
                       pref: 'check_settings_location'),
+
+                  PrefSlider<int>(
+                    title: const Text("Mock offset"),
+                    pref: 'mock_location_timestamp_offset_tenth_of_sec',
+                    trailing: (num v) => SizedBox(width: 80, child: Text('${(v*0.1).toStringAsFixed(1)} sec ${v<0?'advance':'delay'}')),
+                    min: -10,
+                    max: 10,
+                  ),
+                  //mock_location_timestamp_offset_millis
                   PrefCheckbox(
-                      title: Text(
-                          "Enable Logging $log_bt_rx_log_uri"),
+                      title: Text("Enable Logging $log_bt_rx_log_uri"),
                       pref: 'log_bt_rx',
                       onChange: (bool? val) async {
-                        prefService.set('log_bt_rx', false); //set to false first and await event from java callback to set to true if all perm/folder set pass
+                        prefService.set('log_bt_rx',
+                            false); //set to false first and await event from java callback to set to true if all perm/folder set pass
                         prefService.set("log_bt_rx_log_uri", "");
                         setState(() {
                           log_bt_rx_log_uri = "";
@@ -265,10 +284,12 @@ class SettingsScreenState extends State<SettingsScreen> {
                         if (enable) {
                           bool writeEnabled = false;
                           try {
-                            writeEnabled = (await methodChannel
-                                .invokeMethod('is_write_enabled')) as bool? ?? false;
-                          } on PlatformException catch (e) {
-                            await toast("WARNING: check _is_connecting failed: $e");
+                            writeEnabled = (await methodChannel.invokeMethod(
+                                    'is_write_enabled')) as bool? ??
+                                false;
+                          } catch (e) {
+                            await toast(
+                                "WARNING: check _is_connecting failed: $e");
                           }
                           if (writeEnabled == false) {
                             await toast(
@@ -276,7 +297,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                           }
                           try {
                             await methodChannel.invokeMethod('set_log_uri');
-                          } on PlatformException catch (e) {
+                          } catch (e) {
                             await toast("WARNING: set_log_uri failed: $e");
                           }
                         }
@@ -340,14 +361,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                         'List streams from above server',
                       ),
                       onPressed: () async {
-                        String host =
-                            prefService.get('ntrip_host') ?? "";
-                        String port =
-                            prefService.get('ntrip_port') ?? "";
-                        String user =
-                            prefService.get('ntrip_user') ?? "";
-                        String pass =
-                            prefService.get('ntrip_pass') ?? "";
+                        String host = prefService.get('ntrip_host') ?? "";
+                        String port = prefService.get('ntrip_port') ?? "";
+                        String user = prefService.get('ntrip_user') ?? "";
+                        String pass = prefService.get('ntrip_pass') ?? "";
                         if (host.isEmpty || port.isEmpty) {
                           await toast(
                               "Please specify the ntrip_host and ntrip_port first...");
@@ -364,19 +381,21 @@ class SettingsScreenState extends State<SettingsScreen> {
                           Future.delayed(const Duration(seconds: 0), () async {
                             try {
                               retCode = (await methodChannel
-                                  .invokeMethod("get_mountpoint_list", {
-                                'ntrip_host': host,
-                                'ntrip_port': port,
-                                'ntrip_user': user,
-                                'ntrip_pass': pass,
-                              })) as int? ?? -1;
+                                      .invokeMethod("get_mountpoint_list", {
+                                    'ntrip_host': host,
+                                    'ntrip_port': port,
+                                    'ntrip_user': user,
+                                    'ntrip_pass': pass,
+                                  })) as int? ??
+                                  -1;
                               developer.log(
                                   "get_mountpoint_list req waiting callback ret: $retCode");
                             } catch (e) {
                               setState(() {
                                 loading = false;
                               });
-                              await toast("List mount-points failed invoke: $e");
+                              await toast(
+                                  "List mount-points failed invoke: $e");
                             }
                           });
                         } catch (e) {
