@@ -3,6 +3,7 @@ package com.clearevo.libbluetooth_gnss_service;
 
 import static android.app.PendingIntent.FLAG_IMMUTABLE;
 import static android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+import static com.clearevo.bluetooth_gnss.MainActivity.MAIN_ACTIVITY_CLASSNAME;
 import static com.clearevo.bluetooth_gnss.MainActivity.get_bd_map;
 import static com.clearevo.libbluetooth_gnss_service.Log.LogObserver;
 import static com.clearevo.libbluetooth_gnss_service.Log.d;
@@ -32,10 +33,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.documentfile.provider.DocumentFile;
+
+import com.clearevo.bluetooth_gnss.R;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -84,7 +88,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     int m_icon_id;
     int m_ntrip_cb_count;
     int m_ntrip_cb_count_added_to_send_buffer;
-    Intent m_start_intent;
+    HashMap<String, Object> m_start_connect_args;
 
     boolean m_ubx_mode = true;
     boolean m_ubx_send_enable_extra_used_packets = true;
@@ -92,7 +96,22 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     boolean m_all_ntrip_params_specified = false;
     long m_last_ntrip_gga_send_ts = 0;
     public static final long SEND_GGA_TO_NTRIP_EVERY_MILLIS = 29 * 1000;
-    public static final String[] REQUIRED_INTENT_EXTRA_PARAM_KEYS = {"ntrip_host", "ntrip_port", "ntrip_mountpoint", "ntrip_user", "ntrip_pass"};
+    //{ntrip_user=null, ntrip_mountpoint=null, secure=true, autostart=false, ntrip_pass=null, ble_gap_scan_mode=false, reconnect=false, log_bt_rx_log_uri=, mock_location_timestamp_offset_millis=0, bdaddr=98:D3:61:FD:78:33, ntrip_host=igs-ip.net, ntrip_port=2101, disable_ntrip=false}
+    public static final String BT_ARG_SECURE = "secure";
+    public static final String BT_ARG_AUTOSTART = "autostart";
+    public static final String BT_ARG_RECONNECT = "reconnect";
+    public static final String BT_ARG_MOCK_TIMESTAMP_OFFSET_MILLIS = "mock_location_timestamp_offset_millis";
+    public static final String BT_ARG_BDADDR = "bdaddr";
+    public static final String BT_ARG_LOG_BT_RX_URI = "log_bt_rx_log_uri";
+    public static final String[] BT_CONNECT_ARGS = {BT_ARG_BDADDR, BT_ARG_SECURE, BT_ARG_RECONNECT, BT_ARG_AUTOSTART, BT_ARG_LOG_BT_RX_URI, BT_ARG_MOCK_TIMESTAMP_OFFSET_MILLIS};
+
+    public static final String NTRIP_ARG_HOST = "ntrip_host";
+    public static final String NTRIP_ARG_PORT = "ntrip_port";
+    public static final String NTRIP_ARG_MOUNTPOINT = "mountpoint";
+    public static final String NTRIP_ARG_USER = "ntrip_user";
+    public static final String NTRIP_ARG_PASS = "ntrip_pass";
+    public static final String NTRIP_ARG_DISABLE = "disable_ntrip";
+    public static final String[] NTRIP_CONNECT_ARGS = {NTRIP_ARG_HOST, NTRIP_ARG_PORT, NTRIP_ARG_MOUNTPOINT, NTRIP_ARG_USER, NTRIP_ARG_PASS, NTRIP_ARG_DISABLE};
     String m_log_bt_rx_log_uri = "";
     boolean m_disable_ntrip = false;
     boolean m_ble_qstarz_mode = false;
@@ -121,33 +140,24 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
         if (intent != null) {
             try {
-
-
-                m_ble_qstarz_mode = intent.getBooleanExtra(ble_qstarz_mode, false);
-
+                HashMap<String, Object> connectArgs = (HashMap<String, Object>) intent.getSerializableExtra("args");
+                log(TAG, "onStartCommand args: "+connectArgs);
                 {
-
-                    m_bdaddr = intent.getStringExtra("bdaddr");
-                    m_secure_rfcomm = intent.getBooleanExtra("secure", true);
-                    m_auto_reconnect = intent.getBooleanExtra("reconnect", false);
-
-                    m_log_bt_rx_log_uri = intent.getStringExtra("log_bt_rx_log_uri");
-                    m_disable_ntrip = intent.getBooleanExtra("disable_ntrip", false);
-                    mock_location_timestamp_offset_millis = intent.getLongExtra("mock_location_timestamp_offset_millis", 0);
+                    m_bdaddr = (String) connectArgs.get(BT_ARG_BDADDR);
+                    if (m_bdaddr == null || m_bdaddr.isEmpty()) {
+                        throw new Exception("invalid arg: "+BT_ARG_BDADDR+" val: "+m_bdaddr);
+                    }
+                    m_secure_rfcomm = (boolean) connectArgs.get(BT_ARG_SECURE);
+                    m_auto_reconnect = (boolean) connectArgs.get(BT_ARG_RECONNECT);
+                    m_log_bt_rx_log_uri = (String) connectArgs.get(BT_ARG_LOG_BT_RX_URI);
+                    m_disable_ntrip = (boolean) connectArgs.get(NTRIP_ARG_DISABLE);
+                    mock_location_timestamp_offset_millis = (int) connectArgs.get(BT_ARG_MOCK_TIMESTAMP_OFFSET_MILLIS);
                     log(TAG, "m_secure_rfcomm: " + m_secure_rfcomm);
                     log(TAG, "m_log_bt_rx_log_uri: " + m_log_bt_rx_log_uri);
                     log(TAG, "m_disable_ntrip: " + m_disable_ntrip);
-                    String cn = intent.getStringExtra("activity_class_name");
-                    m_start_intent = intent;
-                    if (cn == null) {
-                        throw new Exception("activity_class_name not specified");
-                    }
-                    m_target_activity_class = Class.forName(cn);
+                    m_target_activity_class = Class.forName(MAIN_ACTIVITY_CLASSNAME);
                     log(TAG, "m_target_activity_class: " + m_target_activity_class.getCanonicalName());
-                    if (!intent.hasExtra("activity_icon_id")) {
-                        throw new Exception("activity_icon_id not specified");
-                    }
-                    m_icon_id = intent.getIntExtra("activity_icon_id", 0);
+                    m_icon_id = R.mipmap.ic_launcher;
 
                     if (m_log_bt_rx_log_uri != null && (!m_log_bt_rx_log_uri.isEmpty())) {
                         String log_uri = m_log_bt_rx_log_uri;
@@ -191,12 +201,17 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     start_foreground("Connecting...", "target device: " + m_bdaddr, "");
                 }
                 m_all_ntrip_params_specified = true;
-                for (String key : REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-                    if (m_start_intent.getStringExtra(key) == null || m_start_intent.getStringExtra(key).length() == 0) {
-                        log(TAG, "key: " + key + "got null or empty string so m_all_ntrip_params_specified false");
-                        m_all_ntrip_params_specified = false;
-                        break;
+                try {
+                    for (String key : NTRIP_CONNECT_ARGS) {
+                        if (m_start_connect_args.get(key) == null || ((String) m_start_connect_args.get(key)).isEmpty()) {
+                            log(TAG, "key: " + key + "got null or empty string so m_all_ntrip_params_specified false");
+                            m_all_ntrip_params_specified = false;
+                            break;
+                        }
                     }
+                } catch (Exception e) {
+                    log(TAG, "WARNING: check m_all_ntrip_params_specified exception: " + Log.getStackTraceString(e));
+                    m_all_ntrip_params_specified = false;
                 }
                 log(TAG, "m_all_ntrip_params_specified: " + m_all_ntrip_params_specified);
                 //ntrip connection would start after we get next gga bashed on this m_all_ntrip_params_specified flag
@@ -230,8 +245,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     log(TAG, "start_ntrip_conn_if_specified call connect_ntrip() since m_all_ntrip_params_specified true");
                     int port = -1;
                     try {
-                        port = Integer.parseInt(m_start_intent.getStringExtra("ntrip_port"));
-                        connect_ntrip(m_start_intent.getStringExtra("ntrip_host"), port, m_start_intent.getStringExtra("ntrip_mountpoint"), m_start_intent.getStringExtra("ntrip_user"), m_start_intent.getStringExtra("ntrip_pass"));
+                        port = Integer.parseInt((String) m_start_connect_args.get(NTRIP_ARG_PORT));
+                        connect_ntrip((String) m_start_connect_args.get(NTRIP_ARG_HOST), port, (String) m_start_connect_args.get(NTRIP_ARG_MOUNTPOINT), (String) m_start_connect_args.get(NTRIP_ARG_USER), (String) m_start_connect_args.get(NTRIP_ARG_PASS));
                     } catch (Exception e) {
                         log(TAG, "call connect_ntrip exception: " + getStackTraceString(e));
                     }
@@ -1270,6 +1285,21 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         }
         log(TAG, "deactivate_mock_location return");
     }
+
+    //TODO: tell user must set to none if want to use app again
+    /*public static boolean isDeviceUsingMockProvider(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return Settings.Secure.getString(
+                    context.getContentResolver(),
+                    Settings.Secure.MOCK_LOCATION_APP
+            ) != null;
+        } else {
+            return !Settings.Secure.getString(
+                    context.getContentResolver(),
+                    Settings.Secure.ALLOW_MOCK_LOCATION
+            ).equals("0");
+        }
+    }*/
 
     private void activate_mock_location() {
         if (closing) {

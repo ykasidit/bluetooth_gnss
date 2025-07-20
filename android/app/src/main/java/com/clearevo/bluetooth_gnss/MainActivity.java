@@ -1,7 +1,5 @@
 package com.clearevo.bluetooth_gnss;
 
-import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_qstarz_mode;
-import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.ble_uart_mode;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.log;
 
 import android.Manifest;
@@ -15,6 +13,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -27,6 +26,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.clearevo.libbluetooth_gnss_service.Log;
+import com.clearevo.libbluetooth_gnss_service.RealLocationHelper;
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 import com.clearevo.libbluetooth_gnss_service.ntrip_conn_mgr;
 import com.clearevo.libbluetooth_gnss_service.rfcomm_conn_mgr;
@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -66,6 +65,9 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
     final int MESSAGE_PARAMS_MAP = 0;
     final int MESSAGE_SETTINGS_MAP = 1;
     final int MESSAGE_DEVICE_MESSAGE = 2;
+
+    public static Location lastInternalGNSSLocation;
+    boolean internalGNSSLocationSubscribed = false;
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
@@ -105,40 +107,23 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
                 .setMethodCallHandler(
                         (call, result) -> {
                             Object return_success_val = null;
-
                             try {
                                 //Log.d(TAG, "got method call: "+call.method);
                                 if (call.method.equals("connect")) {
-                                    final GnssConnectionParams gnssConnectionParams = new GnssConnectionParams();
-                                    gnssConnectionParams.bdaddr = call.argument("bdaddr");
-                                    gnssConnectionParams.secure = (Boolean.TRUE.equals(call.argument("secure")));
-                                    gnssConnectionParams.reconnect = (Boolean.TRUE.equals(call.argument("reconnect")));
-                                    gnssConnectionParams.autostart = (Boolean.TRUE.equals(call.argument("autostart")));
-                                    gnssConnectionParams.log_bt_rx_log_uri = call.argument("log_bt_rx_log_uri");
-                                    gnssConnectionParams.disableNtrip = (Boolean.TRUE.equals(call.argument("disable_ntrip")));
-                                    gnssConnectionParams.gapMode = (Boolean.TRUE.equals(call.argument("ble_gap_scan_mode")));
-                                    gnssConnectionParams.ble_uart_mode = (Boolean.TRUE.equals(call.argument(ble_uart_mode)));
-                                    gnssConnectionParams.ble_qstarz_mode = (Boolean.TRUE.equals(call.argument(ble_qstarz_mode)));
-                                    String om = call.argument("mock_location_timestamp_offset_millis");
-                                    gnssConnectionParams.mock_location_timestamp_offset_millis = Long.parseLong(om);
-                                    Util.save_last_connect_dev(getApplicationContext(), gnssConnectionParams);
-
-                                    for (String pk : bluetooth_gnss_service.REQUIRED_INTENT_EXTRA_PARAM_KEYS) {
-                                        gnssConnectionParams.extraParams.put(pk, call.argument(pk));
-                                    }
+                                    Log.d(TAG,"MethodChannel method: "+call.method+" args: "+call.arguments);
+                                    HashMap<String, Object> connectArgs = call.arguments();
+                                    Util.save_connect_args(getApplicationContext(), connectArgs); //service read from this to get args for intent/autostart cases
                                     final Context context = getApplicationContext();
-
                                     new Thread() {
                                         public void run() {
                                             try {
                                                 //getcanonicalname somehow returns null, getname() would return something with $ at the end so wont work to launch the activity from the service notification, so just use a string literal here
-                                                Util.connect(MAIN_ACTIVITY_CLASSNAME, context, gnssConnectionParams);
+                                                Util.connect(context, connectArgs);
                                             } catch (Throwable tr) {
                                                 Log.d(TAG, "connect() exception: " + Log.getStackTraceString(tr));
                                             }
                                         }
                                     }.start();
-
                                     int ret = 0;
                                     Log.d(TAG, "connect() ret: " + ret);
                                     return_success_val = true;
@@ -193,7 +178,27 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
                                 } else if (call.method.equals("get_bd_map")) {
                                     return_success_val = get_bd_map(m_handler, getApplicationContext(), this);
                                 } else if (call.method.equals("check_permissions_not_granted")) {
-                                    return_success_val = check_permissions_not_granted();
+                                    List<String> ret = check_permissions_not_granted();
+                                    if (ret.isEmpty()) {
+                                        //all permissions ok - subscribe location now
+                                        if (!internalGNSSLocationSubscribed) {
+                                            Log.d(TAG, "all perm ok - RealLocationHelper start get TODO");
+                                            /*RealLocationHelper.getRealLocation(getApplicationContext(), new RealLocationHelper.LocationCallback() {
+                                                @Override
+                                                public void onLocationReceived(Location location) {
+                                                    Log.e(TAG, "RealLocationHelper onLocationReceived: " + location);
+                                                    lastInternalGNSSLocation = location;
+                                                }
+
+                                                @Override
+                                                public void onLocationError(String message) {
+                                                    Log.e(TAG, "RealLocationHelper Error: " + message);
+                                                }
+                                            });*/
+                                            internalGNSSLocationSubscribed = true;
+                                        }
+                                    }
+                                    return_success_val = ret;
                                 } else if (call.method.equals("is_bluetooth_on")) {
                                     return_success_val = rfcomm_conn_mgr.is_bluetooth_on();
                                 } else if (call.method.equals("is_ntrip_connected")) {

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 
+import 'package:bluetooth_gnss/map_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:pref/pref.dart';
 
 const methodChannel = MethodChannel("com.clearevo.bluetooth_gnss/engine");
@@ -53,6 +55,17 @@ StreamSubscription<dynamic> initEventChannels() {
       }
       return; //update messages only
     } else {
+      if (channel_paramMap["lat"] != null && channel_paramMap["lat"] is double) {
+        try {
+          var pos = LatLng(channel_paramMap["lat"] as double,
+              channel_paramMap["lon"] as double);
+          //developer.log("set mapExternalDevPos start: $pos");
+          mapExternalDevPos.value = pos;
+          //developer.log("set mapExternalDevPos success: $pos");
+        } catch (e, t) {
+          developer.log("set mapExternalDevPos failed: $e: $t");
+        }
+      }
       for (MapEntry<String, dynamic> entry in channel_paramMap.entries) {
         String k = entry.key;
         if (!paramMap.containsKey(k)) {

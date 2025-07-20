@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import static android.content.Context.MODE_PRIVATE;
+import java.util.HashMap;
 
 public class Autostart extends BroadcastReceiver {
     public static final String TAG = "btgnss_as";
@@ -15,10 +15,12 @@ public class Autostart extends BroadcastReceiver {
             Log.d(TAG, "onReceive start");
             try {
                 // defaults from preferences
-                final GnssConnectionParams gnssConnectionParams = Util.load_last_connect_dev(context);
-                Log.d(TAG, "pref autostart: " +gnssConnectionParams.autostart);
-                if (gnssConnectionParams.autostart) {
-                    Util.connect(MainActivity.MAIN_ACTIVITY_CLASSNAME, context, gnssConnectionParams);
+                final HashMap<String, Object> connectArgs = Util.load_last_connect_args(context);
+                Log.d(TAG, "pref autostart: " +connectArgs.get("autostart"));
+                boolean autostart = (boolean) connectArgs.get("autostart");
+                Log.d(TAG, "pref unboxed autostart: " +connectArgs.get("autostart"));
+                if (autostart) {
+                    Util.connect(context, connectArgs);
                 }
             } catch (Exception e) {
                 Log.d(TAG, "autostart got exception: " +Log.getStackTraceString(e));

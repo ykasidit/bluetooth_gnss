@@ -155,7 +155,7 @@ Future<void> connect() async {
           'ntrip_user': prefService.get('ntrip_user'),
           'ntrip_pass': prefService.get('ntrip_pass'),
           'autostart': autostart,
-          'mock_location_timestamp_offset_millis': (((prefService.get('mock_location_timestamp_offset_tenth_of_sec') ?? 0) as int) * 100).toString(),
+          'mock_location_timestamp_offset_millis': (((prefService.get('mock_location_timestamp_offset_tenth_of_sec') ?? 0) as int) * 100),
         })) as bool? ??
         false;
     developer.log("main.dart connect() start connect done");
@@ -368,7 +368,7 @@ Future<ConnectState> _checkUpdateSelectedDev(
   }
 
   //ok - ready to connect
-  icon_map["'Mock Location app' is 'Bluetooth GNSS'\n"] = iconOk;
+  icon_map["'Mock Location app' is 'Bluetooth GNSS'\nWARNING: You MUST set 'Select mock location app' to 'Nothing' in 'Developer Settings' when you need use phone/tablet's internal GPS device again."] = iconOk;
   connectStatus.value = "Please press the floating button to connect...";
   connectSelectedDevice.value = selected_dev_sum;
 
