@@ -368,7 +368,7 @@ Future<ConnectState> _checkUpdateSelectedDev(
   }
 
   //ok - ready to connect
-  icon_map["'Mock Location app' is 'Bluetooth GNSS'\nWARNING: You MUST set 'Select mock location app' to 'Nothing' in 'Developer Settings' when you need use phone/tablet's internal GPS device again."] = iconOk;
+  icon_map["'Mock Location app' is 'Bluetooth GNSS'\nWARNING: When you need use internal GPS device again,\nSet 'Select mock location app' to 'Nothing'\n(in 'Developer Settings')."] = iconOk;
   connectStatus.value = "Please press the floating button to connect...";
   connectSelectedDevice.value = selected_dev_sum;
 
