@@ -15,12 +15,7 @@ import net.sf.marineapi.nmea.util.SatelliteInfo;
 import net.sf.marineapi.nmea.util.Units;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.clearevo.libbluetooth_gnss_service.ubx_parser.ubx_parse_get_n_bytes_consumed;
 
@@ -29,6 +24,7 @@ public class gnss_sentence_parser {
 
 
     static final String TAG = "btgnss_nmea_p";
+    public static final TimeZone TZ_UTC = TimeZone.getTimeZone("UTC");
     final String[] KNOWN_NMEA_PREFIX_LIST = {
             "$"+ TalkerId.GN, //combined
             "$"+ TalkerId.GP, //GPS
@@ -315,10 +311,19 @@ public class gnss_sentence_parser {
 
                 } else if (sentence instanceof RMCSentence) {
                     RMCSentence rmc = (RMCSentence) sentence;
-
                     try {
-                        Date rmc_date = rmc.getDate();
-                        put_param(talker_id, "rmc_ts", rmc.getTime().toDate(rmc_date.toDate()).getTime());
+                        net.sf.marineapi.nmea.util.Date nmeaDate = rmc.getDate();
+                        net.sf.marineapi.nmea.util.Time nmeaTime = rmc.getTime();
+                        Calendar cal = Calendar.getInstance(TZ_UTC);
+                        cal.set(Calendar.YEAR, nmeaDate.getYear());
+                        cal.set(Calendar.MONTH, nmeaDate.getMonth() - 1); // Calendar is 0-based
+                        cal.set(Calendar.DAY_OF_MONTH, nmeaDate.getDay());
+                        cal.set(Calendar.HOUR_OF_DAY, nmeaTime.getHour());
+                        cal.set(Calendar.MINUTE, nmeaTime.getMinutes());
+                        cal.set(Calendar.SECOND, (int) nmeaTime.getSeconds());
+                        cal.set(Calendar.MILLISECOND, 0);
+                        long gnss_ts = cal.getTimeInMillis();
+                        put_param(talker_id, "rmc_ts", gnss_ts);
                         put_param(talker_id, "time", rmc.getTime().toISO8601());
                     } catch (Exception pe) {
                         Log.d(TAG, "parse/put rmc nmea: [" + nmea + "] got exception: " + Log.getStackTraceString(pe));

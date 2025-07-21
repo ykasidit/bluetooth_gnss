@@ -156,6 +156,7 @@ Future<void> connect() async {
           'ntrip_pass': prefService.get('ntrip_pass'),
           'autostart': autostart,
           'mock_location_timestamp_offset_millis': (((prefService.get('mock_location_timestamp_offset_tenth_of_sec') ?? 0) as int) * 100),
+          'mock_location_timestamp_use_system_time': prefService.get('mock_location_timestamp_use_system_time')
         })) as bool? ??
         false;
     developer.log("main.dart connect() start connect done");
@@ -214,7 +215,7 @@ Future<void> checkConnectState() async {
     case ConnectState.ReadyToConnect:
       floatingButtonIcon.value = Icons.bluetooth_connected_rounded;
     case ConnectState.Connecting:
-      floatingButtonIcon.value = Icons.timelapse_rounded;
+      floatingButtonIcon.value = Icons.access_time_rounded;
     case ConnectState.Connected:
       floatingButtonIcon.value = Icons.bluetooth_disabled_rounded;
   }

@@ -276,11 +276,13 @@ List<Widget> getDevSepcificRows(BuildContext context) {
 List<Widget> getStatRows(BuildContext context)
 {
   List<List<String>> m = [
-    ["Mock Location Time (actual)", "mock_location_actual_ts"],
-    ["Mock Location Time Offset (ms)", "mock_location_timestamp_offset_millis"],
-    ["Mock Location Time Set", "mock_location_set_ts"],
+    ["System Time at Mock", "mock_location_system_ts"],
+    ["GNSS Time at Mock", "mock_location_gnss_ts"],
+    ["Mock use System Time", "mock_location_timestamp_use_system_time"],
+    ["Mock Base Time", "mock_location_base_ts"],
+    ["Mock Time Offset (ms)", "mock_location_timestamp_offset_millis"],
+    ["Mock Final Time", "mock_location_set_ts"],
     ["Mock altitude type", "alt_type"],
-
     ["GGA count", "GN_GGA_count"],
     ["RMC count", "GN_RMC_count"],
     ["Log folder", "logfile_folder"],

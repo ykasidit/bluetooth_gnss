@@ -628,7 +628,7 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         }
     };
 
-    static boolean already_asked_perm = false;
+    List<String> askedPermissions = new ArrayList<>();
 
     public List<String> check_permissions_not_granted()
     {
@@ -653,9 +653,10 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
             if (notGrantedPermission.contains(Manifest.permission.READ_EXTERNAL_STORAGE)) {
                 notGrantedPermission.remove(Manifest.permission.READ_EXTERNAL_STORAGE); //not always required, only required if user enables logging
             }
-            if (notGrantedPermission.size() > 0 && (!already_asked_perm)) {
-                Log.d(TAG, "should ask manifest perm notGrantedPermission: " + Arrays.toString(notGrantedPermission.toArray()));
-                already_asked_perm = true;
+        Log.d(TAG, "should ask manifest perm notGrantedPermission: " + Arrays.toString(notGrantedPermission.toArray()));
+            if (!notGrantedPermission.isEmpty()) {
+                Log.d(TAG, "ask now perm notGrantedPermission: " + Arrays.toString(notGrantedPermission.toArray()));
+                //already_asked_perm = true;
                 String[] perm_array = notGrantedPermission.toArray(new String[notGrantedPermission.size()]);
                 m_handler.post(new Runnable() {
                     @Override

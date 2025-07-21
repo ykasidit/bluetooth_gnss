@@ -27,6 +27,7 @@ Future<void> main() async {
     'ntrip_host': "igs-ip.net",
     'ntrip_port': "2101",
     "mock_location_timestamp_offset_tenth_of_sec": 0,
+    "mock_location_timestamp_use_system_time": false,
   });
   runApp(App());
 }

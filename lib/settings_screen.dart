@@ -261,13 +261,16 @@ class SettingsScreenState extends State<SettingsScreen> {
                       title: Text(
                           "Check for Settings > 'Location' ON and 'High Accuracy'"),
                       pref: 'check_settings_location'),
-
+                  const PrefCheckbox(
+                      title: Text(
+                          "Mock location use system time (instead of GNSS device RMC time)"),
+                      pref: 'mock_location_timestamp_use_system_time'),
                   PrefSlider<int>(
                     title: const Text("Mock offset"),
                     pref: 'mock_location_timestamp_offset_tenth_of_sec',
                     trailing: (num v) => SizedBox(width: 80, child: Text('${(v*0.1).toStringAsFixed(1)} sec ${v<0?'advance':'delay'}')),
-                    min: -10,
-                    max: 10,
+                    min: -50,
+                    max: 50,
                   ),
                   //mock_location_timestamp_offset_millis
                   PrefCheckbox(
