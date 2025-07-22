@@ -400,7 +400,7 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
                 if (inputMessage.what == MESSAGE_PARAMS_MAP || inputMessage.what == MESSAGE_DEVICE_MESSAGE) {
                     try {
                         if (mBound == false || m_events_sink == null) {
-                            Log.d(TAG, "mBound == false || m_events_sink == null so not delivering params_map");
+                            //Log.d(TAG, "mBound == false || m_events_sink == null so not delivering params_map");
                         } else {
                             Object params_map = inputMessage.obj;
                             if (params_map instanceof HashMap) {
