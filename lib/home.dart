@@ -31,8 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<dynamic>? _eventChannelSubscription;
 
   @override
-  void initState()
-  {
+  void initState() {
     super.initState();
     developer.log("home initState()");
     developer.log("home event stream sub");
@@ -51,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _launchUrl(String url) async {
+  Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       throw 'Could not launch $url';
@@ -86,36 +85,41 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('About'),
               onTap: () async {
                 final info = await PackageInfo.fromPlatform();
-                showAboutDialog(
-                  context: context,
-                  applicationName: info.appName,
-                  applicationVersion: info.version,
-                  applicationIcon: Image.asset("assets/icons/ic_launcher.png", width: 48, height: 48),
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(top: 16),
-                      child: Text(
-                        'Bluetooth GNSS helps you connect to external Bluetooth GPS/GNSS devices and set mock location on Android for improved accuracy or integration.',
+                if (context.mounted) {
+                  showAboutDialog(
+                    context: context,
+                    applicationName: info.appName,
+                    applicationVersion: info.version,
+                    applicationIcon: Image.asset("assets/icons/ic_launcher.png",
+                        width: 48, height: 48),
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: Text(
+                          'Bluetooth GNSS helps you connect to external Bluetooth GPS/GNSS devices and set mock location on Android for improved accuracy or integration.',
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    InkWell(
-                      onTap: () => _launchUrl('https://github.com/ykasidit/bluetooth_gnss'),
-                      child: const Text(
-                        '🔗 Project homepage',
-                        style: TextStyle(color: Colors.blue),
+                      const SizedBox(height: 10),
+                      InkWell(
+                        onTap: () => _launchUrl(
+                            'https://github.com/ykasidit/bluetooth_gnss'),
+                        child: const Text(
+                          '🔗 Project homepage',
+                          style: TextStyle(color: Colors.blue),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    InkWell(
-                      onTap: () => _launchUrl('https://github.com/ykasidit/bluetooth_gnss/issues'),
-                      child: const Text(
-                        '🐞 Report an issue',
-                        style: TextStyle(color: Colors.blue),
+                      const SizedBox(height: 4),
+                      InkWell(
+                        onTap: () => _launchUrl(
+                            'https://github.com/ykasidit/bluetooth_gnss/issues'),
+                        child: const Text(
+                          '🐞 Report an issue',
+                          style: TextStyle(color: Colors.blue),
+                        ),
                       ),
-                    ),
-                  ],
-                );
+                    ],
+                  );
+                }
               },
             ),
           ],
@@ -145,4 +149,5 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-ValueNotifier<IconData> floatingButtonIcon = ValueNotifier(Icons.access_time_filled_rounded);
+ValueNotifier<IconData> floatingButtonIcon =
+    ValueNotifier(Icons.access_time_filled_rounded);
