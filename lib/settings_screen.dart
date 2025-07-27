@@ -12,7 +12,8 @@ import 'channels.dart';
 import 'connect.dart';
 import 'main.dart';
 
-const _settingsEventChannel = EventChannel("com.clearevo.bluetooth_gnss/settings_events");
+const _settingsEventChannel =
+    EventChannel("com.clearevo.bluetooth_gnss/settings_events");
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -28,8 +29,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   Stream<dynamic>? event_stream;
   StreamSubscription<dynamic>? event_stream_sub;
   @override
-  void dispose()
-  {
+  void dispose() {
     developer.log("settings event stream cancel");
     event_stream_sub?.cancel();
     super.dispose();
@@ -247,7 +247,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                 inAsyncCall: loading,
                 child: PrefPage(children: [
                   const PrefTitle(title: Text('Target device:')),
-                  reactivePrefDropDown('target_bdaddr', "Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)", bdMapNotifier),
+                  reactivePrefDropDown(
+                      'target_bdaddr',
+                      "Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)",
+                      bdMapNotifier),
                   const PrefTitle(title: Text('Bluetooth Connection settings')),
                   const PrefCheckbox(
                       title: Text("Secure RFCOMM connection"), pref: 'secure'),
@@ -265,13 +268,48 @@ class SettingsScreenState extends State<SettingsScreen> {
                       title: Text(
                           "Mock location use system time (instead of GNSS device RMC time)"),
                       pref: 'mock_location_timestamp_use_system_time'),
-                  PrefSlider<int>(
-                    title: const Text("Mock offset"),
-                    pref: 'mock_location_timestamp_offset_tenth_of_sec',
-                    trailing: (num v) => SizedBox(width: 80, child: Text('${(v*0.1).toStringAsFixed(1)} sec ${v<0?'advance':'delay'}')),
-                    min: -50,
-                    max: 50,
-                  ),
+                  PrefText(
+                      pref: 'mock_timestamp_offset_secs',
+                      decoration: const InputDecoration(
+                        labelText: 'Location timestamp offset (secs)',
+                      ),
+                      hintText: "Example: -1.5",
+                      validator: validateDouble),
+                  ValueListenableBuilder<DateTime>(
+                      valueListenable: setLiveArgsTs,
+                      builder: (BuildContext context, DateTime setTs,
+                          Widget? child) {
+                        developer.log("rebld pref live setTs:  $setTs");
+                        return PrefText(
+                            key: ValueKey('lon_${setTs.millisecondsSinceEpoch}'),
+                            pref: 'mock_lat_offset_meters',
+                            decoration: const InputDecoration(
+                              labelText: 'Adjust latitude offset (meters)',
+                            ),
+                            hintText: "Example: -2.5",
+                            validator: validateDouble);
+                      }),
+                  ValueListenableBuilder<DateTime>(
+                      valueListenable: setLiveArgsTs,
+                      builder: (BuildContext context, DateTime setTs,
+                          Widget? child) {
+                        developer.log("rebld pref live setTs:  $setTs");
+                        return PrefText(
+                            key: ValueKey('lon_${setTs.millisecondsSinceEpoch}'),
+                            pref: 'mock_lon_offset_meters',
+                            decoration: const InputDecoration(
+                              labelText: 'Adjust longitude offset (meters)',
+                            ),
+                            hintText: "Example: 3.5",
+                            validator: validateDouble);
+                      }),
+                  PrefText(
+                      pref: 'mock_alt_offset_meters',
+                      decoration: const InputDecoration(
+                        labelText: 'Adjust altitude offset (meters)',
+                      ),
+                      hintText: "Example: -10.5",
+                      validator: validateDouble),
                   //mock_location_timestamp_offset_millis
                   PrefCheckbox(
                       title: Text("Enable Logging $log_bt_rx_log_uri"),
@@ -333,8 +371,6 @@ class SettingsScreenState extends State<SettingsScreen> {
                         }
                         return null;
                       }),
-                  const PrefText(
-                      label: "Ref lat,lon for sorting", pref: 'ref_lat_lon'),
                   PrefText(
                       label: "Stream (mount-point)",
                       pref: 'ntrip_mountpoint',
@@ -417,8 +453,24 @@ class SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const PrefCheckbox(
-                      title: Text("Sort by nearest to to Ref lat,lon"),
+                      title: Text("Sort by nearest to Ref position"),
                       pref: 'list_nearest_streams_first'),
+                  PrefText(
+                      label: "Ref position lat, lon for sorting",
+                      pref: 'ref_lat_lon',
+                      hintText: "Example: 6.691289,101.674621",
+                      validator: (String? t) {
+                        if (t != null && t.contains(",")) {
+                          List<String> parts = t.split(",");
+                          if (parts.length == 2) {
+                            if (double.tryParse(parts[0]) != null &&
+                                double.tryParse(parts[1]) != null) {
+                              return null;
+                            }
+                          }
+                        }
+                        return "Please enter a valid location: latitude, longitude";
+                      }),
                 ]),
               )),
         ));

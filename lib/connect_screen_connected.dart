@@ -126,7 +126,10 @@ List<Widget> connectedRows(BuildContext context) {
                 padding: EdgeInsets.all(5.0),
               ),
               Text(
-                  "- You can now use other apps like 'Waze' normally.\n- Location is now from connected device\n- To stop, press the 'Disconnect' menu in top-right options.",
+                  "- You can now use other apps like 'Waze' normally.\n"
+                      "- Some apps use only phone's internal gps, ignoring 'mock' location, will not work correctly.\n"
+                      "- Developers can also get position json intents broadcasted at: com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE"
+                  ,
                   style: Theme.of(context).textTheme.bodySmall),
               const Padding(
                 padding: EdgeInsets.all(5.0),
@@ -279,9 +282,23 @@ List<Widget> getStatRows(BuildContext context)
     ["System Time at Mock", "mock_location_system_ts"],
     ["GNSS Time at Mock", "mock_location_gnss_ts"],
     ["Mock use System Time", "mock_location_timestamp_use_system_time"],
-    ["Mock Base Time", "mock_location_base_ts"],
-    ["Mock Time Offset (ms)", "mock_location_timestamp_offset_millis"],
-    ["Mock Final Time", "mock_location_set_ts"],
+
+    ["Ori Time", "mock_location_base_ts"],
+    ["Ori Lat (deg)", "mock_location_base_lat"],
+    ["Ori Lon (deg)", "mock_location_base_lon"],
+    ["Ori Alt (m)", "mock_location_base_alt"],
+
+    ["Time Offset (secs)", "mock_timestamp_offset_secs"],
+    ["Lat offset (m)", "mock_lat_offset_meters"],
+    ["Lon offset (m)", "mock_lon_offset_meters"],
+    ["Alt offset (m)", "mock_alt_offset_meters"],
+
+    ["Final Mock Time", "mock_location_set_ts"],
+    ["Final Mock Lat (deg)", "mock_location_set_lat"],
+    ["Final Mock Lon (deg)", "mock_location_set_lon"],
+    ["Final Mock Alt (m)", "mock_location_set_alt"],
+
+
     ["Mock altitude type", "alt_type"],
     ["GGA count", "GN_GGA_count"],
     ["RMC count", "GN_RMC_count"],

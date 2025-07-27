@@ -157,6 +157,9 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
                                     String msg = call.argument("msg");
                                     toast(msg);
                                     return_success_val = 0;
+                                } else if (call.method.equals("setLiveArgs")) {
+                                    m_service.setLiveArgs(call.arguments());
+                                    return_success_val = 0;
                                 } else if (call.method.equals("disconnect")) {
                                     try {
                                         Log.d(TAG, "disconnect0");

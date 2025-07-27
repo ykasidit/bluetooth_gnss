@@ -23,6 +23,7 @@ ValueNotifier<String> connectStatus = ValueNotifier("Loading status...");
 ValueNotifier<String> connectSelectedDevice =
     ValueNotifier("Loading selected device...");
 ValueNotifier<bool> isBtConnected = ValueNotifier(false);
+ValueNotifier<DateTime> setLiveArgsTs = ValueNotifier(DateTime.now());
 ValueNotifier<bool> isQstarz = ValueNotifier(false);
 ValueNotifier<bool> isBtConnThreadConnecting = ValueNotifier(false);
 ValueNotifier<int> mockLocationSetTs = ValueNotifier(0);
@@ -155,8 +156,13 @@ Future<void> connect() async {
           'ntrip_user': prefService.get('ntrip_user'),
           'ntrip_pass': prefService.get('ntrip_pass'),
           'autostart': autostart,
-          'mock_location_timestamp_offset_millis': (((prefService.get('mock_location_timestamp_offset_tenth_of_sec') ?? 0) as int) * 100),
-          'mock_location_timestamp_use_system_time': prefService.get('mock_location_timestamp_use_system_time')
+
+      'mock_timestamp_use_system_time': prefService.get('mock_location_timestamp_use_system_time')! as bool,
+      'mock_timestamp_offset_secs': double.parse(prefService.get('mock_timestamp_offset_secs') ?? "0.0"),
+      'mock_lat_offset_meters': double.parse(prefService.get('mock_lat_offset_meters') ?? "0.0"),
+      'mock_lon_offset_meters': double.parse(prefService.get('mock_lon_offset_meters') ?? "0.0"),
+      'mock_alt_offset_meters': double.parse(prefService.get('mock_alt_offset_meters') ?? "0.0"),
+
         })) as bool? ??
         false;
     developer.log("main.dart connect() start connect done");
@@ -374,4 +380,18 @@ Future<ConnectState> _checkUpdateSelectedDev(
   connectSelectedDevice.value = selected_dev_sum;
 
   return ConnectState.ReadyToConnect;
+}
+
+Future<void> setLiveArgs() async
+{
+  await methodChannel.invokeMethod('setLiveArgs', {
+    'mock_timestamp_use_system_time': prefService.get('mock_location_timestamp_use_system_time')! as bool,
+    'mock_timestamp_offset_secs': double.parse(prefService.get('mock_timestamp_offset_secs') ?? "0.0"),
+    'mock_lat_offset_meters': double.parse(prefService.get('mock_lat_offset_meters') ?? "0.0"),
+    'mock_lon_offset_meters': double.parse(prefService.get('mock_lon_offset_meters') ?? "0.0"),
+    'mock_alt_offset_meters': double.parse(prefService.get('mock_alt_offset_meters') ?? "0.0"),
+  });
+  developer.log("setLiveArgs setTs");
+  setLiveArgsTs.value = DateTime.timestamp();
+  developer.log("setLiveArgs setTs done: ${setLiveArgsTs.value}");
 }

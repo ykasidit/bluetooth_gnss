@@ -83,6 +83,14 @@ String tsToDateTimeStr(int ts_millis)
       "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}.${dateTime.millisecond.toString().padLeft(3, '0')}";
 }
 
+String? validateDouble(String? newValue) {
+  double? tsoffset = double.tryParse(newValue ?? "");
+  if (tsoffset == null) {
+    return "Numbers with fractions only";
+  }
+  return null;
+}
+
 Row paramRow(BuildContext context, String param, {TextStyle? style, int double_fraction_digits=2, String title=""}) {
   paramMapSubscribe(param);
   return Row(
@@ -94,6 +102,9 @@ Row paramRow(BuildContext context, String param, {TextStyle? style, int double_f
         valueListenable: paramMap[param]!,
         builder: (context, value, child) {
           if (value is double) {
+            if (param.endsWith("_lat") || param.endsWith("_lon")) {
+              double_fraction_digits = 7;
+            }
             value = value.toStringAsFixed(double_fraction_digits);
           } else if (param.endsWith("_ts") && value is int) {
             value = tsToDateTimeStr(value);

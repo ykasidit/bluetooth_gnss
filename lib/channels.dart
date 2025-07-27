@@ -59,9 +59,11 @@ StreamSubscription<dynamic> initEventChannels() {
         try {
           var pos = LatLng(channel_paramMap["lat"] as double,
               channel_paramMap["lon"] as double);
-          //developer.log("set mapExternalDevPos start: $pos");
           mapExternalDevPos.value = pos;
-          //developer.log("set mapExternalDevPos success: $pos");
+
+          var pos_ori = LatLng(channel_paramMap["mock_location_base_lat"] as double,
+              channel_paramMap["mock_location_base_lon"] as double);
+          mapExternalDevPosOri.value = pos_ori;
         } catch (e, t) {
           developer.log("set mapExternalDevPos failed: $e: $t");
         }

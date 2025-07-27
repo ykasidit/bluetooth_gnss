@@ -7,7 +7,6 @@ import static com.clearevo.bluetooth_gnss.MainActivity.MAIN_ACTIVITY_CLASSNAME;
 import static com.clearevo.bluetooth_gnss.MainActivity.get_bd_map;
 import static com.clearevo.libbluetooth_gnss_service.Log.LogObserver;
 import static com.clearevo.libbluetooth_gnss_service.Log.d;
-import static com.clearevo.libbluetooth_gnss_service.Log.e;
 import static com.clearevo.libbluetooth_gnss_service.Log.getStackTraceString;
 import static com.clearevo.libbluetooth_gnss_service.Log.m_log_operations_fos;
 import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
@@ -25,7 +24,6 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
-import android.location.provider.ProviderProperties;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
@@ -33,7 +31,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
@@ -44,9 +41,7 @@ import com.clearevo.bluetooth_gnss.R;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.OutputStream;
-import java.security.Provider;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -101,12 +96,32 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String BT_ARG_SECURE = "secure";
     public static final String BT_ARG_AUTOSTART = "autostart";
     public static final String BT_ARG_RECONNECT = "reconnect";
-    public static final String BT_ARG_MOCK_TIMESTAMP_OFFSET_MILLIS = "mock_location_timestamp_offset_millis";
     public static final String BT_ARG_BDADDR = "bdaddr";
     public static final String BT_ARG_LOG_BT_RX_URI = "log_bt_rx_log_uri";
+    public static final String BT_ARG_MOCK_USE_SYSTEM_TIMESTAMP = "mock_timestamp_use_system_time";
+    public static final String BT_ARG_MOCK_TIMESTAMP_OFFSET_SECS = "mock_timestamp_offset_secs";
+    public static final String BT_ARG_MOCK_LAT_OFFSET_METERS = "mock_lat_offset_meters";
+    public static final String BT_ARG_MOCK_LON_OFFSET_METERS = "mock_lon_offset_meters";
+    public static final String BT_ARG_MOCK_ALT_OFFSET_METERS = "mock_alt_offset_meters";
 
-    public static final String BT_ARG_MOCK_USE_SYSTEM_TIMESTAMP = "mock_location_timestamp_use_system_time";
-    public static final String[] BT_CONNECT_ARGS = {BT_ARG_BDADDR, BT_ARG_SECURE, BT_ARG_RECONNECT, BT_ARG_AUTOSTART, BT_ARG_LOG_BT_RX_URI, BT_ARG_MOCK_TIMESTAMP_OFFSET_MILLIS, BT_ARG_MOCK_USE_SYSTEM_TIMESTAMP};
+
+
+    public static final String[] BT_CONNECT_ARGS = {
+            BT_ARG_BDADDR,
+            BT_ARG_SECURE,
+            BT_ARG_RECONNECT,
+            BT_ARG_AUTOSTART,
+            BT_ARG_LOG_BT_RX_URI,
+    };
+
+    public static final String[] BT_MOCK_ARGS = {
+            BT_ARG_MOCK_USE_SYSTEM_TIMESTAMP,
+            BT_ARG_MOCK_TIMESTAMP_OFFSET_SECS,
+            BT_ARG_MOCK_LAT_OFFSET_METERS,
+            BT_ARG_MOCK_LON_OFFSET_METERS,
+            BT_ARG_MOCK_ALT_OFFSET_METERS
+    };
+
 
     public static final String NTRIP_ARG_HOST = "ntrip_host";
     public static final String NTRIP_ARG_PORT = "ntrip_port";
@@ -123,16 +138,25 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     OutputStream m_log_bt_rx_csv_fos = null;
     long log_bt_rx_bytes_written = 0;
     public static bluetooth_gnss_service curInstance = null;
-    long mock_location_timestamp_offset_millis = 0;
     boolean mock_location_timestamp_use_system_time = false;
+    double mock_timestamp_offset_secs = 0.0;
+    double mock_lat_offset_meters = 0.0;
+    double mock_lon_offset_meters = 0.0;
+    double mock_alt_offset_meters = 0.0;
+    public static final double latlonMetersToDegMultiplier = 1.0 / 111_320.0;
 
-    public static final String ble_uart_mode = "ble_uart_mode";
-    public static final String ble_qstarz_mode = "ble_qstarz_mode";
-
-    File bt_gnss_test_debug_mock_location_1_1_mode_flag = new File("/sdcard/bt_gnss_test_debug_mock_location_1_1_mode_flag");
     public static final String POSITION_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE";
     public static final String PARSED_NMEA_UPDATE_INTENT_ACTION = "com.clearevo.libbluetooth_gnss_service.PARSED_NMEA_UPDATE";
     public static final String INTENT_EXTRA_DATA_JSON_KEY = "data_json";
+
+    public void setLiveArgs(HashMap<String, Object> connectArgs)
+    {
+        mock_location_timestamp_use_system_time = (boolean) connectArgs.get(BT_ARG_MOCK_USE_SYSTEM_TIMESTAMP);
+        mock_timestamp_offset_secs = (double) connectArgs.get(BT_ARG_MOCK_TIMESTAMP_OFFSET_SECS);
+        mock_lat_offset_meters =  (double) connectArgs.get(BT_ARG_MOCK_LAT_OFFSET_METERS);
+        mock_lon_offset_meters =  (double) connectArgs.get(BT_ARG_MOCK_LON_OFFSET_METERS);
+        mock_alt_offset_meters =  (double) connectArgs.get(BT_ARG_MOCK_ALT_OFFSET_METERS);
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -156,14 +180,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     m_auto_reconnect = (boolean) connectArgs.get(BT_ARG_RECONNECT);
                     m_log_bt_rx_log_uri = (String) connectArgs.get(BT_ARG_LOG_BT_RX_URI);
                     m_disable_ntrip = (boolean) connectArgs.get(NTRIP_ARG_DISABLE);
-                    mock_location_timestamp_offset_millis = (int) connectArgs.get(BT_ARG_MOCK_TIMESTAMP_OFFSET_MILLIS);
-                    mock_location_timestamp_use_system_time = (boolean) connectArgs.get(BT_ARG_MOCK_USE_SYSTEM_TIMESTAMP);
 
-                    log(TAG, "m_secure_rfcomm: " + m_secure_rfcomm);
-                    log(TAG, "m_log_bt_rx_log_uri: " + m_log_bt_rx_log_uri);
-                    log(TAG, "m_disable_ntrip: " + m_disable_ntrip);
+                    setLiveArgs(connectArgs);
+
                     m_target_activity_class = Class.forName(MAIN_ACTIVITY_CLASSNAME);
-                    log(TAG, "m_target_activity_class: " + m_target_activity_class.getCanonicalName());
                     m_icon_id = R.mipmap.ic_launcher;
 
                     if (m_log_bt_rx_log_uri != null && (!m_log_bt_rx_log_uri.isEmpty())) {
@@ -1128,27 +1148,31 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         long system_ts = System.currentTimeMillis();
         long system_to_gnss_ts_diff = system_ts - gnss_ts;
         Log.d(TAG, "setMock gnss_ts: "+gnss_ts +" vs system_ts: "+system_ts+" = system_to_gnss_ts_diff: "+system_to_gnss_ts_diff);
-        try {
-            if (bt_gnss_test_debug_mock_location_1_1_mode_flag.isFile()) {
-                log(TAG, "NOTE: bt_gnss_test_debug_mock_location_1_1_mode_flag exists - overriding lat, lon to 1, 1");
-                latitude = 1;
-                longitude = 1;
-            }
-        } catch (Throwable tr) {
-            log(TAG, "WARNING: check bt_gnss_test_debug_mock_location_1_1_mode_flag exception: "+ getStackTraceString(tr));
-        }
+
 
         activate_mock_location(); //this will check a static flag and not re-activate if already active
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         long mock_base_ts = (mock_location_timestamp_use_system_time? system_ts : gnss_ts);
-        long mock_set_ts = mock_base_ts + mock_location_timestamp_offset_millis;
+        long mock_set_ts = mock_base_ts + ((long)(mock_timestamp_offset_secs*1000.0));
         m_gnss_parser.put_param("", "mock_location_system_ts", system_ts);
         m_gnss_parser.put_param("", "mock_location_gnss_ts", gnss_ts);
         m_gnss_parser.put_param("", "mock_location_timestamp_use_system_time", mock_location_timestamp_use_system_time);
         m_gnss_parser.put_param("", "mock_location_base_ts", mock_base_ts);
-        m_gnss_parser.put_param("", "mock_location_timestamp_offset_millis", mock_location_timestamp_offset_millis);
+        m_gnss_parser.put_param("", "mock_timestamp_offset_secs", mock_timestamp_offset_secs);
         m_gnss_parser.put_param("", "mock_location_set_ts", mock_set_ts);
 
+        m_gnss_parser.put_param("", "mock_location_base_lat", latitude);
+        m_gnss_parser.put_param("", "mock_location_base_lon", longitude);
+        m_gnss_parser.put_param("", "mock_location_base_alt", altitude);
+        m_gnss_parser.put_param("", "mock_lat_offset_meters", mock_lat_offset_meters);
+        m_gnss_parser.put_param("", "mock_lon_offset_meters", mock_lon_offset_meters);
+        m_gnss_parser.put_param("", "mock_alt_offset_meters", mock_alt_offset_meters);
+        latitude += mock_lat_offset_meters*latlonMetersToDegMultiplier;
+        longitude += mock_lon_offset_meters*latlonMetersToDegMultiplier;
+        altitude += mock_alt_offset_meters;
+        m_gnss_parser.put_param("", "mock_location_set_lat", latitude);
+        m_gnss_parser.put_param("", "mock_location_set_lon", longitude);
+        m_gnss_parser.put_param("", "mock_location_set_alt", altitude);
 
         /// ////// modern way
         for (String provider : locationManager.getAllProviders()) {

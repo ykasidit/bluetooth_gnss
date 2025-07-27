@@ -45,6 +45,7 @@ public class StartConnectionReceiver extends BroadcastReceiver {
 
                 ArrayList<String> all_args = new ArrayList<String>();
                 all_args.addAll(Arrays.asList(bluetooth_gnss_service.BT_CONNECT_ARGS));
+                all_args.addAll(Arrays.asList(bluetooth_gnss_service.BT_MOCK_ARGS));
                 all_args.addAll(Arrays.asList(bluetooth_gnss_service.NTRIP_CONNECT_ARGS));
                 for (String pk : all_args) {
                     final String value = overrides.optString(pk, null);
