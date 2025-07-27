@@ -1,0 +1,1 @@
+Nutze Bluetooth GPS/Galileo/GLONASS/BeiDou Empfänger, unterstützt NTRIP/RTK
