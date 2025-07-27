@@ -5,6 +5,8 @@ import 'package:bluetooth_gnss/connect_screen.dart';
 import 'package:bluetooth_gnss/settings_screen.dart';
 import 'package:bluetooth_gnss/utils_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'channels.dart';
 import 'connect.dart';
 import 'map_screen.dart';
@@ -49,6 +51,13 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  void _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $url';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,18 +82,39 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text('Menu', style: TextStyle(color: Colors.white)),
             ),
             ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () => setState(() => currentIndex = 2),
-            ),
-            ListTile(
               leading: const Icon(Icons.info),
               title: const Text('About'),
-              onTap: () {
+              onTap: () async {
+                final info = await PackageInfo.fromPlatform();
                 showAboutDialog(
                   context: context,
-                  applicationName: 'Bluetooth GNSS',
-                  applicationVersion: '1.0.0',
+                  applicationName: info.appName,
+                  applicationVersion: info.version,
+                  applicationIcon: Image.asset("assets/icons/ic_launcher.png", width: 48, height: 48),
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: Text(
+                        'Bluetooth GNSS helps you connect to external Bluetooth GPS/GNSS devices and set mock location on Android for improved accuracy or integration.',
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    InkWell(
+                      onTap: () => _launchUrl('https://github.com/ykasidit/bluetooth_gnss'),
+                      child: const Text(
+                        '🔗 Project homepage',
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    InkWell(
+                      onTap: () => _launchUrl('https://github.com/ykasidit/bluetooth_gnss/issues'),
+                      child: const Text(
+                        '🐞 Report an issue',
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
