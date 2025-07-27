@@ -4,10 +4,9 @@ import 'package:bluetooth_gnss/main.dart';
 import 'package:bluetooth_gnss/utils_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
-import 'channels.dart';
 import 'connect.dart';
 import 'const.dart';
 
