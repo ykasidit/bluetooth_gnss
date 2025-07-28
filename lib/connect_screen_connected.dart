@@ -37,6 +37,46 @@ class ConnectScreenConnectedState extends State<ConnectScreenConnected> {
 List<Widget> connectedRows(BuildContext context) {
   developer.log("connectingRows build start");
   return <Widget>[
+
+    Card(
+      child: Container(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: <Widget>[
+              Text(
+                'Connected',
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineSmall!
+                    .copyWith(fontFamily: 'GoogleSans', color: Colors.grey),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(5.0),
+              ),
+              iconConnected,
+              const Padding(
+                padding: EdgeInsets.all(5.0),
+              ),
+              Text(connectSelectedDevice.value),
+              const Padding(
+                padding: EdgeInsets.all(5.0),
+              ),
+              Text(
+                  "- You can now use other apps like 'OsmAnd' or 'Waze' for navigation normally.\n"
+                      "- NOT compatible with 'Google Maps' - it uses other location sources too and you will see location jumps.\n"
+                      "- Some apps that ignore 'mock' location, will not work correctly.\n"
+                      "- Developers can also get position json Android Intents broadcasted as: \"com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE\"\n"
+                  ,
+                  style: Theme.of(context).textTheme.bodySmall),
+              const Padding(
+                padding: EdgeInsets.all(5.0),
+              ),
+            ],
+          )),
+    ),
+    const Padding(
+      padding: EdgeInsets.all(10.0),
+    ),
     Card(
       child: Container(
         padding: const EdgeInsets.all(10.0),
@@ -99,45 +139,7 @@ List<Widget> connectedRows(BuildContext context) {
         ),
       ),
     ),
-    const Padding(
-      padding: EdgeInsets.all(10.0),
-    ),
-    Card(
-      child: Container(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: <Widget>[
-              Text(
-                'Connected',
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall!
-                    .copyWith(fontFamily: 'GoogleSans', color: Colors.grey),
-              ),
-              const Padding(
-                padding: EdgeInsets.all(5.0),
-              ),
-              iconConnected,
-              const Padding(
-                padding: EdgeInsets.all(5.0),
-              ),
-              Text(connectSelectedDevice.value),
-              const Padding(
-                padding: EdgeInsets.all(5.0),
-              ),
-              Text(
-                  "- You can now use other apps like 'OsmAnd' or 'Waze' for navigation normally.\n"
-                      "- NOT compatible with 'Google Maps' - it uses other location sources too and you will see location jumps.\n"
-                      "- Some apps that ignore 'mock' location, will not work correctly.\n"
-                      "- Developers can also get position json Android Intents broadcasted as: \"com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE\"\n"
-                  ,
-                  style: Theme.of(context).textTheme.bodySmall),
-              const Padding(
-                padding: EdgeInsets.all(5.0),
-              ),
-            ],
-          )),
-    ),
+
     Padding(
         padding: const EdgeInsets.all(5.0),
         child: Card(
@@ -298,6 +300,7 @@ List<Widget> getStatRows(BuildContext context)
     ["Final Mock Lat (deg)", "mock_location_set_lat"],
     ["Final Mock Lon (deg)", "mock_location_set_lon"],
     ["Final Mock Alt (m)", "mock_location_set_alt"],
+    ["Final Mock Bearing (deg)", "course"],
 
 
     ["Mock altitude type", "alt_type"],
