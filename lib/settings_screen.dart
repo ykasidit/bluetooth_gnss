@@ -290,7 +290,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                           validator: validateDouble,
                           keyboardType: TextInputType.numberWithOptions(
                               decimal: true, signed: true),
-                          onChange: (String) async => await setLiveArgs(),
+                          onChange: (s) async => await setLiveArgs(),
                         );
                       }),
                   ValueListenableBuilder<DateTime>(
@@ -315,7 +315,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                           validator: validateDouble,
                           keyboardType: TextInputType.numberWithOptions(
                               decimal: true, signed: true),
-                          onChange: (String) async => await setLiveArgs(),
+                          onChange: (s) async => await setLiveArgs(),
                         );
                       }),
                   ValueListenableBuilder<DateTime>(
@@ -339,7 +339,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                           validator: validateDouble,
                           keyboardType: TextInputType.numberWithOptions(
                               decimal: true, signed: true),
-                          onChange: (String) async => await setLiveArgs(),
+                          onChange: (s) async => await setLiveArgs(),
                         );
                       }),
                   ValueListenableBuilder<DateTime>(
@@ -363,7 +363,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                           validator: validateDouble,
                           keyboardType: TextInputType.numberWithOptions(
                               decimal: true, signed: true),
-                          onChange: (String) async => await setLiveArgs(),
+                          onChange: (s) async => await setLiveArgs(),
                         );
                       }),
                   //mock_location_timestamp_offset_millis
