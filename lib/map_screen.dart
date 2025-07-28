@@ -4,7 +4,6 @@ import 'package:bluetooth_gnss/main.dart';
 import 'package:bluetooth_gnss/utils_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'connect.dart';
@@ -13,7 +12,6 @@ import 'const.dart';
 final ValueNotifier<LatLng?> mapInternalDevPos = ValueNotifier(null);
 final ValueNotifier<LatLng?> mapExternalDevPos = ValueNotifier(null);
 final ValueNotifier<LatLng?> mapExternalDevPosOri = ValueNotifier(null);
-
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -27,7 +25,6 @@ class MapScreenState extends State<MapScreen> {
   LatLng? lastMovedPos;
   bool follow = true;
   LatLng? tappedPosition;
-  ValueNotifier<String> currentOffsetSum = ValueNotifier("");
 
   @override
   void dispose() {
@@ -36,64 +33,35 @@ class MapScreenState extends State<MapScreen> {
   }
 
   @override
-  void initState()
-  {
+  void initState() {
     super.initState();
-    _startLocationUpdates();
   }
-
-  Future<void> _startLocationUpdates() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      await Geolocator.openLocationSettings();
-      return;
-    }
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      permission = await Geolocator.requestPermission();
-    }
-    Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
-    ).listen((Position position) {
-      developer.log("Geolocator new pos: $position mocked: ${position.isMocked}");
-      var pos = LatLng(position.latitude, position.longitude);
-      if (lastMovedPos == null || follow) {
-        developer.log("moving map to pos: $pos");
-        mapController.move(pos, mapController.camera.zoom);
-        lastMovedPos = pos;
-      }
-      mapInternalDevPos.value = LatLng(position.latitude, position.longitude);
-    });
-  }
-
 
   @override
   Widget build(BuildContext context) {
     MapOptions mapOptions = MapOptions(
       keepAlive: true,
-      cameraConstraint: const CameraConstraint.containLatitude(),
+      initialCenter: LatLng(0, 0),
+      initialZoom: 1,
       onLongPress: (tapPosition, latlng) async {
         tappedPosition = latlng;
         try {
           LatLng? lastOriPos = mapExternalDevPosOri.value;
           if (lastOriPos != null) {
-            double lat_offset_m = (tappedPosition!.latitude -
-                lastOriPos.latitude) * latlonDegtoMetersMultiplier;
-            double lon_offset_m = (tappedPosition!.longitude -
-                lastOriPos.longitude) * latlonDegtoMetersMultiplier;
+            double lat_offset_m =
+                (tappedPosition!.latitude - lastOriPos.latitude) *
+                    latlonDegtoMetersMultiplier;
+            double lon_offset_m =
+                (tappedPosition!.longitude - lastOriPos.longitude) *
+                    latlonDegtoMetersMultiplier;
             prefService.set("mock_lat_offset_meters", lat_offset_m.toString());
             prefService.set("mock_lon_offset_meters", lon_offset_m.toString());
-            currentOffsetSum.value =
-            "Offset: Lat: ${lat_offset_m.toStringAsFixed(2)}m Lon: ${lon_offset_m
-                .toStringAsFixed(2)}m";
             await setLiveArgs();
-            await toast(currentOffsetSum.value);
+            await toast("Offset: Lat: ${lat_offset_m.toStringAsFixed(2)}m Lon: ${lon_offset_m.toStringAsFixed(2)}m");
           }
         } catch (e, tr) {
           developer.log("set new lat/lon offset exception: $e $tr");
         }
-
       },
       onPositionChanged: (position, hasGesture) {
         if (hasGesture) {
@@ -115,7 +83,21 @@ class MapScreenState extends State<MapScreen> {
             ValueListenableBuilder<LatLng?>(
               valueListenable: mapExternalDevPos,
               builder: (context, externalPos, _) {
-                developer.log("building new MarkerLayer for externalPos: $externalPos");
+                if (follow && externalPos != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) async {
+                    double zoom =
+                        lastMovedPos == null ? 18 : mapController.camera.zoom;
+                    mapController.move(externalPos, zoom);
+                    if (lastMovedPos == null) {
+                      lastMovedPos = externalPos;
+                      String ref_lat_lon = "${externalPos.latitude.toStringAsFixed(7)},${externalPos.longitude.toStringAsFixed(7)}";
+                      prefService.set("ref_lat_lon", ref_lat_lon);
+                      await setLiveArgs();
+                    }
+                  });
+                }
+                developer.log(
+                    "building new MarkerLayer for externalPos: $externalPos");
                 return MarkerLayer(
                   markers: [
                     if (externalPos != null)
@@ -123,7 +105,8 @@ class MapScreenState extends State<MapScreen> {
                         point: externalPos,
                         width: 40,
                         height: 40,
-                        child: const Icon(Icons.location_on, color: Colors.blue),
+                        child:
+                            const Icon(Icons.location_on, color: Colors.blue),
                       ),
                   ],
                 );
@@ -132,7 +115,8 @@ class MapScreenState extends State<MapScreen> {
             ValueListenableBuilder<LatLng?>(
               valueListenable: mapExternalDevPosOri,
               builder: (context, externalPos, _) {
-                developer.log("building new MarkerLayer for mapExternalDevPosOri: $mapExternalDevPosOri");
+                developer.log(
+                    "building new MarkerLayer for mapExternalDevPosOri: $mapExternalDevPosOri");
                 return MarkerLayer(
                   markers: [
                     if (externalPos != null)
@@ -140,7 +124,8 @@ class MapScreenState extends State<MapScreen> {
                         point: externalPos,
                         width: 40,
                         height: 40,
-                        child: const Icon(Icons.bluetooth_connected_rounded, color: Colors.blue),
+                        child: const Icon(Icons.bluetooth_connected_rounded,
+                            color: Colors.blue),
                       ),
                   ],
                 );
@@ -204,11 +189,23 @@ class MapScreenState extends State<MapScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '📍 Long tap to correct offsets in settings',
-                  style: TextStyle(fontSize: 11),
+                ValueListenableBuilder<bool>(
+                  valueListenable: isBtConnected,
+                  builder: (context, connected, _) {
+                    if (connected) {
+                      return const Text(
+                        '📍 Connected - long tap to update offsets in settings',
+                        style: TextStyle(fontSize: 11),
+                      );
+                    } else {
+                      lastMovedPos = null;
+                      return const Text(
+                        'Not connected',
+                        style: TextStyle(fontSize: 11),
+                      );
+                    }
+                  },
                 ),
-                reactiveText(currentOffsetSum, style: const TextStyle(fontSize: 11))
               ],
             ),
           ),
@@ -216,6 +213,4 @@ class MapScreenState extends State<MapScreen> {
       ],
     );
   }
-
 }
-

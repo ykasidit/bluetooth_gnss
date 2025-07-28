@@ -126,9 +126,10 @@ List<Widget> connectedRows(BuildContext context) {
                 padding: EdgeInsets.all(5.0),
               ),
               Text(
-                  "- You can now use other apps like 'Waze' normally.\n"
-                      "- Some apps use only phone's internal gps, ignoring 'mock' location, will not work correctly.\n"
-                      "- Developers can also get position json intents broadcasted at: com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE"
+                  "- You can now use other apps like 'OsmAnd' or 'Waze' for navigation normally.\n"
+                      "- NOT compatible with 'Google Maps' - it uses other location sources too and you will see location jumps.\n"
+                      "- Some apps that ignore 'mock' location, will not work correctly.\n"
+                      "- Developers can also get position json Android Intents broadcasted as: \"com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE\"\n"
                   ,
                   style: Theme.of(context).textTheme.bodySmall),
               const Padding(

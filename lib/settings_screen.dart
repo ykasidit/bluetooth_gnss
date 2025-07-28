@@ -268,48 +268,104 @@ class SettingsScreenState extends State<SettingsScreen> {
                       title: Text(
                           "Mock location use system time (instead of GNSS device RMC time)"),
                       pref: 'mock_location_timestamp_use_system_time'),
-                  PrefText(
-                      pref: 'mock_timestamp_offset_secs',
-                      decoration: const InputDecoration(
-                        labelText: 'Location timestamp offset (secs)',
-                      ),
-                      hintText: "Example: -1.5",
-                      validator: validateDouble),
                   ValueListenableBuilder<DateTime>(
                       valueListenable: setLiveArgsTs,
                       builder: (BuildContext context, DateTime setTs,
                           Widget? child) {
-                        developer.log("rebld pref live setTs:  $setTs");
                         return PrefText(
-                            key: ValueKey('lon_${setTs.millisecondsSinceEpoch}'),
-                            pref: 'mock_lat_offset_meters',
-                            decoration: const InputDecoration(
-                              labelText: 'Adjust latitude offset (meters)',
-                            ),
-                            hintText: "Example: -2.5",
-                            validator: validateDouble);
+                          key: ValueKey(
+                              'mock_timestamp_offset_secs_${setTs.millisecondsSinceEpoch}'),
+                          pref: 'mock_timestamp_offset_secs',
+                          decoration: InputDecoration(
+                            labelText: 'Live location timestamp offset (secs)',
+                            suffixIcon: IconButton(
+                                icon: Icon(Icons.clear),
+                                onPressed: () async {
+                                  await prefService.set(
+                                      'mock_timestamp_offset_secs', '0.0');
+                                  await setLiveArgs(); // if needed to reflect change
+                                }),
+                          ),
+                          hintText: "Example: -1.5",
+                          validator: validateDouble,
+                          keyboardType: TextInputType.numberWithOptions(
+                              decimal: true, signed: true),
+                          onChange: (String) async => await setLiveArgs(),
+                        );
                       }),
                   ValueListenableBuilder<DateTime>(
                       valueListenable: setLiveArgsTs,
                       builder: (BuildContext context, DateTime setTs,
                           Widget? child) {
-                        developer.log("rebld pref live setTs:  $setTs");
                         return PrefText(
-                            key: ValueKey('lon_${setTs.millisecondsSinceEpoch}'),
-                            pref: 'mock_lon_offset_meters',
-                            decoration: const InputDecoration(
-                              labelText: 'Adjust longitude offset (meters)',
-                            ),
-                            hintText: "Example: 3.5",
-                            validator: validateDouble);
+                          key: ValueKey(
+                              'mock_lat_offset_meters_${setTs.millisecondsSinceEpoch}'),
+                          pref: 'mock_lat_offset_meters',
+                          decoration: InputDecoration(
+                            labelText: 'Live latitude offset (meters)',
+                            suffixIcon: IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () async {
+                                  await prefService.set(
+                                      'mock_lat_offset_meters', '0.0');
+                                  await setLiveArgs(); // if needed to reflect change
+                                }),
+                          ),
+                          hintText: "Example: -2.5",
+                          validator: validateDouble,
+                          keyboardType: TextInputType.numberWithOptions(
+                              decimal: true, signed: true),
+                          onChange: (String) async => await setLiveArgs(),
+                        );
                       }),
-                  PrefText(
-                      pref: 'mock_alt_offset_meters',
-                      decoration: const InputDecoration(
-                        labelText: 'Adjust altitude offset (meters)',
-                      ),
-                      hintText: "Example: -10.5",
-                      validator: validateDouble),
+                  ValueListenableBuilder<DateTime>(
+                      valueListenable: setLiveArgsTs,
+                      builder: (BuildContext context, DateTime setTs,
+                          Widget? child) {
+                        return PrefText(
+                          key: ValueKey('mock_lon_offset_meters_${setTs.millisecondsSinceEpoch}'),
+                          pref: 'mock_lon_offset_meters',
+                          decoration: InputDecoration(
+                            labelText: 'Live longitude offset (meters)',
+                            suffixIcon: IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () async {
+                                  await prefService.set(
+                                      'mock_lon_offset_meters', '0.0');
+                                  await setLiveArgs(); // if needed to reflect change
+                                }),
+                          ),
+                          hintText: "Example: 3.5",
+                          validator: validateDouble,
+                          keyboardType: TextInputType.numberWithOptions(
+                              decimal: true, signed: true),
+                          onChange: (String) async => await setLiveArgs(),
+                        );
+                      }),
+                  ValueListenableBuilder<DateTime>(
+                      valueListenable: setLiveArgsTs,
+                      builder: (BuildContext context, DateTime setTs,
+                          Widget? child) {
+                        return PrefText(
+                          key: ValueKey('mock_alt_offset_meters_${setTs.millisecondsSinceEpoch}'),
+                          pref: 'mock_alt_offset_meters',
+                          decoration: InputDecoration(
+                            labelText: 'Live altitude offset (meters)',
+                            suffixIcon: IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () async {
+                                  await prefService.set(
+                                      'mock_alt_offset_meters', '0.0');
+                                  await setLiveArgs(); // if needed to reflect change
+                                }),
+                          ),
+                          hintText: "Example: -10.5",
+                          validator: validateDouble,
+                          keyboardType: TextInputType.numberWithOptions(
+                              decimal: true, signed: true),
+                          onChange: (String) async => await setLiveArgs(),
+                        );
+                      }),
                   //mock_location_timestamp_offset_millis
                   PrefCheckbox(
                       title: Text("Enable Logging $log_bt_rx_log_uri"),
@@ -455,21 +511,30 @@ class SettingsScreenState extends State<SettingsScreen> {
                   const PrefCheckbox(
                       title: Text("Sort by nearest to Ref position"),
                       pref: 'list_nearest_streams_first'),
-                  PrefText(
-                      label: "Ref position lat, lon for sorting",
-                      pref: 'ref_lat_lon',
-                      hintText: "Example: 6.691289,101.674621",
-                      validator: (String? t) {
-                        if (t != null && t.contains(",")) {
-                          List<String> parts = t.split(",");
-                          if (parts.length == 2) {
-                            if (double.tryParse(parts[0]) != null &&
-                                double.tryParse(parts[1]) != null) {
-                              return null;
-                            }
-                          }
-                        }
-                        return "Please enter a valid location: latitude, longitude";
+
+                  ValueListenableBuilder<DateTime>(
+                      valueListenable: setLiveArgsTs,
+                      builder: (BuildContext context, DateTime setTs,
+                          Widget? child) {
+                        developer.log("rebld pref live setTs:  $setTs");
+                        return PrefText(
+                            key: ValueKey(
+                                'ref_lat_lon_${setTs.millisecondsSinceEpoch}'),
+                            label: "Ref position lat, lon for sorting",
+                            pref: 'ref_lat_lon',
+                            hintText: "Example: 6.691289,101.674621",
+                            validator: (String? t) {
+                              if (t != null && t.contains(",")) {
+                                List<String> parts = t.split(",");
+                                if (parts.length == 2) {
+                                  if (double.tryParse(parts[0]) != null &&
+                                      double.tryParse(parts[1]) != null) {
+                                    return null;
+                                  }
+                                }
+                              }
+                              return "Please enter a valid location: latitude, longitude";
+                            });
                       }),
                 ]),
               )),

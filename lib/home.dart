@@ -128,14 +128,20 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(index: currentIndex, children: screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
-        onDestinationSelected: (index) => setState(() => currentIndex = index),
+        onDestinationSelected: (index) => setState(() {
+          currentIndex = index;
+          if (currentIndex != 0) {
+
+          }
+        }),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.bluetooth), label: 'Connect'),
           NavigationDestination(icon: Icon(Icons.map), label: 'Map'),
           NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: currentIndex == 0
+          ? FloatingActionButton(
         onPressed: () async {
           try {
             await onFloatingButtonTap();
@@ -144,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         },
         child: reactiveIcon(floatingButtonIcon),
-      ),
+      ) : null,
     );
   }
 }
