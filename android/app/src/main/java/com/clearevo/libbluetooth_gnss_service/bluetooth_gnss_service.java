@@ -3,6 +3,7 @@ package com.clearevo.libbluetooth_gnss_service;
 
 import static android.app.PendingIntent.FLAG_IMMUTABLE;
 import static android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+import static android.os.SystemClock.elapsedRealtimeNanos;
 import static com.clearevo.bluetooth_gnss.MainActivity.MAIN_ACTIVITY_CLASSNAME;
 import static com.clearevo.bluetooth_gnss.MainActivity.get_bd_map;
 import static com.clearevo.libbluetooth_gnss_service.Log.LogObserver;
@@ -138,7 +139,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String NTRIP_ARG_PASS = "ntrip_pass";
     public static final String NTRIP_ARG_DISABLE = "disable_ntrip";
     public static final String[] NTRIP_CONNECT_ARGS = {NTRIP_ARG_HOST, NTRIP_ARG_PORT, NTRIP_ARG_MOUNTPOINT, NTRIP_ARG_USER, NTRIP_ARG_PASS, NTRIP_ARG_DISABLE};
-    //public static final String[] LOCATION_PROVIDERS = new String[]{LocationManager.GPS_PROVIDER, LocationManager.FUSED_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER};
     String m_log_bt_rx_log_uri = "";
     boolean m_disable_ntrip = false;
     boolean m_ble_qstarz_mode = false;
@@ -776,7 +776,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     String time_str = convertUnixTimeStampToSQLDateTime(new_ts);
                     object.put("time", time_str);
                     //d(TAG, "time: "+time_str);
-                    setMock(lat, lon, float_height_m, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts);
+                    setMock(lat, lon, float_height_m, heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts);
                 }
                 HashMap<String, Object> param_map = m_gnss_parser.getM_parsed_params_hashmap();
                 HashMap<String, Object> qstarz_param_map = jsonToMap(object);
@@ -1064,7 +1064,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
         NotificationManager mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+         {
             NotificationChannel channel = new NotificationChannel(notification_channel_id,
                     notification_name,
                     NotificationManager.IMPORTANCE_DEFAULT);
@@ -1105,7 +1105,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         boolean gps_enabled = false;
         try {
-            gps_enabled = gps_enabled && lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            gps_enabled = gps_enabled && lm.isProviderEnabled(GPS_PROVIDER);
         } catch(Exception e) {
             log(TAG, "check gps_enabled exception: "+ getStackTraceString(e));
         }
@@ -1117,16 +1117,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         boolean mock_enabled = false;
         try {
-
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                //log(TAG,"is_mock_location_enabled Build.VERSION.SDK_INT >= Build.VERSION_CODES.M");
-                AppOpsManager opsManager = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
-                mock_enabled = (opsManager.checkOp(AppOpsManager.OPSTR_MOCK_LOCATION, app_uid, app_id_string)== AppOpsManager.MODE_ALLOWED);
-            } else {
-                // in marshmallow this will always return true
-                //log(TAG,"is_mock_location_enabled older models");
-                mock_enabled = !android.provider.Settings.Secure.getString(context.getContentResolver(), "mock_location").equals("0");
-            }
+            //log(TAG,"is_mock_location_enabled Build.VERSION.SDK_INT >= Build.VERSION_CODES.M");
+            AppOpsManager opsManager = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
+            mock_enabled = (opsManager.checkOp(AppOpsManager.OPSTR_MOCK_LOCATION, app_uid, app_id_string)== AppOpsManager.MODE_ALLOWED);
         } catch(Exception e) {
             if (e instanceof java.lang.SecurityException) {
                 //no need to print - expected
@@ -1199,15 +1192,30 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
 
+    public static final String FUSED_PROVIDER = "fused";
+    public static final String GPS_PROVIDER = "gps";
+    public static final float MOCK_ACCURACY = 5.0f;
+    String[] providers_to_mock = new String[] {FUSED_PROVIDER, GPS_PROVIDER};
 
-    private void setMock(double latitude, double longitude, double altitude, float speed, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts) {
+    private void setMock(double latitude, double longitude, double altitude, double bearing_degrees, float speed_m_s, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts) {
         if (closing) {
             d(TAG, "setmock ignore as already closing");
             return;
         }
-        double bearing = azimuthDeg;
+
+        /*
+        gpt:
+        What Advanced Users Say
+
+    "To make Google Maps work, I had to mock both GPS and fused providers, and make sure to match timestamps with System.currentTimeMillis()."
+
+    "Setting speed and bearing carefully improved how Maps responds."
+
+    "Don't set bearing when you're stationary or it'll mess up the arrow."
+        * */
+
         long system_ts = System.currentTimeMillis();
-        long system_to_gnss_ts_diff = system_ts - gnss_ts;
+        long system_ts_nanos = SystemClock.elapsedRealtimeNanos();
         //Log.d(TAG, "setMock gnss_ts: "+gnss_ts +" vs system_ts: "+system_ts+" = system_to_gnss_ts_diff: "+system_to_gnss_ts_diff);
 
 
@@ -1238,12 +1246,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         /// ////// modern way
         boolean fuse_set_done = false;
 
-        for (String provider : locationManager.getAllProviders()) {
+        for (String provider : providers_to_mock) {
             try {
-                if (TextUtils.equals(provider, LocationManager.PASSIVE_PROVIDER)) {
-                    continue;
-                }
-
                 //Log.d(TAG, "setmock to provider: " + provider + " START");
 
                 Location newLocation = new Location(provider);
@@ -1255,14 +1259,14 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
                 newLocation.setLatitude(latitude);
                 newLocation.setLongitude(longitude);
-                newLocation.setAccuracy(5.0f);
+                newLocation.setAccuracy(MOCK_ACCURACY);
                 newLocation.setAltitude(altitude);
 
-                if (!Double.isNaN(bearing)) {
-                    newLocation.setBearing((float) bearing);
+                if (!Double.isNaN(bearing_degrees) && (!Float.isNaN(speed_m_s) && speed_m_s > 1.5)) {
+                    newLocation.setBearing((float) bearing_degrees);
                 }
 
-                newLocation.setSpeed(speed);
+                newLocation.setSpeed(speed_m_s);
 
                 if (n_sats > 0) {
                     Bundle bundle = new Bundle();
@@ -1270,17 +1274,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     newLocation.setExtras(bundle);
                 }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                    newLocation.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-                }
 
-                if (!TextUtils.equals(provider, LocationManager.FUSED_PROVIDER)) {
+                newLocation.setElapsedRealtimeNanos(system_ts_nanos);
+
+                if (!TextUtils.equals(provider, FUSED_PROVIDER)) {
                     locationManager.setTestProviderLocation(provider, newLocation);
-                }
-                //Log.d(TAG, "setmock to provider: " + provider + " SUCCESS");
-
-                // Fused provider: only once
-                if (TextUtils.equals(provider, LocationManager.FUSED_PROVIDER)) {
+                } else  {
+                    //FUSED_PROVIDER
                     try {
                         if (fusedClient == null) {
                             fusedClient = LocationServices.getFusedLocationProviderClient(this);
@@ -1294,7 +1294,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 }
 
             } catch (Throwable tr) {
-                if (!LocationManager.GPS_PROVIDER.equals(provider) && ("" + tr).contains("unknown")) {
+                if (("" + tr).contains("unknown")) {
                     // ok
                 } else {
                     log("WARNING: setTestProviderLocation for provider: " + provider + " exception: " + tr);
@@ -1316,8 +1316,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             try {jo.put("longitude", longitude);} catch (Exception e) {}
             try {jo.put("altitude", altitude);} catch (Exception e) {}
             //try {jo.put("accuracy", accuracy);} catch (Exception e) {}
-            try {jo.put("bearing", bearing);} catch (Exception e) {}
-            try {jo.put("speed", speed);} catch (Exception e) {}
+            try {jo.put("bearing", bearing_degrees);} catch (Exception e) {}
+            try {jo.put("speed_m_s", speed_m_s);} catch (Exception e) {}
             try {jo.put("n_sats", n_sats);} catch (Exception e) {}
             intent.putExtra(INTENT_EXTRA_DATA_JSON_KEY, jo.toString());
             getApplicationContext().sendBroadcast(intent);
@@ -1333,8 +1333,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         m_gnss_parser.put_param("", "lon", longitude);
         m_gnss_parser.put_param("", "alt", altitude);
         m_gnss_parser.put_param("", "alt_type", alt_is_elipsoidal?"ellipsoidal":"orthometric");
-        if (!Double.isNaN(bearing))
-            m_gnss_parser.put_param("", "course", bearing);
+        if (!Double.isNaN(bearing_degrees)) {
+            m_gnss_parser.put_param("", "course", bearing_degrees);
+        }
+        m_gnss_parser.put_param("", "speed_m_s", speed_m_s);
         m_gnss_parser.put_param("", "n_sats", n_sats);
         //m_gnss_parser.put_param("", "accuracy", accuracy);
 
@@ -1389,10 +1391,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             try {
                 LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-                for (String provider : locationManager.getAllProviders()) {
+                for (String provider : providers_to_mock) {
                     try {
-                        if (TextUtils.equals(provider, LocationManager.PASSIVE_PROVIDER) ||
-                                TextUtils.equals(provider, LocationManager.FUSED_PROVIDER)) {
+                        if (
+                                TextUtils.equals(provider, FUSED_PROVIDER)) {
                             continue;
                         }
                         //Log.d(TAG, "deactivate_mock_location() provider: " + provider+" START");
@@ -1403,7 +1405,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         //Log.d(TAG, "deactivate_mock_location() provider: " + provider+" SUCCESS");
                     } catch (Throwable tr) {
                         //Log.d(TAG, "deactivate_mock_location() provider: " + provider+" FAILED exception: "+Log.getStackTraceString(tr));
-                        if (!provider.equals(LocationManager.GPS_PROVIDER) && (""+tr).contains("unknown")) {
+                        if ((""+tr).contains("unknown")) {
                             //ok
                         } else {
                             log("WARNING: setTestProviderEnabled for provider: " + provider + " exception: " + tr);
@@ -1455,10 +1457,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             try {
                 log(TAG, "activate_mock_location 0");
                 LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                for (String provider : locationManager.getAllProviders()) {
+                for (String provider : providers_to_mock) {
                     try {
-                        if (TextUtils.equals(provider, LocationManager.PASSIVE_PROVIDER) ||
-                                TextUtils.equals(provider, LocationManager.FUSED_PROVIDER)) {
+                        if (TextUtils.equals(provider, FUSED_PROVIDER)) {
                             continue;
                         }
                         //Log.d(TAG, "activate_mock_location() provider: " + provider+" START");
@@ -1479,7 +1480,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         //Log.d(TAG, "activate_mock_location() provider: " + provider+" SUCCESS");
                     } catch (Throwable tr) {
                         //Log.d(TAG, "activate_mock_location() provider: " + provider+" FAILED exception: "+Log.getStackTraceString(tr));
-                        if (!provider.equals(LocationManager.GPS_PROVIDER) && (""+tr).contains("unknown")) {
+                        if ((""+tr).contains("unknown")) {
                             //ok
                         } else {
                             log("WARNING: setTestProviderEnabled for provider: " + provider + " exception: " + tr);
@@ -1630,7 +1631,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         } catch (Exception e) {
                             log(TAG, "get course failed exception: "+ getStackTraceString(e));
                         }
-                        setMock(lat, lon, alt, (float) speed, alt_is_ellipsoidal, n_sats, hdop, talker, new_ts);
+                        setMock(lat, lon, alt, bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, talker, new_ts);
                         break;
                     } else {
                         //omit as same ts as last
