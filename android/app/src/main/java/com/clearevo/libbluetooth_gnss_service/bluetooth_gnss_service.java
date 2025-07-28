@@ -194,9 +194,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     }
 
                     if (m_auto_reconnect) {
-                        start_auto_reconnect_thread();
+                        start_auto_reconnect_thread(connectArgs);
                     } else {
-                        connect();
+                        connect(connectArgs);
                     }
                 }
             } catch (Exception e) {
@@ -215,15 +215,16 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     public static final String log_uri_pref_key = "flutter.pref_log_uri";
 
-    void connect() {
+    void connect(HashMap<String, Object> connectArgs) {
         {
+            m_start_connect_args = connectArgs;
             if (m_bdaddr == null) {
                 String msg = "bluetooth_gnss_service: startservice: Target Bluetooth device not specifed - cannot start...";
                 log(TAG, msg);
                 toast(msg);
             } else {
                 log(TAG, "onStartCommand got bdaddr");
-                int start_ret = connect(m_bdaddr, m_secure_rfcomm, getApplicationContext());
+                int start_ret = connect(connectArgs, m_bdaddr, m_secure_rfcomm, getApplicationContext());
                 if (start_ret == 0) {
                     start_foreground("Connecting...", "target device: " + m_bdaddr, "");
                 }
@@ -324,7 +325,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         log(TAG, "stop_auto_reconnect_thread end");
     }
 
-    void start_auto_reconnect_thread() {
+    void start_auto_reconnect_thread(HashMap<String, Object> connectArgs) {
+        m_start_connect_args = connectArgs;
         if (m_auto_reconnect) {
 
             stop_auto_reconnect_thread();
@@ -346,7 +348,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                     @Override
                                     public void run() {
                                         toast("Auto-Reconnect: Trying to connect...");
-                                        connect();
+                                        connect(connectArgs);
                                     }
                                 });
                             } else {
@@ -375,8 +377,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         }
     }
 
-    int connect(String bdaddr, boolean secure, Context context) {
+    int connect(HashMap<String, Object> connectArgs, String bdaddr, boolean secure, Context context) {
         int ret = -1;
+        m_start_connect_args = connectArgs;
 
         try {
 
