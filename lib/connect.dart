@@ -157,7 +157,7 @@ Future<void> connect() async {
           'ntrip_pass': prefService.get('ntrip_pass'),
           'autostart': autostart,
 
-      'mock_timestamp_use_system_time': prefService.get('mock_location_timestamp_use_system_time')! as bool,
+      'mock_timestamp_use_system_time': true,
       'mock_timestamp_offset_secs': double.parse(prefService.get('mock_timestamp_offset_secs') ?? "0.0"),
       'mock_lat_offset_meters': double.parse(prefService.get('mock_lat_offset_meters') ?? "0.0"),
       'mock_lon_offset_meters': double.parse(prefService.get('mock_lon_offset_meters') ?? "0.0"),
@@ -375,7 +375,7 @@ Future<ConnectState> _checkUpdateSelectedDev(
   }
 
   //ok - ready to connect
-  icon_map["'Mock Location app' is 'Bluetooth GNSS'\nWARNING: When you need use internal GPS device again,\nSet 'Select mock location app' to 'Nothing'\n(in 'Developer Settings')."] = iconOk;
+  icon_map["'Mock Location app' is 'Bluetooth GNSS'\nWARNING: If you want use internal GPS device again,\nSet 'Select mock location app' to 'Nothing'\n(in 'Developer Settings')."] = iconOk;
   connectStatus.value = "Please press the floating button to connect...";
   connectSelectedDevice.value = selected_dev_sum;
 
@@ -385,7 +385,7 @@ Future<ConnectState> _checkUpdateSelectedDev(
 Future<void> setLiveArgs() async
 {
   await methodChannel.invokeMethod('setLiveArgs', {
-    'mock_timestamp_use_system_time': prefService.get('mock_location_timestamp_use_system_time')! as bool,
+    'mock_timestamp_use_system_time': true,
     'mock_timestamp_offset_secs': double.parse(prefService.get('mock_timestamp_offset_secs') ?? "0.0"),
     'mock_lat_offset_meters': double.parse(prefService.get('mock_lat_offset_meters') ?? "0.0"),
     'mock_lon_offset_meters': double.parse(prefService.get('mock_lon_offset_meters') ?? "0.0"),
