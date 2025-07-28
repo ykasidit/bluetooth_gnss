@@ -264,10 +264,6 @@ class SettingsScreenState extends State<SettingsScreen> {
                       title: Text(
                           "Check for Settings > 'Location' ON and 'High Accuracy'"),
                       pref: 'check_settings_location'),
-                  const PrefCheckbox(
-                      title: Text(
-                          "Mock location use system time (instead of GNSS device RMC time)"),
-                      pref: 'mock_location_timestamp_use_system_time'),
                   ValueListenableBuilder<DateTime>(
                       valueListenable: setLiveArgsTs,
                       builder: (BuildContext context, DateTime setTs,
