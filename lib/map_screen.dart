@@ -96,8 +96,8 @@ class MapScreenState extends State<MapScreen> {
                     }
                   });
                 }
-                developer.log(
-                    "building new MarkerLayer for externalPos: $externalPos");
+                /*developer.log(
+                    "building new MarkerLayer for externalPos: $externalPos");*/
                 return MarkerLayer(
                   markers: [
                     if (externalPos != null)
@@ -115,8 +115,8 @@ class MapScreenState extends State<MapScreen> {
             ValueListenableBuilder<LatLng?>(
               valueListenable: mapExternalDevPosOri,
               builder: (context, externalPos, _) {
-                developer.log(
-                    "building new MarkerLayer for mapExternalDevPosOri: $mapExternalDevPosOri");
+                /*developer.log(
+                    "building new MarkerLayer for mapExternalDevPosOri: $mapExternalDevPosOri");*/
                 return MarkerLayer(
                   markers: [
                     if (externalPos != null)
