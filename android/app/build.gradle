@@ -46,6 +46,10 @@ android {
         targetSdk 34
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
+
+        ndk {
+            abiFilters "arm64-v8a"
+        }
     }
 
     dependenciesInfo {
@@ -75,16 +79,7 @@ android {
             shrinkResources false //required for minifyEnabled false above
             }
     }
-    packagingOptions {
-        //go executable to run
-        jniLibs {
-            excludes += ["lib/mips/**", "lib/mips64/**", "lib/x86/**", "lib/x86_64/**"]
-            keepDebugSymbols += ["*/voicetest_client.so"]
-        }
-        resources {
-            excludes += ["lib/mips/**", "lib/mips64/**", "lib/x86/**", "lib/x86_64/**", "META-INF/DEPENDENCIES", "META-INF/LICENSE", "META-INF/LICENSE.txt", "META-INF/LICENSE.md", "META-INF/license.txt", "META-INF/NOTICE", "META-INF/NOTICE.txt", "META-INF/notice.txt", "META-INF/NOTICE.md", "META-INF/ASL2.0", "META-INF/*.kotlin_module", "META-INF/INDEX.LIST", "META-INF/io.netty.versions.properties", "kotlin/internal/internal.kotlin_builtins", "kotlin/reflect/reflect.kotlin_builtins", "kotlin/kotlin.kotlin_builtins", "kotlin/coroutines/coroutines.kotlin_builtins", "kotlin/ranges/ranges.kotlin_builtins", "kotlin/collections/collections.kotlin_builtins", "kotlin/annotation/annotation.kotlin_builtins", "junit/runner/logo.gif"]
-        }
-    }
+
     lint {
         abortOnError true
         ignoreWarnings false
@@ -92,22 +87,8 @@ android {
         warningsAsErrors true
     }
 
-    android.applicationVariants.all { variant ->
-        variant.mergeAssetsProvider.configure { mergeTask ->
-            mergeTask.doLast {
-                def outputDir = mergeTask.outputDir.get().asFile
-                def unwantedAbis = ["armeabi-v7a", "x86", "x86_64"]
 
-                unwantedAbis.each { abi ->
-                    def libDir = new File(outputDir, "lib/${abi}")
-                    if (libDir.exists()) {
-                        println "Deleting unwanted ABI directory: ${libDir}"
-                        libDir.deleteDir()
-                    }
-                }
-            }
-        }
-    }
+
 
 }
 
