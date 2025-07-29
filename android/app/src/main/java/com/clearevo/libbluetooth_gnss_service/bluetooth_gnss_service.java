@@ -134,7 +134,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     public static final String NTRIP_ARG_HOST = "ntrip_host";
     public static final String NTRIP_ARG_PORT = "ntrip_port";
-    public static final String NTRIP_ARG_MOUNTPOINT = "mountpoint";
+    public static final String NTRIP_ARG_MOUNTPOINT = "ntrip_mountpoint";
     public static final String NTRIP_ARG_USER = "ntrip_user";
     public static final String NTRIP_ARG_PASS = "ntrip_pass";
     public static final String NTRIP_ARG_DISABLE = "disable_ntrip";
@@ -239,7 +239,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 m_all_ntrip_params_specified = true;
                 try {
                     for (String key : NTRIP_CONNECT_ARGS) {
-                        if (m_start_connect_args.get(key) == null || ((String) m_start_connect_args.get(key)).isEmpty()) {
+                        Object val = m_start_connect_args.get(key);
+                        if (val == null || (val instanceof String && ((String)val).isEmpty())) {
                             log(TAG, "key: " + key + "got null or empty string so m_all_ntrip_params_specified false");
                             m_all_ntrip_params_specified = false;
                             break;
@@ -798,7 +799,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 //log(TAG, "qstarz ble lon: " + param_map.get("lon"));
                 try {
                     if (m_activity_for_nmea_param_callbacks != null) {
-                        m_activity_for_nmea_param_callbacks.onPositionUpdate(param_map);
+                        m_activity_for_nmea_param_callbacks.onPositionUpdate((HashMap<String, Object>) param_map.clone());
                     }
                 } catch (Exception e) {
                     log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: " + getStackTraceString(e));
@@ -991,7 +992,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 }
             }
             if (parsed_nmea != null) {
-                m_activity_for_nmea_param_callbacks.onDeviceMessage(gnss_sentence_parser.MessageType.NMEA, parsed_nmea);
+                m_activity_for_nmea_param_callbacks.onDeviceMessage(gnss_sentence_parser.MessageType.NMEA, (HashMap<String, Object>) parsed_nmea.clone());
             }
         } catch (Exception e) {
             log(TAG, "bluetooth_gnss_service on_readline parse exception: "+ getStackTraceString(e));
@@ -1186,7 +1187,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     void close_sensors()
     {
         try {
-            sensorManager.unregisterListener(sensorListener);
+            if (sensorManager != null && sensorListener != null) {
+                sensorManager.unregisterListener(sensorListener);
+            }
         } catch (Throwable tr) {}
         init_sensor_done = false;
     }
@@ -1202,6 +1205,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             d(TAG, "setmock ignore as already closing");
             return;
         }
+
+        double sensor_azimuth = azimuthDeg;
 
         /*
         gpt:
@@ -1242,9 +1247,11 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         m_gnss_parser.put_param("", "mock_location_set_lat", latitude);
         m_gnss_parser.put_param("", "mock_location_set_lon", longitude);
         m_gnss_parser.put_param("", "mock_location_set_alt", altitude);
-
+        m_gnss_parser.put_param("", "mock_location_gnss_bearing", bearing_degrees);
+        m_gnss_parser.put_param("", "mock_location_sensor_bearing", sensor_azimuth);
+        m_gnss_parser.put_param("", "mock_location_set_bearing", null);
         /// ////// modern way
-        boolean fuse_set_done = false;
+        double mock_bearing = Double.NaN;
 
         for (String provider : providers_to_mock) {
             try {
@@ -1262,8 +1269,17 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 newLocation.setAccuracy(MOCK_ACCURACY);
                 newLocation.setAltitude(altitude);
 
+
                 if (!Double.isNaN(bearing_degrees) && (!Float.isNaN(speed_m_s) && speed_m_s > 1.5)) {
-                    newLocation.setBearing((float) bearing_degrees);
+                    mock_bearing = bearing_degrees;
+                } else {
+                    if (!Float.isNaN(speed_m_s) && speed_m_s <= 1.5) {
+                        mock_bearing = sensor_azimuth;
+                    }
+                }
+                if (!Double.isNaN(mock_bearing)) {
+                    newLocation.setBearing((float) mock_bearing);
+                    m_gnss_parser.put_param("", "mock_location_set_bearing", mock_bearing);
                 }
 
                 newLocation.setSpeed(speed_m_s);
@@ -1316,7 +1332,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             try {jo.put("longitude", longitude);} catch (Exception e) {}
             try {jo.put("altitude", altitude);} catch (Exception e) {}
             //try {jo.put("accuracy", accuracy);} catch (Exception e) {}
-            try {jo.put("bearing", bearing_degrees);} catch (Exception e) {}
+            try {jo.put("bearing", mock_bearing);} catch (Exception e) {}
             try {jo.put("speed_m_s", speed_m_s);} catch (Exception e) {}
             try {jo.put("n_sats", n_sats);} catch (Exception e) {}
             intent.putExtra(INTENT_EXTRA_DATA_JSON_KEY, jo.toString());
@@ -1333,10 +1349,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         m_gnss_parser.put_param("", "lon", longitude);
         m_gnss_parser.put_param("", "alt", altitude);
         m_gnss_parser.put_param("", "alt_type", alt_is_elipsoidal?"ellipsoidal":"orthometric");
-        if (!Double.isNaN(bearing_degrees)) {
-            m_gnss_parser.put_param("", "course", bearing_degrees);
-        }
-        m_gnss_parser.put_param("", "speed_m_s", speed_m_s);
+        m_gnss_parser.put_param("", "bearing_degrees", bearing_degrees);
+        m_gnss_parser.put_param("", "sensor_azimuth", sensor_azimuth);
+        m_gnss_parser.put_param("", "speed_m_s", (double) speed_m_s);
+        double speed_kmh = speed_m_s * 3.6;
+        double speed_mph = speed_m_s * 2.23694;
+        m_gnss_parser.put_param("", "speed_kmh", speed_kmh);
+        m_gnss_parser.put_param("", "speed_mph", speed_mph);
         m_gnss_parser.put_param("", "n_sats", n_sats);
         //m_gnss_parser.put_param("", "accuracy", accuracy);
 
@@ -1647,7 +1666,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         //report params to activity
         try {
             if (m_activity_for_nmea_param_callbacks != null) {
-                m_activity_for_nmea_param_callbacks.onPositionUpdate(params_map);
+                m_activity_for_nmea_param_callbacks.onPositionUpdate((HashMap<String, Object>) params_map.clone());
             }
         } catch (Exception e) {
             log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: "+ getStackTraceString(e));

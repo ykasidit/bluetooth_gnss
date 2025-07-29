@@ -227,6 +227,7 @@ List<Widget> connectedRows(BuildContext context) {
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
+              const Padding(padding: EdgeInsets.all(50.0)), //so above dosnt get blocked/unreadable by the FAB
             ],
           ),
         )))
@@ -257,16 +258,20 @@ List<Widget> getDevSepcificRows(BuildContext context) {
   } else {
     List<List<String>> m = [
       ["Time from GNSS", "ANY_rmc_ts"],
+      ["Fix status", "ANY_status"],
+      ['Fix quality', "ANY_fix_quality"],
+      ['Speed (km/h)', "speed_kmh"],
+      ['Speed (mph)', "speed_mph"],
+      ['Speed (m/s)', "speed_m_s"],
       ["Ellipsoidal Height", "ANY_ellipsoidal_height"],
       ["Orthometric (MSL) Height", "ANY_gga_alt"],
       ["Geoidal Height", "ANY_geoidal_height"],
-      ["Fix status", "ANY_status"],
-      ['Fix quality', "ANY_fix_quality"],
       ['UBLOX Fix Type', "UBX_POSITION_navStat"],
       ['UBLOX XY Accuracy (m)', "UBX_POSITION_hAcc"],
       ["UBLOX Z Accuracy(m)", "UBX_POSITION_vAcc"],
       ['HDOP', "hdop"],
-      ["Course", "course"],
+      ["GNSS bearing (deg)", "mock_location_gnss_bearing"],
+      ["Sensor bearing (deg)", "mock_location_sensor_bearing"],
       ["N Sats used TOTAL", "n_sats"],
       ["N Galileo in use/view", "GA_n_sats_used"],
       ['N GPS in use/view', "GP_n_sats_used"],
@@ -300,7 +305,7 @@ List<Widget> getStatRows(BuildContext context)
     ["Final Mock Lat (deg)", "mock_location_set_lat"],
     ["Final Mock Lon (deg)", "mock_location_set_lon"],
     ["Final Mock Alt (m)", "mock_location_set_alt"],
-    ["Final Mock Bearing (deg)", "course"],
+    ["Final Mock Bearing (deg)", "mock_location_set_bearing"],
 
 
     ["Mock altitude type", "alt_type"],

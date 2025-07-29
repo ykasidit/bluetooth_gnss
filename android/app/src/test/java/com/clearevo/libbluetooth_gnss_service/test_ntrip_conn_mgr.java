@@ -61,10 +61,11 @@ public class test_ntrip_conn_mgr implements ntrip_conn_callbacks{
             pass = prop.getProperty("pass");
             prop_mp = prop.getProperty("mountpoint");
         } catch (IOException ex) {
-            no_ntrip_cred = true;
-            //host = "www.igs-ip.net";
+            //https://www.centipede-rtk.org/the-centipede-rtk-network
             host = "caster.centipede.fr";
             port = 2101;
+            user = "centipede";
+            pass = "centipede";
 
         }
 
