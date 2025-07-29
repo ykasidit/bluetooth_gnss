@@ -96,21 +96,19 @@ android {
         variant.mergeAssetsProvider.configure { mergeTask ->
             mergeTask.doLast {
                 def outputDir = mergeTask.outputDir.get().asFile
-                def patterns = [
-                        "libs/x86",
-                        "libs/x86_64",
-                        "shares/libs/android-*/x86",
-                        "shares/libs/android-*/x86_64"
-                ]
-                patterns.each { pattern ->
-                    def matches = new File(outputDir, pattern)
-                    if (matches.exists()) {
-                        matches.deleteDir()
+                def unwantedAbis = ["armeabi-v7a", "x86", "x86_64"]
+
+                unwantedAbis.each { abi ->
+                    def libDir = new File(outputDir, "lib/${abi}")
+                    if (libDir.exists()) {
+                        println "Deleting unwanted ABI directory: ${libDir}"
+                        libDir.deleteDir()
                     }
                 }
             }
         }
     }
+
 }
 
 flutter {
