@@ -63,7 +63,7 @@ List<Widget> connectedRows(BuildContext context) {
               ),
               Text(
                   "- You can now use other apps like 'OsmAnd' or 'Waze' for navigation normally.\n"
-                      "- NOT compatible with 'Google Maps' - it uses other location sources too and you will see location jumps.\n"
+                      "- NOT compatible with 'Google Maps' - it uses other location sources too and might behave strangely.\n"
                       "- Some apps that ignore 'mock' location, will not work correctly.\n"
                       "- Developers can also get position json Android Intents broadcasted as: \"com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE\"\n"
                   ,
@@ -261,7 +261,7 @@ List<Widget> getDevSepcificRows(BuildContext context) {
       ["Fix status", "ANY_status"],
       ['Fix quality', "ANY_fix_quality"],
       ["GNSS bearing (deg)", "mock_location_gnss_bearing"],
-      ["Sensor bearing (deg)", "mock_location_sensor_bearing"],
+      //["Sensor bearing (deg)", "mock_location_sensor_bearing"],
       ['Speed (km/h)', "speed_kmh"],
       ['Speed (mph)', "speed_mph"],
       ['Speed (m/s)', "speed_m_s"],
