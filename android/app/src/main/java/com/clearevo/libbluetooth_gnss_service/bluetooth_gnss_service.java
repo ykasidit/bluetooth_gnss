@@ -3,7 +3,6 @@ package com.clearevo.libbluetooth_gnss_service;
 
 import static android.app.PendingIntent.FLAG_IMMUTABLE;
 import static android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
-import static android.os.SystemClock.elapsedRealtimeNanos;
 import static com.clearevo.bluetooth_gnss.MainActivity.MAIN_ACTIVITY_CLASSNAME;
 import static com.clearevo.bluetooth_gnss.MainActivity.get_bd_map;
 import static com.clearevo.libbluetooth_gnss_service.Log.LogObserver;
@@ -22,10 +21,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
@@ -1133,7 +1128,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         return mock_enabled;
     }
 
-    final float[] gravity = new float[3];
+    /*final float[] gravity = new float[3];
     final float[] geomagnetic = new float[3];
     final float[] sensor_r = new float[9];
     final float[] orientation = new float[3];
@@ -1193,7 +1188,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         } catch (Throwable tr) {}
         init_sensor_done = false;
     }
-
+*/
 
     public static final String FUSED_PROVIDER = "fused";
     public static final String GPS_PROVIDER = "gps";
@@ -1206,7 +1201,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             return;
         }
 
-        double sensor_azimuth = azimuthDeg;
+        //double sensor_azimuth = azimuthDeg;
 
         /*
         gpt:
@@ -1248,7 +1243,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         m_gnss_parser.put_param("", "mock_location_set_lon", longitude);
         m_gnss_parser.put_param("", "mock_location_set_alt", altitude);
         m_gnss_parser.put_param("", "mock_location_gnss_bearing", bearing_degrees);
-        m_gnss_parser.put_param("", "mock_location_sensor_bearing", sensor_azimuth);
+        //m_gnss_parser.put_param("", "mock_location_sensor_bearing", sensor_azimuth);
         m_gnss_parser.put_param("", "mock_location_set_bearing", null);
         /// ////// modern way
         double mock_bearing = Double.NaN;
@@ -1273,9 +1268,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 if (!Double.isNaN(bearing_degrees) && (!Float.isNaN(speed_m_s) && speed_m_s > 1.5)) {
                     mock_bearing = bearing_degrees;
                 } else {
-                    if (!Float.isNaN(speed_m_s) && speed_m_s <= 1.5) {
+                    /* arrow heading seems to work on gmaps if i disable: if (!Float.isNaN(speed_m_s) && speed_m_s <= 1.5) {
                         mock_bearing = sensor_azimuth;
-                    }
+                    }*/
                 }
                 if (!Double.isNaN(mock_bearing)) {
                     newLocation.setBearing((float) mock_bearing);
@@ -1305,7 +1300,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         fusedClient.setMockLocation(newLocation);
                         //Log.d(TAG, "fusedClient mock done for provider: "+provider);
                     } catch (Throwable e) {
-                        Log.d(TAG, "WARNING: Fused mock failed: " + Log.getStackTraceString(e));
+                        Log.d(TAG, "WARNING: fusedClient mock failed: " + Log.getStackTraceString(e));
                     }
                 }
 
@@ -1350,7 +1345,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         m_gnss_parser.put_param("", "alt", altitude);
         m_gnss_parser.put_param("", "alt_type", alt_is_elipsoidal?"ellipsoidal":"orthometric");
         m_gnss_parser.put_param("", "bearing_degrees", bearing_degrees);
-        m_gnss_parser.put_param("", "sensor_azimuth", sensor_azimuth);
+        //m_gnss_parser.put_param("", "sensor_azimuth", sensor_azimuth);
         m_gnss_parser.put_param("", "speed_m_s", (double) speed_m_s);
         double speed_kmh = speed_m_s * 3.6;
         double speed_mph = speed_m_s * 2.23694;
@@ -1398,11 +1393,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     private void deactivate_mock_location() {
         log(TAG, "deactivate_mock_location0");
-        close_sensors();
+        //close_sensors();
         if (fusedClient != null) {
             try {
                 fusedClient.setMockMode(false);
-            } catch (Throwable tr) {}
+            } catch (Throwable tr) {
+                Log.d(TAG, "WARNING: deactivate_mock_location() fusedClient.setMockMode(false) exception: "+Log.getStackTraceString(tr));
+            }
             fusedClient = null;
         }
         if (is_mock_location_active()) {
@@ -1471,7 +1468,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             d(TAG, "activate_mock_location ignore as already closing");
             return;
         }
-        init_sensors();
+        //init_sensors();
         if (!is_mock_location_active()) {
             try {
                 log(TAG, "activate_mock_location 0");
