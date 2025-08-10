@@ -146,7 +146,7 @@ Future<void> connect() async {
     final bool ret = (await methodChannel.invokeMethod('connect', {
           "bdaddr": bdaddr,
           'secure': prefService.get('secure') ?? true,
-          'reconnect': prefService.get('reconnect') ?? false,
+          'reconnect': false, //TODO: retest/recode this feature - not well tested - users say no way to stop/disconnect when fail - prefService.get('reconnect') ?? false,
           'ble_gap_scan_mode': gapMode,
           'log_bt_rx_log_uri': log_bt_rx_log_uri,
           'disable_ntrip': prefService.get('disable_ntrip') ?? false,
@@ -353,6 +353,7 @@ Future<ConnectState> _checkUpdateSelectedDev(
     icon_map["Target device selected:\n${connectSelectedDevice.value}"] =
         iconOk;
   }
+  /* doesnt work in current targetsdk on some phones as in req emails, pixel 9?
   bool checkLocation = prefService.get('check_settings_location') ?? true;
   if (checkLocation) {
     if (!(await isLocationEnabled())) {
@@ -364,7 +365,7 @@ Future<ConnectState> _checkUpdateSelectedDev(
     }
     //developer.log('check_and_update_selected_device13');
     icon_map["Location is on and 'High Accuracy'"] = iconOk;
-  }
+  }*/
 
   if (!(await isMockLocationEnabled())) {
     String msg =

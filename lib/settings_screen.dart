@@ -254,16 +254,16 @@ class SettingsScreenState extends State<SettingsScreen> {
                   const PrefTitle(title: Text('Bluetooth Connection settings')),
                   const PrefCheckbox(
                       title: Text("Secure RFCOMM connection"), pref: 'secure'),
-                  const PrefCheckbox(
+                  /*const PrefCheckbox(
                       title: Text("Auto-reconnect - when disconnected"),
-                      pref: 'reconnect'),
+                      pref: 'reconnect'),*/
                   const PrefCheckbox(
                       title: Text("Autostart - connect on phone boot"),
                       pref: 'autostart'),
-                  const PrefCheckbox(
+                  /*const PrefCheckbox(
                       title: Text(
                           "Check for Settings > 'Location' ON and 'High Accuracy'"),
-                      pref: 'check_settings_location'),
+                      pref: 'check_settings_location'),*/
                   ValueListenableBuilder<DateTime>(
                       valueListenable: setLiveArgsTs,
                       builder: (BuildContext context, DateTime setTs,
