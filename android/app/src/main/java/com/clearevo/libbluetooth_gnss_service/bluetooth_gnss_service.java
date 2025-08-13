@@ -325,6 +325,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 log(TAG, "interrrupt old m_auto_reconnect_thread failed exception: " + getStackTraceString(e));
             }
             log(TAG, "stop_auto_reconnect_thread1.2");
+            m_handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    toast("Auto-Reconnect: Stopped");
+                }
+            });
         }
         log(TAG, "stop_auto_reconnect_thread end");
     }
@@ -392,7 +398,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 toast("connection already starting - please wait...");
                 return 1;
             } else if (g_rfcomm_mgr != null && g_rfcomm_mgr.is_bt_connected()) {
-                toast("already connected - press Back to disconnect and exit...");
+                toast("already connected");
                 return 2;
             } else {
 
