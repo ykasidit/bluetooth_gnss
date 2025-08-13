@@ -165,8 +165,12 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
                                         Log.d(TAG, "disconnect0");
                                         if (m_service != null && mBound) {
                                             Log.d(TAG, "disconnect1");
-                                            m_service.stop_auto_reconnect_thread();
-                                            m_service.close();
+                                            try {
+                                                m_service.stop_auto_reconnect_thread();
+                                            } catch (Throwable tr) {}
+                                            try {
+                                                m_service.close();
+                                            } catch (Throwable tr) {}
                                             return_success_val = true;
                                             Log.d(TAG, "disconnect2");
                                         }
