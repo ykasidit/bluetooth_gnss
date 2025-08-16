@@ -304,6 +304,7 @@ List<Widget> getStatRows(BuildContext context)
     ["Final Mock Time", "mock_location_set_ts"],
     ["Final Mock Lat (deg)", "mock_location_set_lat"],
     ["Final Mock Lon (deg)", "mock_location_set_lon"],
+    ["Final Mock Accuracy (m)", "mock_location_set_accuracy"],
     ["Final Mock Alt (m)", "mock_location_set_alt"],
     ["Final Mock Bearing (deg)", "mock_location_set_bearing"],
 
