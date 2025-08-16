@@ -219,6 +219,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String log_uri_pref_key = "flutter.pref_log_uri";
 
     void connect(HashMap<String, Object> connectArgs) {
+        closing = false;
         {
             m_start_connect_args = connectArgs;
             if (m_bdaddr == null) {
@@ -388,6 +389,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
     int connect(HashMap<String, Object> connectArgs, String bdaddr, boolean secure, Context context) {
+        closing = false;
         int ret = -1;
         m_start_connect_args = connectArgs;
 
@@ -778,7 +780,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     String time_str = convertUnixTimeStampToSQLDateTime(new_ts);
                     object.put("time", time_str);
                     //d(TAG, "time: "+time_str);
-                    setMock(lat, lon, accuracy, float_height_m, heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts);
+                    setMock(lat, lon, (float) accuracy, float_height_m, heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts);
                 }
                 HashMap<String, Object> param_map = m_gnss_parser.getM_parsed_params_hashmap();
                 HashMap<String, Object> qstarz_param_map = jsonToMap(object);
@@ -1198,13 +1200,17 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
     public static final String FUSED_PROVIDER = "fused";
     public static final String GPS_PROVIDER = "gps";
-    //public static final float MOCK_ACCURACY = 5.0f;
+    public static final float DEFAULT_MOCK_ACCURACY = 5.0f;
     String[] providers_to_mock = new String[] {FUSED_PROVIDER, GPS_PROVIDER};
 
-    private void setMock(double latitude, double longitude, double accuracy, double altitude, double bearing_degrees, float speed_m_s, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts) {
+    private void setMock(double latitude, double longitude, float accuracy, double altitude, double bearing_degrees, float speed_m_s, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts) {
         if (closing) {
             d(TAG, "setmock ignore as already closing");
             return;
+        }
+
+        if (Float.isNaN(accuracy)) {
+            accuracy = DEFAULT_MOCK_ACCURACY;
         }
 
         //double sensor_azimuth = azimuthDeg;
@@ -1247,6 +1253,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         altitude += mock_alt_offset_meters;
         m_gnss_parser.put_param("", "mock_location_set_lat", latitude);
         m_gnss_parser.put_param("", "mock_location_set_lon", longitude);
+        m_gnss_parser.put_param("", "mock_location_set_accuracy", accuracy);
         m_gnss_parser.put_param("", "mock_location_set_alt", altitude);
         m_gnss_parser.put_param("", "mock_location_gnss_bearing", bearing_degrees);
         //m_gnss_parser.put_param("", "mock_location_sensor_bearing", sensor_azimuth);
@@ -1267,7 +1274,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
                 newLocation.setLatitude(latitude);
                 newLocation.setLongitude(longitude);
-                newLocation.setAccuracy(MOCK_ACCURACY);
+                newLocation.setAccuracy(accuracy);
                 newLocation.setAltitude(altitude);
 
 
@@ -1358,7 +1365,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         m_gnss_parser.put_param("", "speed_kmh", speed_kmh);
         m_gnss_parser.put_param("", "speed_mph", speed_mph);
         m_gnss_parser.put_param("", "n_sats", n_sats);
-        //m_gnss_parser.put_param("", "accuracy", accuracy);
+        m_gnss_parser.put_param("", "accuracy", accuracy);
 
         //intent_pos_broadcast_ts
         if (log_file_uri != null) {
@@ -1573,7 +1580,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             "GQ"
     };
 
-    double DEFAULT_CEP = 4.0;
+    double DEFAULT_CEP = 5.0;
     double DEFAULT_UBLOX_M8030_CEP = 2.0;
     double DEFAULT_UBLOX_ZED_F9P_CEP = 1.5;
 
@@ -1607,7 +1614,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             log(TAG, "WARNING: broadcast position intent failed exception: "+ getStackTraceString(tr));
         }
         //try set_mock
-        double lat = 0.0, lon = 0.0, alt = 0.0, hdop = 0.0, speed = 0.0, bearing = 0.0/0.0, accuracy = 5.0;
+        double lat = Double.NaN, lon = Double.NaN, alt = Double.NaN, hdop = Double.NaN, speed = 0.0, bearing = Double.NaN, accuracy = Double.NaN;
         int n_sats = 0;
         for (String talker : GGA_MESSAGE_TALKER_TRY_LIST) {
 
@@ -1653,7 +1660,17 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         } catch (Exception e) {
                             log(TAG, "get course failed exception: "+ getStackTraceString(e));
                         }
-                        setMock(lat, lon, accuracy, alt, bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, talker, new_ts);
+                        if (params_map.containsKey("UBX_POSITION_hAcc")) {
+                            try {
+                                accuracy = Double.parseDouble((String) params_map.get("UBX_POSITION_hAcc"));
+                            } catch (Exception e) {}
+                        }
+
+                        //if not ubx or ubx conv failed...
+                        if (Double.isNaN(accuracy)) {
+                            accuracy = hdop * get_connected_device_CEP();
+                        }
+                        setMock(lat, lon, (float) accuracy, alt, bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, talker, new_ts);
                         break;
                     } else {
                         //omit as same ts as last
