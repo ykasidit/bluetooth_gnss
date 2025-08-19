@@ -91,6 +91,17 @@ String? validateDouble(String? newValue) {
   return null;
 }
 
+String? validateDoublePositive(String? newValue) {
+  double? tsoffset = double.tryParse(newValue ?? "");
+  if (tsoffset == null) {
+    return "Numbers with fractions only";
+  }
+  if (tsoffset <= 0) {
+    return "Greater than 0 only";
+  }
+  return null;
+}
+
 Row paramRow(BuildContext context, String param, {TextStyle? style, int double_fraction_digits=2, String title=""}) {
   paramMapSubscribe(param);
   return Row(

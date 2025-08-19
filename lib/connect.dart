@@ -146,6 +146,7 @@ Future<void> connect() async {
     final bool ret = (await methodChannel.invokeMethod('connect', {
           "bdaddr": bdaddr,
           'secure': prefService.get('secure') ?? true,
+          "device_cep":  prefService.get('device_cep') ?? "5.0",
           'reconnect': prefService.get('reconnect') ?? false, //TODO: retest/recode this feature - not well tested - users say no way to stop/disconnect when fail,
           'ble_gap_scan_mode': gapMode,
           'log_bt_rx_log_uri': log_bt_rx_log_uri,
