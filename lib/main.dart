@@ -16,6 +16,7 @@ Future<void> main() async {
   await prefService.setDefaultValues({
     'reconnect': false,
     'secure': true,
+    'device_cep': "5.0",
     'check_settings_location': false,
     'log_bt_rx': false,
     'disable_ntrip': false,

@@ -251,6 +251,19 @@ class SettingsScreenState extends State<SettingsScreen> {
                       'target_bdaddr',
                       "Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)",
                       bdMapNotifier),
+                 PrefText(
+                          key: ValueKey(
+                              'device_cep'),
+                          pref: 'device_cep',
+                          decoration: InputDecoration(
+                            labelText: 'Device CEP (m) (see device spec sheet)',
+                            hintText: "Example: 5",
+                          ),
+                          hintText: "Example: 5",
+                          validator: validateDoublePositive,
+                          keyboardType: TextInputType.numberWithOptions(
+                              decimal: true, signed: false),
+                        ),
                   const PrefTitle(title: Text('Bluetooth Connection settings')),
                   const PrefCheckbox(
                       title: Text("Secure RFCOMM connection"), pref: 'secure'),

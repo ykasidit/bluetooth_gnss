@@ -108,6 +108,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String BT_ARG_MOCK_LAT_OFFSET_METERS = "mock_lat_offset_meters";
     public static final String BT_ARG_MOCK_LON_OFFSET_METERS = "mock_lon_offset_meters";
     public static final String BT_ARG_MOCK_ALT_OFFSET_METERS = "mock_alt_offset_meters";
+    public static final String BT_ARG_DEVICE_CEP = "device_cep";
 
     FusedLocationProviderClient fusedClient;
     public static final String[] BT_CONNECT_ARGS = {
@@ -116,6 +117,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             BT_ARG_RECONNECT,
             BT_ARG_AUTOSTART,
             BT_ARG_LOG_BT_RX_URI,
+            BT_ARG_DEVICE_CEP,
     };
 
     public static final String[] BT_MOCK_ARGS = {
@@ -183,9 +185,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     m_auto_reconnect = (boolean) connectArgs.get(BT_ARG_RECONNECT);
                     m_log_bt_rx_log_uri = (String) connectArgs.get(BT_ARG_LOG_BT_RX_URI);
                     m_disable_ntrip = (boolean) connectArgs.get(NTRIP_ARG_DISABLE);
-
+                    try {
+                        m_device_cep = Double.parseDouble((String) connectArgs.get(BT_ARG_DEVICE_CEP));
+                    } catch (Exception e) {}
                     setLiveArgs(connectArgs);
-
                     m_target_activity_class = Class.forName(MAIN_ACTIVITY_CLASSNAME);
                     m_icon_id = R.mipmap.ic_launcher;
 
@@ -774,13 +777,15 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     double heading_degrees = object.getDouble("heading_degrees");
                     double float_speed_kmh = object.getDouble("float_speed_kmh");
                     double hdop = object.getDouble("hdop");
+                    double vdop = object.getDouble("QSTARZ_vdop");
                     double accuracy = hdop * get_connected_device_CEP();
+                    double vaccuracy = vdop * get_connected_device_CEP();
                     int satellite_count_used = object.getInt("satellite_count_used");
                     long new_ts = (object.getLong("timestamp_s")*1000L) + object.getLong("millisecond");
                     String time_str = convertUnixTimeStampToSQLDateTime(new_ts);
                     object.put("time", time_str);
                     //d(TAG, "time: "+time_str);
-                    setMock(lat, lon, (float) accuracy, float_height_m, heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts);
+                    setMock(lat, lon, (float) accuracy, (float) vaccuracy, float_height_m, heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts);
                 }
                 HashMap<String, Object> param_map = m_gnss_parser.getM_parsed_params_hashmap();
                 HashMap<String, Object> qstarz_param_map = jsonToMap(object);
@@ -1203,7 +1208,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final float DEFAULT_MOCK_ACCURACY = 5.0f;
     String[] providers_to_mock = new String[] {FUSED_PROVIDER, GPS_PROVIDER};
 
-    private void setMock(double latitude, double longitude, float accuracy, double altitude, double bearing_degrees, float speed_m_s, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts) {
+    private void setMock(double latitude, double longitude, float accuracy, float vaccuracy, double altitude, double bearing_degrees, float speed_m_s, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts) {
         if (closing) {
             d(TAG, "setmock ignore as already closing");
             return;
@@ -1254,6 +1259,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         m_gnss_parser.put_param("", "mock_location_set_lat", latitude);
         m_gnss_parser.put_param("", "mock_location_set_lon", longitude);
         m_gnss_parser.put_param("", "mock_location_set_accuracy", accuracy);
+        m_gnss_parser.put_param("", "mock_location_set_vaccuracy", vaccuracy);
         m_gnss_parser.put_param("", "mock_location_set_alt", altitude);
         m_gnss_parser.put_param("", "mock_location_gnss_bearing", bearing_degrees);
         //m_gnss_parser.put_param("", "mock_location_sensor_bearing", sensor_azimuth);
@@ -1276,7 +1282,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 newLocation.setLongitude(longitude);
                 newLocation.setAccuracy(accuracy);
                 newLocation.setAltitude(altitude);
-
+                if (!Float.isNaN(vaccuracy)) {
+                    newLocation.setVerticalAccuracyMeters(vaccuracy);
+                }
 
                 if (!Double.isNaN(bearing_degrees) && (!Float.isNaN(speed_m_s) && speed_m_s > 1.5)) {
                     mock_bearing = bearing_degrees;
@@ -1580,14 +1588,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             "GQ"
     };
 
-    double DEFAULT_CEP = 5.0;
+    double m_device_cep = 5.0;
     double DEFAULT_UBLOX_M8030_CEP = 2.0;
     double DEFAULT_UBLOX_ZED_F9P_CEP = 1.5;
 
     public double get_connected_device_CEP()
     {
-        //TODO - later set per detected device or adjustable by user in settings
-        return DEFAULT_CEP;
+        return m_device_cep;
     }
 
     @Override
@@ -1614,7 +1621,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             log(TAG, "WARNING: broadcast position intent failed exception: "+ getStackTraceString(tr));
         }
         //try set_mock
-        double lat = Double.NaN, lon = Double.NaN, alt = Double.NaN, hdop = Double.NaN, speed = 0.0, bearing = Double.NaN, accuracy = Double.NaN;
+        double lat = Double.NaN, lon = Double.NaN, alt = Double.NaN, hdop = Double.NaN, vdop = Double.NaN, speed = 0.0, bearing = Double.NaN, accuracy = Double.NaN;
         int n_sats = 0;
         for (String talker : GGA_MESSAGE_TALKER_TRY_LIST) {
 
@@ -1645,6 +1652,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         }
                         hdop = (double) params_map.get(talker+"_hdop");
                         speed = (double) params_map.get(talker+"_speed"); //Speed in knots (nautical miles per hour).
+                        try {
+                            vdop = (double) params_map.get("ANY_gsa_vdop");
+                        } catch (Exception e) {}
                         speed = speed * 0.514444; //convert to m/s
                         try {
                             Object course = null;
@@ -1665,12 +1675,21 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                 accuracy = Double.parseDouble((String) params_map.get("UBX_POSITION_hAcc"));
                             } catch (Exception e) {}
                         }
+                        double vaccuracy = Double.NaN;
+                        if (params_map.containsKey("UBX_POSITION_vAcc")) {
+                            try {
+                                vaccuracy = Double.parseDouble((String) params_map.get("UBX_POSITION_vAcc"));
+                            } catch (Exception e) {}
+                        }
 
                         //if not ubx or ubx conv failed...
                         if (Double.isNaN(accuracy)) {
                             accuracy = hdop * get_connected_device_CEP();
                         }
-                        setMock(lat, lon, (float) accuracy, alt, bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, talker, new_ts);
+                        if (Double.isNaN(vaccuracy)) {
+                            vaccuracy = vdop * get_connected_device_CEP();
+                        }
+                        setMock(lat, lon, (float) accuracy, (float) vaccuracy, alt, bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, talker, new_ts);
                         break;
                     } else {
                         //omit as same ts as last

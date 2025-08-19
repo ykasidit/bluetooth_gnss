@@ -269,6 +269,7 @@ List<Widget> getDevSepcificRows(BuildContext context) {
       ["Orthometric (MSL) Height", "ANY_gga_alt"],
       ["Geoidal Height", "ANY_geoidal_height"],
       ['HDOP', "hdop"],
+      ['VDOP', "ANY_gsa_vdop"],
       ["N Sats used TOTAL", "n_sats"],
       ["N Galileo in use/view", "GA_n_sats_used"],
       ['N GPS in use/view', "GP_n_sats_used"],
@@ -305,6 +306,7 @@ List<Widget> getStatRows(BuildContext context)
     ["Final Mock Lat (deg)", "mock_location_set_lat"],
     ["Final Mock Lon (deg)", "mock_location_set_lon"],
     ["Final Mock Accuracy (m)", "mock_location_set_accuracy"],
+    ["Final Mock V-accuracy (m)", "mock_location_set_vaccuracy"],
     ["Final Mock Alt (m)", "mock_location_set_alt"],
     ["Final Mock Bearing (deg)", "mock_location_set_bearing"],
 
