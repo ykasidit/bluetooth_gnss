@@ -25,7 +25,7 @@ Future<void> main() async {
     bleQstarzModeKey: false,
     'autostart': false,
     'list_nearest_streams_first': true,
-    'ntrip_host': "caster.centipede.fr",
+    'ntrip_host': "igs-ip.net",
     'ntrip_port': "2101",
     "mock_timestamp_use_system_time": true,
     "mock_timestamp_offset_secs": "0.0",

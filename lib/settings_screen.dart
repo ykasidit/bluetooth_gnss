@@ -239,11 +239,7 @@ class SettingsScreenState extends State<SettingsScreen> {
         service: prefService,
         child: MaterialApp(
           title: 'Settings',
-          home: Scaffold(
-              appBar: AppBar(
-                title: const Text('Settings'),
-              ),
-              body: ModalProgressHUD(
+          home: ModalProgressHUD(
                 inAsyncCall: loading,
                 child: PrefPage(children: [
                   const PrefTitle(title: Text('Target device:')),
@@ -546,7 +542,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                             });
                       }),
                 ]),
-              )),
+              ),
         ));
   }
 }
