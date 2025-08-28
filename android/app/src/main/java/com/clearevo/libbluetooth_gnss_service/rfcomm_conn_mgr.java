@@ -226,7 +226,7 @@ public class rfcomm_conn_mgr {
         try {
 
             close_gatt();
-
+            BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
             if (m_ble_mode) {
                 connect_ble(m_target_bt_server_dev);
             } else {
@@ -260,8 +260,6 @@ public class rfcomm_conn_mgr {
                     if (m_bluetooth_socket == null)
                         throw new Exception("create rfcommsocket failed - got null ret from alternative0 sock create to dev");
                 }
-
-                BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
                 Log.d(TAG, "calling m_bluetooth_socket.connect() START m_target_bt_server_dev: name: " + m_target_bt_server_dev.getName() + " bdaddr: " + m_target_bt_server_dev.getAddress());
                 m_bluetooth_socket.connect();
                 Log.d(TAG, "calling m_bluetooth_socket.connect() DONE m_target_bt_server_dev: name: " + m_target_bt_server_dev.getName() + " bdaddr: " + m_target_bt_server_dev.getAddress());

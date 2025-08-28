@@ -260,6 +260,7 @@ public class ntrip_conn_mgr {
 
     public static ArrayList<String> read_is_get_lines_until(InputStream is, String end_flag, int max_lines_throw_thereafter, int timeout_millis) throws Exception
     {
+        //already set so impossible at runtime - so no need - inputstream_to_queue_reader_thread.debug_break_on_avail_0 = false;
         byte[] tmp_read_buf = new byte[inputstream_to_queue_reader_thread.MAX_READ_BUF_SIZE];
         ArrayList<String> lines = new ArrayList<String>();
         byte[] resp_line_bytes = null;

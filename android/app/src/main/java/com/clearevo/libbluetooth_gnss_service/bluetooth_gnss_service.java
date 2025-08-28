@@ -766,7 +766,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
              "gsv_fields":[{"prn":0,"elevation":8194,"azimuth":35,"snr":33},{"prn":0,"elevation":7168,"azimuth":39,"snr":98},{"prn":0,"elevation":7958,"azimuth":45,"snr":47}]}
 * */
             try {
-                //d(TAG, "on_read_object ondevicemessage start");
+                //d(TAG, "on_read_object ondevicemessage start: "+object);
                 if (object.getInt("fix_status") >= 3) {
                     //3D so fix is ok now - get lat lon to send mock location
                     double lat = new BigDecimal(object.getString("latitude")).doubleValue(); //handle old phone precision lost
@@ -777,13 +777,16 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     double heading_degrees = object.getDouble("heading_degrees");
                     double float_speed_kmh = object.getDouble("float_speed_kmh");
                     double hdop = object.getDouble("hdop");
-                    double vdop = object.getDouble("QSTARZ_vdop");
+                    double vdop = Double.NaN;
+                    try{vdop = object.getDouble("vdop");}catch (Exception e){};
                     double accuracy = hdop * get_connected_device_CEP();
                     double vaccuracy = vdop * get_connected_device_CEP();
                     int satellite_count_used = object.getInt("satellite_count_used");
                     long new_ts = (object.getLong("timestamp_s")*1000L) + object.getLong("millisecond");
-                    String time_str = convertUnixTimeStampToSQLDateTime(new_ts);
-                    object.put("time", time_str);
+                    try {
+                        String time_str = QstarzUtils.getQstarzDatetime(object.getLong("timestamp_s"), object.getLong("millisecond"));//convertUnixTimeStampToSQLDateTime(new_ts);
+                        object.put("time", time_str);
+                    } catch (Exception e) {};
                     //d(TAG, "time: "+time_str);
                     setMock(lat, lon, (float) accuracy, (float) vaccuracy, float_height_m, heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts);
                 }
@@ -799,8 +802,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     m_gnss_parser.put_param(talker, "timestamp", ts);
                 }
                 {
-                    String rcr = QstarzUtils.getQstarzRCRLogType((int) param_map.get("QSTARZ_rcr").toString().charAt(0));
-                    m_gnss_parser.put_param(talker, "rcr_logtype", rcr);
+                    String rcr_logtype = QstarzUtils.getQstarzRCRLogType((int) param_map.get("QSTARZ_rcr"));
+                    m_gnss_parser.put_param(talker, "rcr_logtype", rcr_logtype);
                 }
 
                 //log(TAG, "qstarz ble lat: " + param_map.get("lat"));

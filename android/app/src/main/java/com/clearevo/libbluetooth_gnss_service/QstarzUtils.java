@@ -24,11 +24,7 @@ public class QstarzUtils {
         return lt == null ? chStr : chStr + " (" + lt + ")";
     }
 
-    public static String getQstarzDatetime(Integer timestampS, Integer millisecond) {
-        if (timestampS == null || millisecond == null) {
-            return "";
-        }
-
+    public static String getQstarzDatetime(long timestampS, long millisecond) {
         long totalMillis = timestampS * 1000L + millisecond;
         Date date = new Date(totalMillis);
 

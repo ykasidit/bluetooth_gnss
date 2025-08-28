@@ -36,11 +36,13 @@ public class test_queue_to_stream_io_threads {
         outgoing_thread.start();
         for (int i = 0; i < 10; i++) {
             try {
-                Thread.sleep(10);
+                Thread.sleep(50);
             } catch (Exception e) {}
             System.out.println(i+" baos size():"+ baos.size());
         }
 
+        System.out.println("input_buf_size: "+input_buf_size);
+        System.out.println("baos.size(): "+baos.size());
         assertTrue(input_buf_size == baos.size());
         assertTrue(incoming_buffers.size() == 0);
 
