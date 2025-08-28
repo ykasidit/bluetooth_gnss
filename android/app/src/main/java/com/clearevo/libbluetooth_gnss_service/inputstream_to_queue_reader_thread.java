@@ -4,6 +4,8 @@ import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 
@@ -15,15 +17,15 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
 
     final String TAG = "btgnss_istqrt";
 
-    public static final int MAX_READ_BUF_SIZE = 500_000;
+    public static final int MAX_READ_BUF_SIZE = 250_000;
     byte[] m_read_buffer = new byte[MAX_READ_BUF_SIZE];
-    public static final int BUFFERED_INPUTSTREAM_SIZE = 10 * MAX_READ_BUF_SIZE;
+    public static final int BUFFERED_INPUTSTREAM_SIZE = 2 * MAX_READ_BUF_SIZE;
     public static final byte[] CRLF = {0x0D, 0x0A};
 
     readline_callbacks m_readline_cb;
     read_buff_callbacks m_read_buff_cb;
 
-    BufferedInputStream m_bis;
+    InputStream m_bis;
     String wk = "kasidit_yak_pai_wangkeaw_leaw_na";
     private File debug_file_flag = new File("/sdcard/debug_"+this.getClass().getSimpleName());
     boolean m_debug_mode = debug_file_flag.exists();
@@ -96,7 +98,7 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
 
             if (readline_mode || read_buff_mode) {
                 m_queue = null;
-                m_bis = new BufferedInputStream(m_is, BUFFERED_INPUTSTREAM_SIZE);
+                m_bis = new PushbackInputStream(new BufferedInputStream(m_is, BUFFERED_INPUTSTREAM_SIZE), BUFFERED_INPUTSTREAM_SIZE);
             }
 
             int loop = 0;
@@ -179,14 +181,26 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
     }
 
 
+
+    public static boolean debug_break_on_avail_0 = false;
     static public byte[] bytes_readline(InputStream bis, byte[] tmp_read_buffer) throws Exception
     {
+        //System.out.println("bis: "+bis);
+        boolean is_pushback = bis instanceof PushbackInputStream;
+        //System.out.println("bis is_pushback: "+is_pushback);
         final int read_buffer_max_len = tmp_read_buffer.length;
-        int read;
+        int read = 0;
+        int nread = 0;
         for (int i = 0; i < read_buffer_max_len; i++) {
+            if (debug_break_on_avail_0 && bis.available() == 0) {
+                //System.out.println("read avail 0: break");
+                break;
+            }
             read = bis.read();
+            //System.out.println("read: "+read);
+            nread++;
             if (read == -1) {
-                return null;
+                break;
             }
             tmp_read_buffer[i] = (byte) read;
             if (i > 0 && tmp_read_buffer[i] == CRLF[1] && tmp_read_buffer[i-1] == CRLF[0]) {
@@ -196,6 +210,10 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
                 System.arraycopy(tmp_read_buffer, 0, readline_buffer, 0, total_read_bytes);
                 return readline_buffer;
             }
+        }
+        if (is_pushback) {
+            //System.out.println("bis unread: "+nread);
+            ((PushbackInputStream) bis).unread(tmp_read_buffer, 0, nread);
         }
         return null;
     }

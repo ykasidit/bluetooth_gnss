@@ -28,6 +28,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   String log_bt_rx_log_uri = "";
   Stream<dynamic>? event_stream;
   StreamSubscription<dynamic>? event_stream_sub;
+  ValueNotifier<DateTime> setMountpointTs = ValueNotifier(DateTime.now());
   @override
   void dispose() {
     developer.log("settings event stream cancel");
@@ -193,16 +194,8 @@ class SettingsScreenState extends State<SettingsScreen> {
             }
             developer.log("chosen_mountpoint: $chosenMountpoint");
             if (chosenMountpoint != null) {
-              prefService.set('ntrip_mountpoint', chosenMountpoint);
-
-              //force re-load of selected ntrip_mountpoint
-
-              if (mounted) {
-                await Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (BuildContext context) {
-                  return SettingsScreen();
-                }));
-              }
+              await prefService.set('ntrip_mountpoint', chosenMountpoint);
+              setMountpointTs.value = DateTime.timestamp(); //trigger ui update in the mountpoint field
             }
           } else if (eventMap["callback_src"] == "set_log_uri") {
             String log_uri = eventMap["callback_payload"] as String? ?? "";
@@ -432,14 +425,22 @@ class SettingsScreenState extends State<SettingsScreen> {
                         }
                         return null;
                       }),
-                  PrefText(
-                      label: "Stream (mount-point)",
-                      pref: 'ntrip_mountpoint',
-                      validator: (str) {
-                        if (str == null) {
-                          return "Invalid mount-point";
-                        }
-                        return null;
+                  ValueListenableBuilder<DateTime>(
+                      valueListenable: setMountpointTs,
+                      builder: (BuildContext context, DateTime setTs,
+                          Widget? child) {
+                        developer.log("rebld pref live setTs:  $setTs");
+                        return PrefText(
+                            key: ValueKey(
+                                'mountpoint_${setTs.millisecondsSinceEpoch}'),
+                            label: "Stream (mount-point)",
+                            pref: 'ntrip_mountpoint',
+                            validator: (str) {
+                              if (str == null) {
+                                return "Invalid mount-point";
+                              }
+                              return null;
+                            });
                       }),
                   PrefText(
                       label: 'User',
