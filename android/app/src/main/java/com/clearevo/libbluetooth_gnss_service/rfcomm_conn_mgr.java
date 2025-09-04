@@ -51,10 +51,8 @@ public class rfcomm_conn_mgr {
     List<Closeable> m_cleanup_closables;
     Thread m_conn_state_watcher;
 
-    rfcomm_conn_callbacks m_rfcomm_to_tcp_callbacks;
-
-    ConcurrentLinkedQueue<byte[]> m_incoming_buffers;
-    ConcurrentLinkedQueue<byte[]> m_outgoing_buffers;
+    PipedOutputStream pos = new PipedOutputStream();
+    PipedInputStream pis = new PipedInputStream(pos, DEFAULT_BUF_SIZE);
 
     final int MAX_SDP_FETCH_DURATION_SECS = 15;
     final int BTINCOMING_QUEUE_MAX_LEN = 100;
@@ -63,7 +61,6 @@ public class rfcomm_conn_mgr {
     static final UUID SPP_WELL_KNOWN_UUNID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     String m_tcp_server_host;
     int m_tcp_server_port;
-    boolean m_readline_callback_mode = false;
     boolean m_secure = true;
     volatile boolean closed = false;
     Parcelable[] m_fetched_uuids = null;
@@ -108,19 +105,18 @@ public class rfcomm_conn_mgr {
 
 
     //use this ctor for readline callback mode
-    public rfcomm_conn_mgr(BluetoothDevice target_bt_server_dev, boolean secure, rfcomm_conn_callbacks cb, Context context, boolean ble_mode) throws Exception {
-        m_readline_callback_mode = true;
+    public rfcomm_conn_mgr(BluetoothDevice target_bt_server_dev, boolean secure, Context context, boolean ble_mode) throws Exception {
         m_secure = secure;
         m_ble_mode = ble_mode;
         init(target_bt_server_dev, secure, null, 0, cb, context);
     }
 
     //use this ctor and specify tcp_server_host, tcp_server_port for connect-and-stream-data-to-your-tcp-server mode
-    public rfcomm_conn_mgr(BluetoothDevice target_bt_server_dev, boolean secure, final String tcp_server_host, final int tcp_server_port, rfcomm_conn_callbacks cb, Context context) throws Exception {
+    public rfcomm_conn_mgr(BluetoothDevice target_bt_server_dev, boolean secure, final String tcp_server_host, final int tcp_server_port, Context context) throws Exception {
         init(target_bt_server_dev, secure, tcp_server_host, tcp_server_port, cb, context);
     }
 
-    private void init(BluetoothDevice target_bt_server_dev, boolean secure, final String tcp_server_host, final int tcp_server_port, rfcomm_conn_callbacks cb, Context context) throws Exception {
+    private void init(BluetoothDevice target_bt_server_dev, boolean secure, final String tcp_server_host, final int tcp_server_port, Context context) throws Exception {
         m_context = context;
         m_secure = secure;
         m_rfcomm_to_tcp_callbacks = cb;
@@ -273,11 +269,7 @@ public class rfcomm_conn_mgr {
 
                 //start thread to read from bluetooth socket to incoming_buffer
                 inputstream_to_queue_reader_thread incoming_thread = null;
-                if (m_readline_callback_mode) {
-                    incoming_thread = new inputstream_to_queue_reader_thread(bs_is, m_rfcomm_to_tcp_callbacks);
-                } else {
-                    incoming_thread = new inputstream_to_queue_reader_thread(bs_is, m_incoming_buffers);
-                }
+                incoming_thread = new inputstream_to_queue_reader_thread(bs_is, m_incoming_buffers);
                 m_cleanup_closables.add(incoming_thread);
                 incoming_thread.start();
 

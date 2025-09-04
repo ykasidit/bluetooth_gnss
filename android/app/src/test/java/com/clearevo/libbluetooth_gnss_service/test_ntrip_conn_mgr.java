@@ -103,7 +103,7 @@ public class test_ntrip_conn_mgr implements ntrip_conn_callbacks{
             ntrip_conn_mgr mgr = null;
             try {
                 //use port+10 to use as a wrong server/port that would timeout
-                mgr = new ntrip_conn_mgr(host, port+10, "", null, null, this);
+                mgr = new ntrip_conn_mgr(host, port+10, "", "", "", this);
                 ArrayList<String> mpl = mgr.get_mount_point_list();
                 throw new Exception("must not reach here - failed");
             } catch (java.net.SocketTimeoutException se) {

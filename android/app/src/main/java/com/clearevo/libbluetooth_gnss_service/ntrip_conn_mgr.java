@@ -258,13 +258,37 @@ public class ntrip_conn_mgr {
         return request_msg;
     }
 
+    public static final byte[] CRLF = {0x0D, 0x0A};
+    static public byte[] bytes_readline(InputStream bis, byte[] tmp_read_buffer) throws Exception
+    {
+        final int read_buffer_max_len = tmp_read_buffer.length;
+        int read;
+        for (int i = 0; i < read_buffer_max_len; i++) {
+            read = bis.read();
+            if (read == -1) {
+                return null;
+            }
+            tmp_read_buffer[i] = (byte) read;
+            if (i > 0 && tmp_read_buffer[i] == CRLF[1] && tmp_read_buffer[i-1] == CRLF[0]) {
+                //ok we got CRLF now so copy and return a new array until this position
+                final int total_read_bytes = i+1;
+                byte[] readline_buffer = new byte[total_read_bytes];
+                System.arraycopy(tmp_read_buffer, 0, readline_buffer, 0, total_read_bytes);
+                return readline_buffer;
+            }
+        }
+        return null;
+    }
+
+
+
     public static ArrayList<String> read_is_get_lines_until(InputStream is, String end_flag, int max_lines_throw_thereafter, int timeout_millis) throws Exception
     {
         //already set so impossible at runtime - so no need - inputstream_to_queue_reader_thread.debug_break_on_avail_0 = false;
         byte[] tmp_read_buf = new byte[inputstream_to_queue_reader_thread.MAX_READ_BUF_SIZE];
         ArrayList<String> lines = new ArrayList<String>();
         byte[] resp_line_bytes = null;
-        while ((resp_line_bytes = inputstream_to_queue_reader_thread.bytes_readline(is, tmp_read_buf)) != null) {
+        while ((resp_line_bytes = bytes_readline(is, tmp_read_buf)) != null) {
             String read_line = new String(resp_line_bytes,  StandardCharsets.UTF_8);
             Log.d(TAG, "read_is_get_lines_until: "+read_line+" end_flag: "+end_flag);
 
