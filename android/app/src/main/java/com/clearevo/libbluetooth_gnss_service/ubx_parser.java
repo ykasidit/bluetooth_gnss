@@ -1,9 +1,6 @@
 package com.clearevo.libbluetooth_gnss_service;
 
 
-
-import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.toHexString;
-
 public class ubx_parser {
 
     public static final String TAG = "btgnssubx";

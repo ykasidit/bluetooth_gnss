@@ -1,4 +1,6 @@
 package com.clearevo.libbluetooth_gnss_service;
+import static com.clearevo.libbluetooth_gnss_service.GNSSPacketReader.DEFAULT_BUF_SIZE;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -6,7 +8,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.io.PushbackInputStream;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -34,22 +35,24 @@ public class test_bytes_readline {
 
     @Test
     public void test() throws Exception {
-        inputstream_to_queue_reader_thread.debug_break_on_avail_0 = true;
-        try {
+
             String ori_hex_str = "00 0D 0A 0D 0A B5 62 06 01 03 00 F1 00 01 FC 13 31 34 30 0D 0A B5 62 06 01 03 00 F1 00 01 FC 13 31 34 30 0D 0A FF EF";
             String[] assert_result_hex_strs = {
                     "00 0D 0A",
                     "0D 0A",
-                    "B5 62 06 01 03 00 F1 00 01 FC 13 31 34 30 0D 0A",
-                    "B5 62 06 01 03 00 F1 00 01 FC 13 31 34 30 0D 0A",
+                    "B5 62 06 01 03 00 F1 00 01 FC 13",
+                    "31 34 30 0D 0A",
+                    "B5 62 06 01 03 00 F1 00 01 FC 13",
+                    "31 34 30 0D 0A",
             };
 
             byte[] ori_buffer = fromHexString(ori_hex_str);
             InputStream is = new ByteArrayInputStream(ori_buffer);
-            byte[] tmp_buffer = new byte[inputstream_to_queue_reader_thread.MAX_READ_BUF_SIZE];
+            //byte[] tmp_buffer = new byte[inputstream_to_queue_reader_thread.MAX_READ_BUF_SIZE];
+            GNSSPacketReader reader = new GNSSPacketReader(is, DEFAULT_BUF_SIZE, true);
             int buffer_count = 0;
             while (true) {
-                byte[] read_buff = inputstream_to_queue_reader_thread.bytes_readline(is, tmp_buffer);
+                byte[] read_buff = reader.read();
                 if (read_buff == null) {
                     assertTrue(buffer_count == assert_result_hex_strs.length);
                     break;
@@ -60,44 +63,39 @@ public class test_bytes_readline {
                 buffer_count++;
             }
 
-            //readline without pushback will not carry on
             byte[] b0 = new byte[]{0x1, 0x2, 0x0d};
             byte[] b1 = new byte[]{0x0a, 0x3, 0x0d, 0x0a};
             InputStream is0 = new ByteArrayInputStream(b0);
-            byte[] rb0 = inputstream_to_queue_reader_thread.bytes_readline(is0, tmp_buffer);
+            reader = new GNSSPacketReader(is0, DEFAULT_BUF_SIZE, true);
+            byte[] rb0 = reader.read();
             Assert.assertTrue(is0.available() == 0);
             Assert.assertTrue(rb0 == null);
 
 
             System.out.println("=============");
             PipedOutputStream pos = new PipedOutputStream();
-            PipedInputStream pis = new PipedInputStream(pos, 500_000);
-            PushbackInputStream pbis = new PushbackInputStream(pis, 500_000);
+            PipedInputStream pis = new PipedInputStream(pos, DEFAULT_BUF_SIZE);
             pos.write(b0);
             pos.flush();
-            rb0 = inputstream_to_queue_reader_thread.bytes_readline(pbis, tmp_buffer);
+            reader = new GNSSPacketReader(pis, DEFAULT_BUF_SIZE, true);
+            rb0 = reader.read();
 
             System.out.println("first read bytes: " + rb0);
             Assert.assertTrue(rb0 == null);
-            Assert.assertTrue(pbis.available() == b0.length);
             pos.write(b1);
-            rb0 = inputstream_to_queue_reader_thread.bytes_readline(pbis, tmp_buffer);
+            rb0 = reader.read();
             Assert.assertTrue(rb0 != null);
             Assert.assertArrayEquals(new byte[]{0x1, 0x2, 0x0d, 0x0a}, rb0);
 
             System.out.println("second read bytes: " + toHexString(rb0));
-            rb0 = inputstream_to_queue_reader_thread.bytes_readline(pbis, tmp_buffer);
+            rb0 = reader.read();
             Assert.assertTrue(rb0 != null);
             Assert.assertArrayEquals(new byte[]{0x3, 0x0d, 0x0a}, rb0);
 
             System.out.println("third read bytes: " + toHexString(rb0));
-            rb0 = inputstream_to_queue_reader_thread.bytes_readline(pbis, tmp_buffer);
+            rb0 = reader.read();
             Assert.assertTrue(rb0 == null);
             pos.close();
-        } finally {
-            inputstream_to_queue_reader_thread.debug_break_on_avail_0 = false;
         }
 
-
-    }
 }

@@ -63,7 +63,7 @@ import java.util.UUID;
 
 
 
-public class bluetooth_gnss_service extends Service implements rfcomm_conn_callbacks, gnss_sentence_parser.gnss_parser_callbacks, ntrip_conn_callbacks, LogObserver {
+public class bluetooth_gnss_service extends Service implements gnss_sentence_parser.gnss_parser_callbacks, ntrip_conn_callbacks, LogObserver {
 
     static {
         System.loadLibrary("rust_lib_bluetooth_gnss");

@@ -26,7 +26,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.clearevo.libbluetooth_gnss_service.Log;
-import com.clearevo.libbluetooth_gnss_service.RealLocationHelper;
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 import com.clearevo.libbluetooth_gnss_service.ntrip_conn_mgr;
 import com.clearevo.libbluetooth_gnss_service.rfcomm_conn_mgr;
