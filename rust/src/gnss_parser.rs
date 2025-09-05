@@ -10,24 +10,12 @@ use std::collections::{HashMap, VecDeque};
 use std::ops::{Deref, DerefMut};
 use std::sync::Mutex;
 use nmea::{Error, Nmea, ParseResult, SentenceType};
-
-struct ParserState {
-    parser: Nmea,
-    last_input: String,
-}
-impl ParserState {
-    fn parse(&mut self, input: String) -> Result<SentenceType> {
-        self.last_input.clear();
-        self.last_input.push_str(&input);
-        let st = self.parser.parse(&self.last_input).map_err(|e| format_err!("{e}"))?;
-        Ok(st)
-    }
-}
+use nmea;
 
 lazy_static! {
     static ref INPUT_BUFFER: Mutex<VecDeque<u8>> = Mutex::new(VecDeque::with_capacity(1024));
     static ref OUTPUT_STATE_PARAMS_MAP: Mutex<HashMap<String, Value>> = Mutex::new(HashMap::new());
-    static ref NMEA_PARSER: Mutex<ParserState> = Mutex::new(ParserState{parser: nmea::Nmea::default(), last_input: String::new()});
+    static ref NMEA_PARSER: Mutex<Vec<Nmea>> = Mutex::new(vec![Nmea::default()]);
 }
 
 #[no_mangle]
@@ -55,6 +43,17 @@ pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_on_
     output.into_inner()
 }
 
+pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_reset_1gnss_1parser(
+    env: JNIEnv,
+    _class: JClass,
+) {
+    let mut p = NMEA_PARSER.lock().unwrap();
+    p.clear();
+    p.push(Nmea::default());
+    OUTPUT_STATE_PARAMS_MAP.lock().unwrap().clear();
+}
+
+
 fn queue_and_parse(read_buf: Vec<u8>) -> Result<Vec<Value>>
 {
     let mut queue = INPUT_BUFFER.lock().unwrap();
@@ -80,12 +79,48 @@ fn parse_queue_get_next_object(buf: &mut VecDeque<u8>) -> Result<Map<String, Val
         GnssPacket::Nmea(nmea_packet) => {
             let nmea_str = String::from_utf8(nmea_packet)?;
             let mut ret:Map<String, Value> = Map::new();
-            let mut parser = NMEA_PARSER.lock().unwrap();
-            let sentence_type = parser.parse(nmea_str)?;
+            let pr = nmea::parse_str(&nmea_str).map_err(|e| {anyhow!("{e}")})?;
+            match pr {
+                ParseResult::AAM(_) => {}
+                ParseResult::ALM(_) => {}
+                ParseResult::APA(_) => {}
+                ParseResult::BOD(_) => {}
+                ParseResult::BWC(_) => {}
+                ParseResult::BWW(_) => {}
+                ParseResult::DBK(_) => {}
+                ParseResult::DPT(_) => {}
+                ParseResult::GBS(_) => {}
+                ParseResult::GGA(gga) => {
+
+                }
+                ParseResult::GLL(_) => {}
+                ParseResult::GNS(_) => {}
+                ParseResult::GSA(_) => {}
+                ParseResult::GST(_) => {}
+                ParseResult::GSV(_) => {}
+                ParseResult::HDT(_) => {}
+                ParseResult::MDA(_) => {}
+                ParseResult::MTW(_) => {}
+                ParseResult::MWV(_) => {}
+                ParseResult::RMC(_) => {}
+                ParseResult::TTM(_) => {}
+                ParseResult::TXT(_) => {}
+                ParseResult::VHW(_) => {}
+                ParseResult::VTG(_) => {}
+                ParseResult::WNC(_) => {}
+                ParseResult::ZDA(_) => {}
+                ParseResult::ZFO(_) => {}
+                ParseResult::ZTG(_) => {}
+                ParseResult::PGRMZ(_) => {}
+                ParseResult::Unsupported(_) => {}
+            }
+            let mut parserv = NMEA_PARSER.lock().unwrap();
+            let mut parser = parserv.first_mut().unwrap();
+            let sentence_type = parser.parse(nmea_str.as_str()).map_err(|e| anyhow!("{e}"))?;
             ret.insert("sentence_type".to_string(),  Value::from(format!("{:?}",sentence_type)));
             match sentence_type {
                 SentenceType::RMC => {
-                    let n = NMEA_PARSER.lock().unwrap().parser.clone();
+                    let n = NMEA_PARSER.lock().unwrap().clone();
                     let v:Value = serde_json::to_value(&n)?;
                     ret.insert(
                         "parser_state".to_string(),
