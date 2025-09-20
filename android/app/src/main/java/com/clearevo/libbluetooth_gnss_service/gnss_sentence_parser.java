@@ -499,7 +499,6 @@ public class gnss_sentence_parser {
             //Log.d(TAG, "put_param null so omit");
             return; //not supported
         }
-
         String _key = talker_id+"_"+param_name;
         String _key_any = TALKER_ID_ANY+"_"+param_name;
         if (talker_id.isEmpty())
