@@ -2,14 +2,10 @@ use anyhow::{anyhow, Result};
 use nmea::Nmea;
 use serde_json::{Map, Value};
 use std::collections::{HashMap, VecDeque};
-use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH};
-use serde_json::{json};
 
 use crate::nmea_parser::parse_nmea_pkt;
 use crate::INPUT_BUFFER;
-use crate::OUTPUT_STATE_PARAMS_MAP;
-const eof_error: &str = "eof";
+const EOF_ERROR: &str = "eof";
 
 
 pub fn queue_and_parse(
@@ -19,6 +15,7 @@ pub fn queue_and_parse(
 ) -> Result<Vec<Value>> {
     let mut queue = INPUT_BUFFER.lock().unwrap();
     queue.extend(read_buf);
+    //println!("read_buf len: {}", read_buf.len());
 
     let mut parsed_objects: Vec<Value> = vec![];
     loop {
@@ -28,7 +25,7 @@ pub fn queue_and_parse(
                 parsed_objects.push(Value::from(obj));
             }
             Err(err) => {
-                if err.to_string() == eof_error {
+                if err.to_string() == EOF_ERROR {
                     break;
                 }
                 println!("WARNING: parse_queue_get_next_object got err: {}", err);
@@ -45,16 +42,20 @@ fn parse_queue_get_next_object(
     buf: &mut VecDeque<u8>,
 ) -> Result<Map<String, Value>> {
     if buf.is_empty() {
-        return Err(anyhow!(eof_error));
+        return Err(anyhow!(EOF_ERROR));
     }
+    //println!("parse_queue_get_next_object0");
     //get next valid nmea or ubx buffer
-    let gnss_pkt = next_gnss_packet(buf).ok_or(anyhow!(eof_error))?;
+    let gnss_pkt = next_gnss_packet(buf).ok_or(anyhow!(EOF_ERROR))?;
+    //println!("parse_queue_get_next_object1");
     match gnss_pkt {
         GnssPacket::Nmea(nmea_packet) => {
+	    println!("got nmea pkt");
             let ret = parse_nmea_pkt(params_state, nmea_parser_state, nmea_packet)?;
             Ok(ret)
         }
-        GnssPacket::Ubx(ubx_packet) => {
+        GnssPacket::Ubx(_ubx_packet) => {
+	    println!("got ubx");
             let mut ret: Map<String, Value> = Map::new();
             ret.insert("ubx_type".to_string(), Value::from(format!("{}", "todo")));
             Ok(ret)
@@ -75,7 +76,7 @@ pub fn next_gnss_packet(buf: &mut VecDeque<u8>) -> Option<GnssPacket> {
     loop {
         // Make it contiguous for fast scanning.
         let slice = buf.make_contiguous();
-
+	//println!("slice len: {}", slice.len());
         // If empty, we need more data.
         if slice.is_empty() {
             return None;
@@ -96,6 +97,7 @@ pub fn next_gnss_packet(buf: &mut VecDeque<u8>) -> Option<GnssPacket> {
             }
             i += 1;
         }
+	//println!("candidate at i {i}");
 
         // If we only found garbage so far, drop it and loop.
         if i > 0 {
@@ -179,3 +181,5 @@ pub fn next_gnss_packet(buf: &mut VecDeque<u8>) -> Option<GnssPacket> {
         }
     }
 }
+
+

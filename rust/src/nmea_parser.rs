@@ -1,31 +1,124 @@
+use std::any::type_name;
+use std::any::Any;
 use std::collections::HashMap;
 use anyhow::{anyhow, Result};
-use serde_json::{Map, Value, json};
-use nmea::{parse_nmea_sentence, parse_str, Nmea, ParseResult};
+use nmea::sentences::{GnssType};
+use serde_json::{Map, Value};
+use nmea::{parse_nmea_sentence, parse_str, Nmea, ParseResult, Satellite};
 
-use crate::put_param;
-use crate::TALKER_NONE;
+use crate::utils::inc_param;
+use crate::utils::put_param;
+use crate::utils::TALKER_NONE;
 
 const TYPE_KEY: &str ="type";
 const TYPE_NMEA: &str = "nmea";
 
+pub const TALKER_GP: &str = "GP"; // GPS
+pub const TALKER_GL: &str = "GL"; // GLONASS
+pub const TALKER_GA: &str = "GA"; // GALILEO
+pub const TALKER_GB: &str = "GB"; // BEIDOU
+pub const TALKER_GQ: &str = "GQ"; // QZSS
+pub const TALKER_GI: &str = "GI"; // NAVIC
+pub const TALKER_PUBX: &str = "PUBX";
+pub const TALKER_PUBX_NMEA_PREFIX: &str = "$PUBX";
 
-pub fn parse_nmea_pkt(params_state: &mut HashMap<String, Value>, nmea_parser_state: &mut Nmea, nmea_packet: Vec<u8>) -> Result<Map<String, Value>> {
+pub fn get_talker_id_for_gnss_system_id_int(gnss_system_id: u32) -> Option<&'static str> {
+    match gnss_system_id {
+        1 => Some(TALKER_GP),
+        2 => Some(TALKER_GL),
+        3 => Some(TALKER_GA),
+        4 => Some(TALKER_GB),
+        5 => Some(TALKER_GQ),
+        _ => None,
+    }
+}
+
+pub fn get_talker_id_for_gt(gt: &GnssType) -> Option<&'static str> {
+    match gt {
+        GnssType::Gps => Some(TALKER_GP),
+        GnssType::Glonass => Some(TALKER_GL),
+        GnssType::Galileo => Some(TALKER_GA),
+        GnssType::Beidou => Some(TALKER_GB),
+        GnssType::Qzss => Some(TALKER_GQ),
+	GnssType::NavIC => Some(TALKER_GI),
+        _ => None,
+    }
+}
+
+pub fn get_gsa_talker_id_from_gsa_nmea(nmea: &str, sids: &[u32]) -> Option<&'static str> {
+    if !nmea.contains(',') {
+        return None;
+    }
+
+    const GSA_SYSTEM_ID_NMEA_CSV_INDEX: usize = 18;
+    let parts: Vec<&str> = nmea.split(',').collect();
+
+    // Try to parse explicit system ID at index 18
+    if parts.len() > GSA_SYSTEM_ID_NMEA_CSV_INDEX {
+	let gsi = parts[GSA_SYSTEM_ID_NMEA_CSV_INDEX].trim();
+
+	let mut part = parts[GSA_SYSTEM_ID_NMEA_CSV_INDEX].trim();
+
+	// Cut off any checksum part like "4*05"
+	if let Some(star_pos) = part.find('*') {
+	    part = &part[..star_pos];
+	}
+
+	println!("gsi: {part}");
+	
+	if let Ok(id) = part.parse::<u32>() {
+	    return get_talker_id_for_gnss_system_id_int(id);
+	}
+    }
+
+    // Otherwise infer from satellite IDs
+    let mut is_gps = false;
+    let mut is_glonass = false;
+
+    for &sid in sids {
+        if (1..=32).contains(&sid) {
+            is_gps = true;
+        } else if (65..=96).contains(&sid) {
+            is_glonass = true;
+        }
+    }
+
+    if is_gps {
+        Some(TALKER_GP)
+    } else if is_glonass {
+        Some(TALKER_GL)
+    } else {
+        None
+    }
+}
+
+
+pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pkt: Vec<u8>) -> Result<Map<String, Value>> {
     let mut ret:Map<String, Value> = Map::new();
     ret.insert(TYPE_KEY.to_string(), Value::from(TYPE_NMEA));
-    let nmea_str_pretrim = String::from_utf8(nmea_packet).map_err(|e| {anyhow!("from_utf8 error: {e}")})?;
+    let nmea_str_pretrim = String::from_utf8(pkt).map_err(|e| {anyhow!("from_utf8 error: {e}")})?;
     let nmea_str = nmea_str_pretrim.trim();
-    //println!("nmea_str: {}", nmea_str);
+    println!("parse_neam_pkt: nmea_str: {}", nmea_str);
+
+    if nmea_str.starts_with(TALKER_PUBX_NMEA_PREFIX) {
+	println!("got pubx");
+	//TODO: parse pubx
+	return Ok(ret);
+    }
+    
     let sentence = parse_nmea_sentence(nmea_str).map_err(|e| {anyhow!("parse_nmea_sentence error: {e}")})?;
     let talker_id = sentence.talker_id;
     let sentence_id = sentence.message_id.as_str();
     ret.insert("talker".to_string(), Value::from(talker_id));
     ret.insert("name".to_string(), Value::from(sentence_id));
     ret.insert("nmea".to_string(), Value::from(nmea_str));
-    let parser = nmea_parser_state;
-    let fix_type = parser.parse_for_fix(nmea_str).map_err(|e| anyhow!("{e}"))?;
-    let fix_valid = fix_type.is_valid();
+    let parser = parser;
+    let sentence_counter = format!("{sentence_id}_count");
+    inc_param(params, talker_id.to_string(), sentence_counter);
+    let fix_type = parser.parse(nmea_str).map_err(|e| anyhow!("{e}"))?;
     let pr = parse_str(nmea_str).map_err(|e| {anyhow!("{e}")})?;
+    let sat_groups = parser.satellites();
+    println!("sat_groups: {:?} fix prns: {:?}", sat_groups, parser.fix_satellites_prns);
 
     match pr {
         ParseResult::AAM(_) => {}
@@ -42,7 +135,16 @@ pub fn parse_nmea_pkt(params_state: &mut HashMap<String, Value>, nmea_parser_sta
         }
         ParseResult::GLL(_) => {}
         ParseResult::GNS(_) => {}
-        ParseResult::GSA(_) => {}
+        ParseResult::GSA(gsa) => {
+
+	    let sids = gsa.fix_sats_prn;
+	    if let Some(talker) = get_gsa_talker_id_from_gsa_nmea(nmea_str, &sids) {
+		println!("Detected talker: {}", talker);
+		put_param(params, format!("{}", talker), "n_sats_used".to_string(), Value::from(sids.len()));
+	    } else {
+		println!("No talker detected");
+	    }
+	}
         ParseResult::GST(_) => {}
         ParseResult::GSV(_) => {}
         ParseResult::HDT(_) => {}
@@ -51,19 +153,42 @@ pub fn parse_nmea_pkt(params_state: &mut HashMap<String, Value>, nmea_parser_sta
         ParseResult::MWV(_) => {}
         ParseResult::RMC(_) => {
 
-            //dump parser state
-            put_param(params_state, TALKER_NONE.to_string(), "fix_type".to_string(), Value::from(format!("{:?}", fix_type)));
-            put_param(params_state, TALKER_NONE.to_string(), "lat".to_string(), Value::from(parser.latitude));
-            put_param(params_state, TALKER_NONE.to_string(), "lon".to_string(), Value::from(parser.longitude));
-            put_param(params_state, TALKER_NONE.to_string(), "alt".to_string(), Value::from(parser.altitude));
+	    let mut type_to_sat_map: HashMap<GnssType, Vec<Satellite>> = HashMap::new();
+	    for sg in sat_groups {
+		type_to_sat_map.entry(sg.gnss_type()).or_default().push(sg.clone());
+	    }
+	    
+	    for (gt, sats) in &type_to_sat_map {
+		let talker = get_talker_id_for_gt(&gt);
+		match talker {
+		    Some(t) => {
+			put_param(params, format!("{}", t), "n_sats_in_view".to_string(), Value::from(sats.len()));
+		    }
+		    None => {
+		    }
+		}
+		
+	    }
+
+
+	    //dump parser state
+            put_param(params, TALKER_NONE.to_string(), "fix_type".to_string(), Value::from(format!("{:?}", fix_type)));
+            put_param(params, TALKER_NONE.to_string(), "lat".to_string(), Value::from(parser.latitude));
+            put_param(params, TALKER_NONE.to_string(), "lon".to_string(), Value::from(parser.longitude));
+            put_param(params, TALKER_NONE.to_string(), "alt".to_string(), Value::from(parser.altitude));
             //Get height/separation of geoid above WGS84 ellipsoid, i.e. difference between WGS-84 earth ellipsoid and mean sea level.
-            put_param(params_state, TALKER_NONE.to_string(), "geoidal_height".to_string(), Value::from(parser.geoid_separation));
-            put_param(params_state, TALKER_NONE.to_string(), "n_sats_used".to_string(), Value::from(parser.num_of_fix_satellites));
-            put_param(params_state, TALKER_NONE.to_string(), "vdop".to_string(), Value::from(parser.vdop));
-            put_param(params_state, TALKER_NONE.to_string(), "hdop".to_string(), Value::from(parser.hdop));
-            put_param(params_state, TALKER_NONE.to_string(), "pdop".to_string(), Value::from(parser.pdop));
-            put_param(params_state, TALKER_NONE.to_string(), "speed_over_ground".to_string(), Value::from(parser.speed_over_ground));
-            put_param(params_state, TALKER_NONE.to_string(), "true_course".to_string(), Value::from(parser.true_course));
+            put_param(params, TALKER_NONE.to_string(), "geoidal_height".to_string(), Value::from(parser.geoid_separation));
+	    //println!("set n_sats_used: {:?}", parser.num_of_fix_satellites);
+            put_param(params, TALKER_NONE.to_string(), "n_sats_used".to_string(), Value::from(parser.num_of_fix_satellites));
+	    
+	    
+	    
+            put_param(params, TALKER_NONE.to_string(), "vdop".to_string(), Value::from(parser.vdop));
+            put_param(params, TALKER_NONE.to_string(), "hdop".to_string(), Value::from(parser.hdop));
+            put_param(params, TALKER_NONE.to_string(), "pdop".to_string(), Value::from(parser.pdop));
+            put_param(params, TALKER_NONE.to_string(), "speed_over_ground".to_string(), Value::from(parser.speed_over_ground));
+            put_param(params, TALKER_NONE.to_string(), "true_course".to_string(), Value::from(parser.true_course));
+
         }
         ParseResult::TTM(_) => {}
         ParseResult::TXT(_) => {}
@@ -74,8 +199,12 @@ pub fn parse_nmea_pkt(params_state: &mut HashMap<String, Value>, nmea_parser_sta
         ParseResult::ZFO(_) => {}
         ParseResult::ZTG(_) => {}
         ParseResult::PGRMZ(_) => {}
-        ParseResult::Unsupported(_) => {}
+        ParseResult::Unsupported(us) => {
+	    println!("unsupported: {us}");
+	}
     }
+
+    
     Ok(ret)
 }
 
@@ -83,25 +212,30 @@ pub fn parse_nmea_pkt(params_state: &mut HashMap<String, Value>, nmea_parser_sta
 mod tests {
     use super::*;
     use crate::gnss_parser::queue_and_parse;
-    
+    use nmea::SentenceType;
+    use serde_json::json;
+
     #[test]
     fn test_nmea_parse_map_state()
     {
-	let mut params_state: HashMap<String, Value> = HashMap::new();
-	let mut parser_state: Nmea = Nmea::default();
-	let example_nmea_gga = "$GNGGA,045115.00,0000.000,N,00000.000,E,1,12,0.60,3.0,M,-13.0,M,,*6F";
-	let ex1 = format!("chad_yak_pai_wangkeaw_leaw{}", example_nmea_gga);
+	let nav_st = vec![SentenceType::RMC];
+	let mut params: HashMap<String, Value> = HashMap::new();
+	let mut parser: Nmea = Nmea::create_for_navigation(&nav_st).unwrap();
+	let example_nmea_gga = "$GNGGA,045115.00,0000.000,N,00000.000,E,1,12,0.60,3.0,M,-13.0,M,,*6F\n";
+	let _ex1 = format!("chad_yak_pai_wangkeaw_leaw{}", example_nmea_gga);
+	let ex1 = _ex1.as_str();
 	let inputs = vec![
+	    example_nmea_gga,
             "$GAGSV,2,1,07,02,28,068,28,07,04,307,21,13,16,327,29,15,68,339,,0*73\n",
-            "$GAGSV,2,1,07,02,28,068,28,07,04,307,21,13,16,327,29,15,68,339,,0*73\r\n", //must support both crlf and lf
+            "$GAGSV,2,1,07,02,28,068,28,07,04,307,21,13,16,327,29,15,68,339,,0*73\r\n",
             "$GNRMC,095520.00,A,2733.35607,S,15302.15703,E,0.042,,240719,,,A,V*0A\n",
+
             "03:01:42  $GNGSA,A,3,17,05,12,19,09,28,02,06,,,,,1.10,0.49,0.99,1*03\n",
             "03:01:42  $GNGSA,A,3,81,67,66,79,78,,,,,,,,1.10,0.49,0.99,2*06\n",
             "03:01:42  $GNGSA,A,3,04,33,19,31,24,12,,,,,,,1.10,0.49,0.99,3*05\n",
             "03:01:42  $GNGSA,A,3,23,28,27,08,10,07,13,16,09,,,,1.10,0.49,0.99,4*05\n",
             "$GNGSA,A,3,26,31,10,32,14,16,25,20,18,22,41,,1.34,0.74,1.12*16\n",
 
-            //can handle input trash/invalid prefix
             "03:52:31  $GPGSV,3,1,12,02,30,352,41,05,67,295,38,06,18,039,28,09,03,049,37,1*68\n",
             "03:52:31  $GPGSV,3,2,12,12,44,295,46,13,32,171,31,15,12,204,32,17,34,106,31,1*6B\n",
             "03:52:31  $GPGSV,3,3,12,19,43,089,27,24,06,235,,25,08,315,,28,06,154,,1*6C\n",
@@ -136,24 +270,43 @@ mod tests {
             "03:52:31  $PUBX,00,035231.00,0641.64673,N,10137.05675,E,19.144,G3,1.2,2.2,0.015,0.00,0.037,,0.51,0.93,0.58,26,0,0*6D\n",
             "03:52:31  $PUBX,03,32,2,U,352,30,41,064,5,U,295,67,38,064,6,U,039,18,28,064,9,e,049,03,,000,12,U,295,44,46,064,13,U,171,32,31,061,15,U,204,12,32,064,17,U,106,34,31,007,19,U,089,43,27,003,24,-,235,06,,000,25,-,315,08,,000,28,e,154,06,,000,30,-,123,-2,,000,211,e,165,14,18,000,214,U,180,53,30,020,219,-,208,07,,000,221,-,307,05,,000,222,U,354,29,41,064,229,U,068,52,24,000,234,U,280,29,43,064,236,e,093,00,,000,241,U,214,40,28,026,243,U,051,26,30,064,159,-,099,45,,000,160,-,253,68,,000,161,-,122,77,,000,162,-,094,23,,000,163,-,264,40,,000,33,e,132,54,10,000,34,U,177,42,30,020,35,U,020,28,30,064,36,e,169,43,,000*38\n" ,
             "03:52:31  $PUBX,04,035231.00,140919,532351.00,2070,18,541289,165.421,08*1A\n",
-            "$GNVTG,,T,,M,0.206,N,0.382,K,A*30",
-            ex1.as_str()
+            "$GNVTG,,T,,M,0.206,N,0.382,K,A*30\n",
+            ex1,
+	    "$GNRMC,095520.00,A,2733.35607,S,15302.15703,E,0.042,,240719,,,A,V*0A\n",
 	];
 
 	for instr in inputs {
+	    println!("instr0: {instr}");
             let bb = instr.as_bytes();
-            let parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, bb).unwrap();
+            let parsed_pkts = queue_and_parse(&mut params, &mut parser, bb).unwrap();
             println!("parsed_json: {}", serde_json::to_string_pretty(&parsed_pkts).unwrap());
 	}
+	
+	println!("params state: {:?}", params);
+	println!("parser state: {:?}", parser);
+	
 
-	/* TODO: OUTPUT_STATE_PARAMS_MAP put in "state" key of jni func output or of queue_and_parse caller func
-	assertTrue(2 == (int) params.get("GN_GGA_count"));
-        assertTrue(1 == (int) params.get("GN_RMC_count"));
-        assertTrue(2 <= (int) params.get("GA_GSV_count"));
+	assert_eq!(2, params.get("GN_GGA_count").unwrap().as_number().unwrap().as_u64().unwrap()) ;
+	assert_eq!(2, params.get("GN_RMC_count").unwrap().as_number().unwrap().as_u64().unwrap());
+        assert_eq!(8, params.get("GA_GSV_count").unwrap().as_number().unwrap().as_u64().unwrap());
+	
+        //println!("n_sats_in_view: {}", );
+	println!("n_sats_used: {:?}", parser.num_of_fix_satellites);
+	assert_eq!(12, params["n_sats_used"].as_u64().unwrap());
 
-        System.out.println("GP_n_sats_in_view: "+params.get("GP_n_sats_in_view"));
-        System.out.println("GP_n_sats_used: "+params.get("GP_n_sats_used"));
-        assertTrue(11 == (int) params.get("GP_n_sats_used"));
+	assert_eq!(11, params["GP_n_sats_used"].as_u64().unwrap());
+	assert_eq!(12, params["GP_n_sats_in_view"].as_u64().unwrap());
+
+	assert_eq!(5, params["GL_n_sats_used"].as_u64().unwrap());
+	assert_eq!(10, params["GL_n_sats_in_view"].as_u64().unwrap());
+
+	assert_eq!(6, params["GA_n_sats_used"].as_u64().unwrap());
+	assert_eq!(10, params["GA_n_sats_in_view"].as_u64().unwrap());
+
+	assert_eq!(9, params["GB_n_sats_used"].as_u64().unwrap());
+	assert_eq!(18, params["GB_n_sats_in_view"].as_u64().unwrap());
+	
+	/*assertTrue(11 == (int) params.get("GP_n_sats_used"));
         assertTrue(12 == (int) params.get("GP_n_sats_in_view"));
         assertTrue(12 == ((List)params.get("GP_sats_in_view_snr_list_signal_id_1")).size());
 
@@ -167,17 +320,20 @@ mod tests {
         System.out.println("GB_n_sats_used: "+params.get("GB_n_sats_used"));
         assertTrue(9 == (int) params.get("GB_n_sats_used"));
         assertTrue(18 == (int) params.get("GB_n_sats_in_view"));
-        assertTrue(18 == ((List)params.get("GB_sats_in_view_snr_list_signal_id_1")).size());
+        assertTrue(18 == ((List)params.get("GB_sats_in_view_snr_list_signal_id_1")).size());*/
 
-        System.out.println("UBX_POSITION_numSvs: "+params.get("UBX_POSITION_numSvs"));
-        assertTrue(26 == Integer.parseInt((String) params.get("UBX_POSITION_numSvs")));
-        String[] plist = new String[] {"lat", "lon", "gga_alt", "gga_alt_units", "geoidal_height", "geoidal_height_units", "ellipsoidal_height"};
-        for (String pi : plist) {
-        System.out.println(pi+": "+params.get("GN_"+pi));
-    }
-        assertTrue(params.get("GN_lat").toString().startsWith("0."));
-        assertTrue(params.get("GN_lon").toString().startsWith("0."));
-	 */
+
+	println!("UBX_POSITION_numSvs: {}", params["UBX_POSITION_numSvs"]);
+	assert_eq!(26, params["UBX_POSITION_numSvs"].as_str().unwrap().parse::<i32>().unwrap());
+
+	let plist = ["lat", "lon", "gga_alt", "gga_alt_units", "geoidal_height", "geoidal_height_units", "ellipsoidal_height"];
+	for pi in plist.iter() {
+            println!("{}: {}", pi, params[&format!("GN_{}", pi)]);
+	}
+
+	assert!(params["GN_lat"].as_str().unwrap().starts_with("0."));
+	assert!(params["GN_lon"].as_str().unwrap().starts_with("0."));
+	
     }
 
     #[test]
@@ -187,8 +343,9 @@ mod tests {
 	let mut parser_state: Nmea = Nmea::default();
 	
 	//GA-GSV
-	let mut nmea = "$GAGSV,2,1,07,02,28,068,28,07,04,307,21,13,16,327,29,15,68,339,,0*73\n".to_string();
+	let nmea = "$GAGSV,2,1,07,02,28,068,28,07,04,307,21,13,16,327,29,15,68,339,,0*73\n".to_string();
 	let bb = nmea.as_bytes();
+	queue_and_parse(&mut params_state, &mut parser_state, bb).unwrap();
 	let parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, bb).unwrap();
 	println!("parsed_json: {}", serde_json::to_string_pretty(&parsed_pkts).unwrap());
 	assert_eq!(parsed_pkts.len(), 1);
@@ -197,7 +354,8 @@ mod tests {
             json!({
 		"type": "nmea",
 		"talker": "GA",
-		"message": "GSV"
+		"name": "GSV",
+		"nmea": "$GAGSV,2,1,07,02,28,068,28,07,04,307,21,13,16,327,29,15,68,339,,0*73"
             })
 	);
 
@@ -232,8 +390,8 @@ mod tests {
             json!({
 		"type": "nmea",
 		"talker": "GN",
-		"message": "RMC",
-		"fix_type": "Gps"
+		"name": "RMC",
+		"nmea": "$GNRMC,095520.00,A,2733.35607,S,15302.15703,E,0.042,,240719,,,A,V*0A",	
             })
 	);
     }
