@@ -9,6 +9,7 @@ use nmea::{parse_nmea_sentence, parse_str, Nmea, ParseResult, Satellite};
 use crate::utils::inc_param;
 use crate::utils::put_param;
 use crate::utils::TALKER_NONE;
+use lazy_static::lazy_static;
 
 const TYPE_KEY: &str ="type";
 const TYPE_NMEA: &str = "nmea";
@@ -19,8 +20,55 @@ pub const TALKER_GA: &str = "GA"; // GALILEO
 pub const TALKER_GB: &str = "GB"; // BEIDOU
 pub const TALKER_GQ: &str = "GQ"; // QZSS
 pub const TALKER_GI: &str = "GI"; // NAVIC
-pub const TALKER_PUBX: &str = "PUBX";
+pub const TALKER_UBX: &str = "UBX";
 pub const TALKER_PUBX_NMEA_PREFIX: &str = "$PUBX";
+
+
+
+lazy_static! {
+    /*
+		put_param(params, TALKER_UBX.to_string(), "POSITION_time".to_string(), Value::from(parts.get(2).ok_or(emsg).map_err(|e| {anyhow!(emsg)})?.to_string()));
+                put_param(params, TALKER_UBX.to_string(), "POSITION_lat".to_string(), parts.get(3).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_NS".to_string(), parts.get(4).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_long".to_string(), parts.get(5).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_EW".to_string(), parts.get(6).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_altRef".to_string(), parts.get(7).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_navStat".to_string(), parts.get(8).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_hAcc".to_string(), parts.get(9).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_vAcc".to_string(), parts.get(10).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_SOG".to_string(), parts.get(11).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_COG".to_string(), parts.get(12)).unwrap();
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_vVel".to_string(), parts.get(13).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_diffAge".to_string(), parts.get(14).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_HDOP".to_string(), parts.get(15).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_VDOP".to_string(), parts.get(16).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_TDOP".to_string(), parts.get(17).unwrap());
+                    put_param(params, TALKER_UBX.to_string(), "POSITION_numSvs".to_string(), parts.get(18).unwrap());
+
+     */
+    pub static ref REF_PUBX_LOCATION_PARAMS: HashMap<usize, String> =  {
+
+        let mut map = HashMap::new();
+        map.insert(2, "POSITION_time".to_string());
+	map.insert(3, "POSITION_lat".to_string());
+	map.insert(4,"POSITION_NS".to_string());
+	map.insert(5,"POSITION_long".to_string());
+        map.insert(6,"POSITION_EW".to_string());
+        map.insert(7,"POSITION_altRef".to_string());
+	map.insert(8,"POSITION_navStat".to_string());
+        map.insert(9,"POSITION_hAcc".to_string());
+        map.insert(10,"POSITION_vAcc".to_string());
+        map.insert(11,"POSITION_SOG".to_string());
+        map.insert(12,"POSITION_COG".to_string());
+        map.insert(13,"POSITION_vVel".to_string());
+        map.insert(14,"POSITION_diffAge".to_string());
+        map.insert(15,"POSITION_HDOP".to_string());
+        map.insert(16,"POSITION_VDOP".to_string());
+        map.insert(17,"POSITION_TDOP".to_string());
+        map.insert(18,"POSITION_numSvs".to_string());
+	map
+    };
+}
 
 pub fn get_talker_id_for_gnss_system_id_int(gnss_system_id: u32) -> Option<&'static str> {
     match gnss_system_id {
@@ -90,6 +138,7 @@ pub fn get_gsa_talker_id_from_gsa_nmea(nmea: &str, sids: &[u32]) -> Option<&'sta
     } else {
         None
     }
+    
 }
 
 
@@ -102,7 +151,17 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
 
     if nmea_str.starts_with(TALKER_PUBX_NMEA_PREFIX) {
 	println!("got pubx");
-	//TODO: parse pubx
+	let parts: Vec<&str> = nmea_str.split(',').collect();
+	if parts.len() > 1 {
+	    let p1 = parts.get(1).unwrap();
+	    if p1.to_string() == "00" {
+		let emsg = "pubx position parse error: {e}";
+		for (k, v) in REF_PUBX_LOCATION_PARAMS.iter() {
+		    
+		    put_param(params, TALKER_UBX.to_string(), v.clone(), Value::from(parts.get(*k).ok_or(emsg).map_err(|e| {anyhow!(emsg)})?.to_string()));
+		}
+	    }
+	}
 	return Ok(ret);
     }
     
@@ -131,7 +190,7 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
         ParseResult::DPT(_) => {}
         ParseResult::GBS(_) => {}
         ParseResult::GGA(_) => {
-
+	    
         }
         ParseResult::GLL(_) => {}
         ParseResult::GNS(_) => {}
@@ -139,10 +198,10 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
 
 	    let sids = gsa.fix_sats_prn;
 	    if let Some(talker) = get_gsa_talker_id_from_gsa_nmea(nmea_str, &sids) {
-		println!("Detected talker: {}", talker);
+		//println!("Detected talker: {}", talker);
 		put_param(params, format!("{}", talker), "n_sats_used".to_string(), Value::from(sids.len()));
 	    } else {
-		println!("No talker detected");
+		//println!("No talker detected");
 	    }
 	}
         ParseResult::GST(_) => {}
@@ -180,8 +239,19 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
             put_param(params, TALKER_NONE.to_string(), "geoidal_height".to_string(), Value::from(parser.geoid_separation));
 	    //println!("set n_sats_used: {:?}", parser.num_of_fix_satellites);
             put_param(params, TALKER_NONE.to_string(), "n_sats_used".to_string(), Value::from(parser.num_of_fix_satellites));
-	    
-	    
+	    //put_param(talker_id, "ellipsoidal_height", gga.getAltitude() + gga.getGeoidalHeight());
+	    match parser.altitude {
+		Some(alt) => {
+		    match parser.geoid_separation {
+			Some(sep) => {
+			    put_param(params, TALKER_NONE.to_string(), "ellipsoidal_height".to_string(), Value::from(alt+sep));
+			}
+			None => {}
+		    }
+		}
+		None => {}
+	    }
+
 	    
             put_param(params, TALKER_NONE.to_string(), "vdop".to_string(), Value::from(parser.vdop));
             put_param(params, TALKER_NONE.to_string(), "hdop".to_string(), Value::from(parser.hdop));
@@ -326,13 +396,15 @@ mod tests {
 	println!("UBX_POSITION_numSvs: {}", params["UBX_POSITION_numSvs"]);
 	assert_eq!(26, params["UBX_POSITION_numSvs"].as_str().unwrap().parse::<i32>().unwrap());
 
-	let plist = ["lat", "lon", "gga_alt", "gga_alt_units", "geoidal_height", "geoidal_height_units", "ellipsoidal_height"];
+	let plist = ["lat", "lon", "alt", "geoidal_height",  "ellipsoidal_height"];
 	for pi in plist.iter() {
-            println!("{}: {}", pi, params[&format!("GN_{}", pi)]);
+	    let k = &format!("{}", pi);
+	    println!("k: {k}");
+            println!("{}: {}", pi, params[k]);
 	}
 
-	assert!(params["GN_lat"].as_str().unwrap().starts_with("0."));
-	assert!(params["GN_lon"].as_str().unwrap().starts_with("0."));
+	assert!(params["lat"].as_f64().unwrap() == -27.5559345);
+	assert!(params["lon"].as_f64().unwrap() == 153.0359505);
 	
     }
 
@@ -394,5 +466,39 @@ mod tests {
 		"nmea": "$GNRMC,095520.00,A,2733.35607,S,15302.15703,E,0.042,,240719,,,A,V*0A",	
             })
 	);
+    }
+
+    #[test]
+    fn test_badelf_gps_pro_plus()
+    {
+	let mut params_state: HashMap<String, Value> = HashMap::new();
+	let mut parser_state: Nmea = Nmea::default();
+	
+	let nmea = "$GPRMC,074955.000,A,0641.0037,N,10139.4031,E,0.14,118.40,101223,,,D*60\n".to_string();
+	let bb = nmea.as_bytes();
+	queue_and_parse(&mut params_state, &mut parser_state, bb).unwrap();
+	let parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, bb).unwrap();
+	println!("parsed_json: {}", serde_json::to_string_pretty(&parsed_pkts).unwrap());
+	println!("pm: {}", serde_json::to_string_pretty(&params_state).unwrap());
+	assert_eq!(params_state["lat"], 6.683395);
+	assert_eq!(params_state["lon"], 101.65671833333333);
+		
+    }
+
+    #[test]
+    fn test_gn_case()
+    {
+	let mut params_state: HashMap<String, Value> = HashMap::new();
+	let mut parser_state: Nmea = Nmea::default();
+	
+
+	let mut parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, "$GNGSA,A,3,26,31,10,32,14,16,25,20,18,22,41,,1.34,0.74,1.12*16\n".as_bytes()).unwrap();
+	parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, "$GNGSA,A,3,73,80,70,,,,,,,,,,1.34,0.74,1.12*10\n".as_bytes()).unwrap();
+	parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, "$GNRMC,020125.00,A,1845.82207,N,09859.94984,E,0.027,,101219,,,F,V*1A\n".as_bytes()).unwrap();
+	println!("parsed_json: {}", serde_json::to_string_pretty(&parsed_pkts).unwrap());
+	println!("pm: {}", serde_json::to_string_pretty(&params_state).unwrap());
+	assert_eq!(params_state["lat"], 6.683395);
+	assert_eq!(params_state["lon"], 101.65671833333333);
+		
     }
 }
