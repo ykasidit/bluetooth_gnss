@@ -179,7 +179,7 @@ public class ntrip_conn_mgr {
             // if control reaches here means we are in mountpoint connect mode...
 
             //start thread to read from socket to incoming_buffer
-            inputstream_to_queue_reader_thread incoming_thread = new inputstream_to_queue_reader_thread(m_sock_is, m_cb);
+            inputstream_to_queue_reader_thread incoming_thread = new inputstream_to_queue_reader_thread(m_sock_is, m_incoming_buffers);
             m_cleanup_closables.add(incoming_thread);
             incoming_thread.start();
 
