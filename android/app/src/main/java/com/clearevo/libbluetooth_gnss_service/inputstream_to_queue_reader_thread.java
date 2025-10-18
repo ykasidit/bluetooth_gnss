@@ -18,7 +18,6 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
     public static final int MAX_READ_BUF_SIZE = 100_000;
     byte[] m_read_buffer = new byte[MAX_READ_BUF_SIZE];
 
-    GNSSPacketReader m_gnss_pkt_reader;
     String wk = "kasidit_yak_pai_wangkeaw_leaw_na";
     private File debug_file_flag = new File("/sdcard/debug_"+this.getClass().getSimpleName());
     boolean m_debug_mode = debug_file_flag.exists();
@@ -53,28 +52,18 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
         Log.d(TAG, "thread start");
         try {
 
-            boolean readline_mode = false;
-            boolean read_buff_mode = false;
-            if (m_readline_cb != null) {
-                readline_mode = true;
-            } else if (m_read_buff_cb != null) {
-                read_buff_mode = true;
-            }
-            Log.d(TAG, "readline_mode: "+readline_mode);
+            boolean read_buff_mode = true;
             Log.d(TAG, "read_buff_mode: "+read_buff_mode);
 
-            if (readline_mode || read_buff_mode) {
+            {
                 m_queue = null;
-                if (readline_mode) {
-                    m_gnss_pkt_reader = new GNSSPacketReader(m_is);
-                }
             }
 
             int loop = 0;
 
             while (true) {
 
-                if (readline_mode || read_buff_mode) {
+                if (read_buff_mode) {
 
                     /*
                     DONT use 'readers' that do readline() as they return strings and this 'encodes' our raw packets which are changed when we do .getbytes('ascii') later
@@ -83,10 +72,7 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
                     //Log.d(TAG, "loop: "+loop+" m_is avail: "+m_is.available()+" m_bis avail: "+m_bis.available());
 
                     byte[] cb_read_buff = null;
-                    if (readline_mode)
-                        cb_read_buff = m_gnss_pkt_reader.read();
-                    else
-                        cb_read_buff = bytes_read(m_is, m_read_buffer);
+                    cb_read_buff = bytes_read(m_is, m_read_buffer);
 
                     if (cb_read_buff == null) {
                         //Log.d(TAG, "read got null - means read from socket failed - break now - m_bis available len: "+m_bis.available());
@@ -104,15 +90,6 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
                             Log.d(TAG, "log.d exception: " + Log.getStackTraceString(e));
                         }
                     }
-
-                    if (readline_mode)
-                        m_readline_cb.on_readline(cb_read_buff); //if buffer is full then this thread will end and exception logged, conn closed so conn watcher would trigger disconnected stage so user would know somethings wrong anyway...
-                    else {
-                        if (m_read_buff_cb != null) {
-                            m_read_buff_cb.on_read(cb_read_buff);
-                        }
-                    }
-
 
                 } else {
                     byte[] read_tmp_buff = new byte[MAX_READ_BUF_SIZE];

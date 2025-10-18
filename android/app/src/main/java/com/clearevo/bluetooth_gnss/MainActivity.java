@@ -29,7 +29,6 @@ import com.clearevo.libbluetooth_gnss_service.Log;
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 import com.clearevo.libbluetooth_gnss_service.ntrip_conn_mgr;
 import com.clearevo.libbluetooth_gnss_service.rfcomm_conn_mgr;
-import com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,7 +46,7 @@ import io.flutter.plugins.GeneratedPluginRegistrant;
 import io.flutter.plugin.common.EventChannel;
 import android.content.pm.PermissionInfo;
 
-public class MainActivity extends FlutterActivity implements gnss_sentence_parser.gnss_parser_callbacks {
+public class MainActivity extends FlutterActivity {
 public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
     private static final String ENGINE_METHOD_CHANNEL = "com.clearevo.bluetooth_gnss/engine";
     private static final String ENGINE_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/engine_events";
@@ -526,10 +525,9 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         }
     }
 
-    @Override
-    public void onDeviceMessage(gnss_sentence_parser.MessageType type, HashMap<String, Object> message_map) {
+    public void onDeviceMessage(String type, HashMap<String, Object> message_map) {
         try {
-            message_map.put("type", type.name());
+            message_map.put("type", type);
             Message msg = m_handler.obtainMessage(MESSAGE_DEVICE_MESSAGE, message_map);
             msg.sendToTarget();
         } catch (Exception e) {
@@ -623,14 +621,14 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
             bluetooth_gnss_service.LocalBinder binder = (bluetooth_gnss_service.LocalBinder) service;
             m_service = binder.getService();
             mBound = true;
-            m_service.set_callback((gnss_sentence_parser.gnss_parser_callbacks) MainActivity.this);
+            m_service.set_callback(MainActivity.this);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             Log.d(TAG, "onServiceDisconnected()");
             mBound = false;
-            m_service.set_callback((gnss_sentence_parser.gnss_parser_callbacks) null);
+            m_service.set_callback(null);
         }
     };
 

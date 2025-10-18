@@ -9,7 +9,7 @@ import static com.clearevo.libbluetooth_gnss_service.Log.LogObserver;
 import static com.clearevo.libbluetooth_gnss_service.Log.d;
 import static com.clearevo.libbluetooth_gnss_service.Log.getStackTraceString;
 import static com.clearevo.libbluetooth_gnss_service.Log.m_log_operations_fos;
-import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.fromHexString;
+import static com.clearevo.libbluetooth_gnss_service.Utils.fromHexString;
 
 import android.app.AppOpsManager;
 import android.app.Notification;
@@ -37,6 +37,7 @@ import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 import androidx.documentfile.provider.DocumentFile;
 
+import com.clearevo.bluetooth_gnss.MainActivity;
 import com.clearevo.bluetooth_gnss.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -46,6 +47,7 @@ import org.json.JSONObject;
 
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -63,7 +65,7 @@ import java.util.UUID;
 
 
 
-public class bluetooth_gnss_service extends Service implements gnss_sentence_parser.gnss_parser_callbacks, ntrip_conn_callbacks, LogObserver {
+public class bluetooth_gnss_service extends Service implements rfcomm_conn_callbacks, ntrip_conn_callbacks, LogObserver {
 
     static {
         System.loadLibrary("rust_lib_bluetooth_gnss");
@@ -77,7 +79,6 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
 
     rfcomm_conn_mgr g_rfcomm_mgr = null;
     ntrip_conn_mgr m_ntrip_conn_mgr = null;
-    private gnss_sentence_parser m_gnss_parser = new gnss_sentence_parser();
 
     Thread m_connecting_thread = null;
     Thread m_ntrip_connecting_thread = null;
@@ -422,9 +423,6 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
                 m_ble_qstarz_mode = name.startsWith("QSTARZ");
                 log(TAG, "m_ble_qstarz_mode:" + m_ble_qstarz_mode);
 
-                m_gnss_parser = new gnss_sentence_parser(); //use new instance
-                m_gnss_parser.set_callback(this);
-
                 toast("connecting to: " + bdaddr);
                 if (g_rfcomm_mgr != null) {
                     g_rfcomm_mgr.close();
@@ -440,7 +438,7 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
                 } else {
                     //ok
                 }
-                g_rfcomm_mgr = new rfcomm_conn_mgr(dev, secure, this, context, m_ble_qstarz_mode);
+                g_rfcomm_mgr = new rfcomm_conn_mgr(dev, secure, this, m_ble_qstarz_mode, this);
 
                 start_connecting_thread();
             }
@@ -788,29 +786,12 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
                         object.put("time", time_str);
                     } catch (Exception e) {};
                     //d(TAG, "time: "+time_str);
-                    setMock(lat, lon, (float) accuracy, (float) vaccuracy, float_height_m, heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts);
+                    setMock(lat, lon, (float) accuracy, (float) vaccuracy, float_height_m, heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts, object);
                 }
-                HashMap<String, Object> param_map = m_gnss_parser.getM_parsed_params_hashmap();
                 HashMap<String, Object> qstarz_param_map = jsonToMap(object);
-                String talker = "QSTARZ";
-                for (String key : qstarz_param_map.keySet()) {
-                    Object value = qstarz_param_map.get(key);
-                    m_gnss_parser.put_param(talker, key, value);
-                }
-                {
-                    String ts = QstarzUtils.getQstarzDatetime((int) param_map.get("QSTARZ_timestamp_s"), (int) param_map.get("QSTARZ_millisecond"));
-                    m_gnss_parser.put_param(talker, "timestamp", ts);
-                }
-                {
-                    String rcr_logtype = QstarzUtils.getQstarzRCRLogType((int) param_map.get("QSTARZ_rcr"));
-                    m_gnss_parser.put_param(talker, "rcr_logtype", rcr_logtype);
-                }
-
-                //log(TAG, "qstarz ble lat: " + param_map.get("lat"));
-                //log(TAG, "qstarz ble lon: " + param_map.get("lon"));
                 try {
-                    if (m_activity_for_nmea_param_callbacks != null) {
-                        m_activity_for_nmea_param_callbacks.onPositionUpdate((HashMap<String, Object>) param_map.clone());
+                    if (mainActivity != null) {
+                        mainActivity.onPositionUpdate(qstarz_param_map);
                     }
                 } catch (Exception e) {
                     log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: " + getStackTraceString(e));
@@ -818,6 +799,39 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
                 //d(TAG, "on_read_object ondevicemessage success");
             } catch (Exception e) {
                 log(TAG, "WARNING: on_read_object m_ble_qstarz_mode exception: "+Log.getStackTraceString(e));
+            }
+        } else {
+            //TODO: handle non qstarz parsed pkt
+            try {
+                //log(TAG, "rfcomm on_readline: "+new String(readline, "ascii"));
+                String nmea_name = object.getString("name");
+                String nmea = object.getString("nmea");
+                log_bt_rx(nmea.getBytes(StandardCharsets.UTF_8));
+                JSONObject parsed_nmea = object;
+                if (nmea_name.startsWith("GGA")) {
+                    if (m_all_ntrip_params_specified) {
+                        start_ntrip_conn_if_specified_but_not_connected();
+                    }
+                    if (m_send_gga_to_ntrip && is_ntrip_connected()) {
+                        log(TAG, "consider send gga to ntrip if not sent since millis: " + SEND_GGA_TO_NTRIP_EVERY_MILLIS);
+                        long now = System.currentTimeMillis();
+                        if (now >= m_last_ntrip_gga_send_ts) {
+                            if (now - m_last_ntrip_gga_send_ts > SEND_GGA_TO_NTRIP_EVERY_MILLIS) {
+                                m_last_ntrip_gga_send_ts = now;
+                                String send_str = (nmea.strip()) + "\r\n";
+                                log(TAG, "yes send to ntrip now: "+send_str);
+                                m_ntrip_conn_mgr.send_buff_to_server(send_str.getBytes("ascii"));
+                            }
+                        } else {
+                            m_last_ntrip_gga_send_ts = 0;
+                        }
+                    }
+                }
+                if (parsed_nmea != null) {
+                    mainActivity.onDeviceMessage("nmea", jsonToMap(parsed_nmea));
+                }
+            } catch (Exception e) {
+                log(TAG, "bluetooth_gnss_service on_readline parse exception: "+ getStackTraceString(e));
             }
         }
     }
@@ -969,44 +983,6 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
             String msg = "WARNING: Logging failed - pls re-tick 'Settings' > 'Enable logging' - error:\n"+ getStackTraceString(tr);
             toast(msg);
             log(TAG, msg);
-        }
-    }
-
-
-    public void on_readline(byte[] readline)
-    {
-        try {
-            //log(TAG, "rfcomm on_readline: "+new String(readline, "ascii"));
-            log_bt_rx(readline);
-            HashMap<String, Object> parsed_nmea = m_gnss_parser.parse(readline);            
-            String nmea_name = "";
-            if (parsed_nmea != null && parsed_nmea.containsKey("name")) {
-                nmea_name = (String) parsed_nmea.get("name");
-            }
-            if (nmea_name.startsWith("GGA")) {
-                if (m_all_ntrip_params_specified) {
-                    start_ntrip_conn_if_specified_but_not_connected();
-                }
-                if (m_send_gga_to_ntrip && is_ntrip_connected()) {
-                    log(TAG, "consider send gga to ntrip if not sent since millis: " + SEND_GGA_TO_NTRIP_EVERY_MILLIS);
-                    long now = System.currentTimeMillis();
-                    if (now >= m_last_ntrip_gga_send_ts) {
-                        if (now - m_last_ntrip_gga_send_ts > SEND_GGA_TO_NTRIP_EVERY_MILLIS) {
-                            m_last_ntrip_gga_send_ts = now;
-                            String send_str = (parsed_nmea.get("contents")) + "\r\n";
-                            log(TAG, "yes send to ntrip now: "+send_str);
-                            m_ntrip_conn_mgr.send_buff_to_server(send_str.getBytes("ascii"));
-                        }
-                    } else {
-                        m_last_ntrip_gga_send_ts = 0;
-                    }
-                }
-            }
-            if (parsed_nmea != null) {
-                m_activity_for_nmea_param_callbacks.onDeviceMessage(gnss_sentence_parser.MessageType.NMEA, (HashMap<String, Object>) parsed_nmea.clone());
-            }
-        } catch (Exception e) {
-            log(TAG, "bluetooth_gnss_service on_readline parse exception: "+ getStackTraceString(e));
         }
     }
 
@@ -1211,7 +1187,8 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
     public static final float DEFAULT_MOCK_ACCURACY = 5.0f;
     String[] providers_to_mock = new String[] {FUSED_PROVIDER, GPS_PROVIDER};
 
-    private void setMock(double latitude, double longitude, float accuracy, float vaccuracy, double altitude, double bearing_degrees, float speed_m_s, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts) {
+    private void setMock(double latitude, double longitude, float accuracy, float vaccuracy, double altitude, double bearing_degrees, float speed_m_s, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts, JSONObject out_object) throws Exception
+    {
         if (closing) {
             d(TAG, "setmock ignore as already closing");
             return;
@@ -1243,30 +1220,30 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         long mock_base_ts = (mock_location_timestamp_use_system_time? system_ts : gnss_ts);
         long mock_set_ts = mock_base_ts + ((long)(mock_timestamp_offset_secs*1000.0));
-        m_gnss_parser.put_param("", "mock_location_system_ts", system_ts);
-        m_gnss_parser.put_param("", "mock_location_gnss_ts", gnss_ts);
-        m_gnss_parser.put_param("", "mock_location_timestamp_use_system_time", mock_location_timestamp_use_system_time);
-        m_gnss_parser.put_param("", "mock_location_base_ts", mock_base_ts);
-        m_gnss_parser.put_param("", "mock_timestamp_offset_secs", mock_timestamp_offset_secs);
-        m_gnss_parser.put_param("", "mock_location_set_ts", mock_set_ts);
+        out_object.put("mock_location_system_ts", system_ts);
+        out_object.put("mock_location_gnss_ts", gnss_ts);
+        out_object.put("mock_location_timestamp_use_system_time", mock_location_timestamp_use_system_time);
+        out_object.put("mock_location_base_ts", mock_base_ts);
+        out_object.put("mock_timestamp_offset_secs", mock_timestamp_offset_secs);
+        out_object.put("mock_location_set_ts", mock_set_ts);
 
-        m_gnss_parser.put_param("", "mock_location_base_lat", latitude);
-        m_gnss_parser.put_param("", "mock_location_base_lon", longitude);
-        m_gnss_parser.put_param("", "mock_location_base_alt", altitude);
-        m_gnss_parser.put_param("", "mock_lat_offset_meters", mock_lat_offset_meters);
-        m_gnss_parser.put_param("", "mock_lon_offset_meters", mock_lon_offset_meters);
-        m_gnss_parser.put_param("", "mock_alt_offset_meters", mock_alt_offset_meters);
+        out_object.put("mock_location_base_lat", latitude);
+        out_object.put("mock_location_base_lon", longitude);
+        out_object.put("mock_location_base_alt", altitude);
+        out_object.put("mock_lat_offset_meters", mock_lat_offset_meters);
+        out_object.put("mock_lon_offset_meters", mock_lon_offset_meters);
+        out_object.put("mock_alt_offset_meters", mock_alt_offset_meters);
         latitude += mock_lat_offset_meters*latlonMetersToDegMultiplier;
         longitude += mock_lon_offset_meters*latlonMetersToDegMultiplier;
         altitude += mock_alt_offset_meters;
-        m_gnss_parser.put_param("", "mock_location_set_lat", latitude);
-        m_gnss_parser.put_param("", "mock_location_set_lon", longitude);
-        m_gnss_parser.put_param("", "mock_location_set_accuracy", accuracy);
-        m_gnss_parser.put_param("", "mock_location_set_vaccuracy", vaccuracy);
-        m_gnss_parser.put_param("", "mock_location_set_alt", altitude);
-        m_gnss_parser.put_param("", "mock_location_gnss_bearing", bearing_degrees);
-        //m_gnss_parser.put_param("", "mock_location_sensor_bearing", sensor_azimuth);
-        m_gnss_parser.put_param("", "mock_location_set_bearing", null);
+        out_object.put("mock_location_set_lat", latitude);
+        out_object.put("mock_location_set_lon", longitude);
+        out_object.put("mock_location_set_accuracy", accuracy);
+        out_object.put("mock_location_set_vaccuracy", vaccuracy);
+        out_object.put("mock_location_set_alt", altitude);
+        out_object.put("mock_location_gnss_bearing", bearing_degrees);
+        //out_object.put("mock_location_sensor_bearing", sensor_azimuth);
+        out_object.put("mock_location_set_bearing", null);
         /// ////// modern way
         double mock_bearing = Double.NaN;
 
@@ -1298,7 +1275,7 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
                 }
                 if (!Double.isNaN(mock_bearing)) {
                     newLocation.setBearing((float) mock_bearing);
-                    m_gnss_parser.put_param("", "mock_location_set_bearing", mock_bearing);
+                    out_object.put("mock_location_set_bearing", mock_bearing);
                 }
 
                 newLocation.setSpeed(speed_m_s);
@@ -1359,43 +1336,43 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
         } catch (Throwable tr) {
             log(TAG, "WARNING: broadcast position intent failed exception: "+ getStackTraceString(tr));
         }
-        m_gnss_parser.put_param("", "intent_pos_broadcast_ts", intent_pos_broadcast_ts);
+        out_object.put("intent_pos_broadcast_ts", intent_pos_broadcast_ts);
 
         //////////////hooks
-        m_gnss_parser.put_param("", "hdop", hdop);
-        m_gnss_parser.put_param("", "location_from_talker", talker);
-        m_gnss_parser.put_param("", "lat", latitude);
-        m_gnss_parser.put_param("", "lon", longitude);
-        m_gnss_parser.put_param("", "alt", altitude);
-        m_gnss_parser.put_param("", "alt_type", alt_is_elipsoidal?"ellipsoidal":"orthometric");
-        m_gnss_parser.put_param("", "bearing_degrees", bearing_degrees);
-        //m_gnss_parser.put_param("", "sensor_azimuth", sensor_azimuth);
-        m_gnss_parser.put_param("", "speed_m_s", (double) speed_m_s);
+        out_object.put("hdop", hdop);
+        out_object.put("location_from_talker", talker);
+        out_object.put("lat", latitude);
+        out_object.put("lon", longitude);
+        out_object.put("alt", altitude);
+        out_object.put("alt_type", alt_is_elipsoidal?"ellipsoidal":"orthometric");
+        out_object.put("bearing_degrees", bearing_degrees);
+        //out_object.put("sensor_azimuth", sensor_azimuth);
+        out_object.put("speed_m_s", (double) speed_m_s);
         double speed_kmh = speed_m_s * 3.6;
         double speed_mph = speed_m_s * 2.23694;
-        m_gnss_parser.put_param("", "speed_kmh", speed_kmh);
-        m_gnss_parser.put_param("", "speed_mph", speed_mph);
-        m_gnss_parser.put_param("", "n_sats", n_sats);
-        m_gnss_parser.put_param("", "accuracy", accuracy);
+        out_object.put("speed_kmh", speed_kmh);
+        out_object.put("speed_mph", speed_mph);
+        out_object.put("n_sats", n_sats);
+        out_object.put("accuracy", accuracy);
 
         //intent_pos_broadcast_ts
         if (log_file_uri != null) {
-            m_gnss_parser.put_param("", "logfile_uri", log_file_uri.toString());
+            out_object.put("logfile_uri", log_file_uri.toString());
             log(TAG, "log_file_uri.toString() "+log_file_uri.toString());
             String ls = log_file_uri.getLastPathSegment();
             if (ls.contains("/")) {
                 String[] parts = ls.split("/");
                 if (parts.length > 1) {
-                    m_gnss_parser.put_param("", "logfile_folder", parts[0]);
-                    m_gnss_parser.put_param("", "logfile_name", parts[1]);
+                    out_object.put("logfile_folder", parts[0]);
+                    out_object.put("logfile_name", parts[1]);
                 }
             } else {
                 log(TAG, "ls: "+log_file_uri.toString());
-                m_gnss_parser.put_param("", "logfile_folder", log_file_uri.toString());
-                m_gnss_parser.put_param("", "logfile_name", ls);
+                out_object.put("logfile_folder", log_file_uri.toString());
+                out_object.put("logfile_name", ls);
             }
-            m_gnss_parser.put_param("", "logfile_n_bytes", log_bt_rx_bytes_written);
-            m_gnss_parser.put_param("", "logfile_size_mb", ((double)log_bt_rx_bytes_written)/1_000_000.0);
+            out_object.put("logfile_n_bytes", log_bt_rx_bytes_written);
+            out_object.put("logfile_size_mb", ((double)log_bt_rx_bytes_written)/1_000_000.0);
         }
         if (m_log_bt_rx_csv_fos != null) {
             try {
@@ -1574,11 +1551,11 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
 
     // Binder given to clients
     private final IBinder m_binder = new LocalBinder();
-    gnss_sentence_parser.gnss_parser_callbacks m_activity_for_nmea_param_callbacks;
+    MainActivity mainActivity;
 
-    public void set_callback(gnss_sentence_parser.gnss_parser_callbacks cb)
+    public void set_callback(MainActivity cb)
     {
-        m_activity_for_nmea_param_callbacks = cb;
+        mainActivity = cb;
     }
 
 
@@ -1599,8 +1576,7 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
     {
         return m_device_cep;
     }
-
-    @Override
+    
     public void onPositionUpdate(HashMap<String, Object> params_map) {
 
         if (closing) {
@@ -1608,16 +1584,17 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
             return;
         }
 
+        JSONObject jo = new JSONObject();
+        for (String k :params_map.keySet()) {
+            try {
+                jo.put(k, params_map.get(k));
+            } catch (Exception e) {}
+        }
+
         //log(TAG, "service: onPositionUpdate() start");
         try {
             Intent intent = new Intent();
             intent.setAction(PARSED_NMEA_UPDATE_INTENT_ACTION);
-            JSONObject jo = new JSONObject();
-            for (String k :params_map.keySet()) {
-                try {
-                    jo.put(k, params_map.get(k));
-                } catch (Exception e) {}
-            }
             intent.putExtra(INTENT_EXTRA_DATA_JSON_KEY, jo.toString());
             getApplicationContext().sendBroadcast(intent);
         } catch (Throwable tr) {
@@ -1692,7 +1669,7 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
                         if (Double.isNaN(vaccuracy)) {
                             vaccuracy = vdop * get_connected_device_CEP();
                         }
-                        setMock(lat, lon, (float) accuracy, (float) vaccuracy, alt, bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, talker, new_ts);
+                        setMock(lat, lon, (float) accuracy, (float) vaccuracy, alt, bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, talker, new_ts, jo);
                         break;
                     } else {
                         //omit as same ts as last
@@ -1707,17 +1684,12 @@ public class bluetooth_gnss_service extends Service implements gnss_sentence_par
 
         //report params to activity
         try {
-            if (m_activity_for_nmea_param_callbacks != null) {
-                m_activity_for_nmea_param_callbacks.onPositionUpdate((HashMap<String, Object>) params_map.clone());
+            if (mainActivity != null) {
+                mainActivity.onPositionUpdate((HashMap<String, Object>) params_map.clone());
             }
         } catch (Exception e) {
             log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: "+ getStackTraceString(e));
         }
-    }
-
-    @Override
-    public void onDeviceMessage(gnss_sentence_parser.MessageType messageType, HashMap<String, Object> message_map) {
-
     }
 
     public int get_ntrip_cb_count()

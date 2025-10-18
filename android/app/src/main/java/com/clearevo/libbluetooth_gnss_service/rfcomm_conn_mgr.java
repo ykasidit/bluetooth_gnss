@@ -4,7 +4,6 @@ import static com.clearevo.libbluetooth_gnss_service.NativeParser.parse_qstarz_p
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.log;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.nordic_uart_service_uuid;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.qstarz_chrc_tx_uuid;
-import static com.clearevo.libbluetooth_gnss_service.gnss_sentence_parser.toHexString;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -51,8 +50,8 @@ public class rfcomm_conn_mgr {
     List<Closeable> m_cleanup_closables;
     Thread m_conn_state_watcher;
 
-    PipedOutputStream pos = new PipedOutputStream();
-    PipedInputStream pis = new PipedInputStream(pos, DEFAULT_BUF_SIZE);
+    ConcurrentLinkedQueue<byte[]> m_incoming_buffers;
+    ConcurrentLinkedQueue<byte[]> m_outgoing_buffers;
 
     final int MAX_SDP_FETCH_DURATION_SECS = 15;
     final int BTINCOMING_QUEUE_MAX_LEN = 100;
@@ -105,18 +104,20 @@ public class rfcomm_conn_mgr {
 
 
     //use this ctor for readline callback mode
-    public rfcomm_conn_mgr(BluetoothDevice target_bt_server_dev, boolean secure, Context context, boolean ble_mode) throws Exception {
+    public rfcomm_conn_mgr(BluetoothDevice target_bt_server_dev, boolean secure, Context context, boolean ble_mode, rfcomm_conn_callbacks cb) throws Exception {
         m_secure = secure;
         m_ble_mode = ble_mode;
-        init(target_bt_server_dev, secure, null, 0, cb, context);
+        init(target_bt_server_dev, secure, null, 0, context, cb);
     }
 
     //use this ctor and specify tcp_server_host, tcp_server_port for connect-and-stream-data-to-your-tcp-server mode
-    public rfcomm_conn_mgr(BluetoothDevice target_bt_server_dev, boolean secure, final String tcp_server_host, final int tcp_server_port, Context context) throws Exception {
-        init(target_bt_server_dev, secure, tcp_server_host, tcp_server_port, cb, context);
+    public rfcomm_conn_mgr(BluetoothDevice target_bt_server_dev, boolean secure, final String tcp_server_host, final int tcp_server_port, Context context, rfcomm_conn_callbacks cb) throws Exception {
+        init(target_bt_server_dev, secure, tcp_server_host, tcp_server_port,context, cb);
     }
 
-    private void init(BluetoothDevice target_bt_server_dev, boolean secure, final String tcp_server_host, final int tcp_server_port, Context context) throws Exception {
+    rfcomm_conn_callbacks m_rfcomm_to_tcp_callbacks;
+
+    private void init(BluetoothDevice target_bt_server_dev, boolean secure, final String tcp_server_host, final int tcp_server_port, Context context, rfcomm_conn_callbacks cb) throws Exception {
         m_context = context;
         m_secure = secure;
         m_rfcomm_to_tcp_callbacks = cb;
@@ -139,19 +140,13 @@ public class rfcomm_conn_mgr {
         m_tcp_server_port = tcp_server_port;
 
         m_cleanup_closables = new ArrayList<Closeable>();
-        m_incoming_buffers = new ConcurrentLinkedQueue<byte[]>();
         m_outgoing_buffers = new ConcurrentLinkedQueue<byte[]>();
 
         if (m_target_bt_server_dev == null)
             throw new Exception("m_target_bt_server_dev not specified");
 
-        if (m_rfcomm_to_tcp_callbacks == null)
-            throw new Exception("m_rfcomm_to_tcp_callbacks not specified");
-
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_UUID);
         m_context.registerReceiver(mReceiver, filter);
-
-        Log.d(TAG, "init() done m_readline_callback_mode: " + m_readline_callback_mode);
     }
 
 
@@ -269,9 +264,7 @@ public class rfcomm_conn_mgr {
 
                 //start thread to read from bluetooth socket to incoming_buffer
                 inputstream_to_queue_reader_thread incoming_thread = null;
-                incoming_thread = new inputstream_to_queue_reader_thread(bs_is, m_incoming_buffers);
-                m_cleanup_closables.add(incoming_thread);
-                incoming_thread.start();
+                //TODO: read from here to native parser
 
                 //start thread to read from m_outgoing_buffers to bluetooth socket
                 queue_to_outputstream_writer_thread outgoing_thread = new queue_to_outputstream_writer_thread(m_outgoing_buffers, bs_os);
