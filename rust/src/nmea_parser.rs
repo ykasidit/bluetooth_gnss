@@ -185,7 +185,15 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
         ParseResult::MDA(_) => {}
         ParseResult::MTW(_) => {}
         ParseResult::MWV(_) => {}
-        ParseResult::RMC(_) => {
+        ParseResult::RMC(rmc) => {
+	    let rmc_ts = match (rmc.fix_date, rmc.fix_time) {
+		(Some(fd), Some(ft)) => {
+		    fd.and_time(ft).and_utc().timestamp_millis()
+		}
+		_ => -1,
+            };
+	    
+	    put_param(params, talker_id.to_string(), "rmc_ts".to_string(), Value::from(rmc_ts));
 
 	    let mut type_to_sat_map: HashMap<GnssType, Vec<Satellite>> = HashMap::new();
 	    for sg in sat_groups {
@@ -234,6 +242,8 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
             put_param(params, TALKER_NONE.to_string(), "speed_over_ground".to_string(), Value::from(parser.speed_over_ground));
             put_param(params, TALKER_NONE.to_string(), "true_course".to_string(), Value::from(parser.true_course));
 
+	    let psd = serde_json::to_value(&params)?;
+	    ret.insert("state".to_string(), psd);
         }
         ParseResult::TTM(_) => {}
         ParseResult::TXT(_) => {}
@@ -416,13 +426,8 @@ mod tests {
 	println!("parsed_json: {}", serde_json::to_string_pretty(&parsed_pkts).unwrap());
 	assert_eq!(parsed_pkts.len(), 1);
 	assert_eq!(
-            parsed_pkts[0],
-            json!({
-		"type": "nmea",
-		"talker": "GN",
-		"name": "RMC",
-		"nmea": "$GNRMC,095520.00,A,2733.35607,S,15302.15703,E,0.042,,240719,,,A,V*0A",	
-            })
+            parsed_pkts[0].get("name").unwrap().as_str().unwrap(),
+	    "RMC"
 	);
     }
 
@@ -440,6 +445,7 @@ mod tests {
 	println!("pm: {}", serde_json::to_string_pretty(&params_state).unwrap());
 	assert_eq!(params_state["lat"], 6.683395);
 	assert_eq!(params_state["lon"], 101.65671833333333);
+	assert_eq!(params_state["GP_rmc_ts"], 1702194595000u64);
 		
     }
 

@@ -53,6 +53,7 @@ pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_on_
     output.into_inner()
 }
 
+#[no_mangle]
 pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_reset_1gnss_1parser(
     _env: JNIEnv,
     _class: JClass,

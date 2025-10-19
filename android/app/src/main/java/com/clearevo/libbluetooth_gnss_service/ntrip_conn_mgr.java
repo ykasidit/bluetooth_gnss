@@ -191,6 +191,7 @@ public class ntrip_conn_mgr {
             //watch ntrip socket state and both threads above
             m_conn_state_watcher = new Thread() {
                 public void run() {
+                    Log.d(TAG, "ntrip m_conn_state_watcher "+hashCode()+" start");
                     while (m_conn_state_watcher == this) {
                         try {
 
@@ -215,7 +216,9 @@ public class ntrip_conn_mgr {
                             }
                             break;
                         }
+                        Log.d(TAG, "ntrip m_conn_state_watcher "+hashCode()+" done");
                     }
+
                 }
             };
             m_conn_state_watcher.start();

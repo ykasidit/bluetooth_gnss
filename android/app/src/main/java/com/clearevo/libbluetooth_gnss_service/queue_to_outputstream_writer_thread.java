@@ -40,7 +40,12 @@ public class queue_to_outputstream_writer_thread extends Thread implements Close
                 //System.out.println("m_queue poll pre poll");
                 byte[] out_buf = m_queue.poll();
                 //Log.d(TAG,"queue_to_outputstream_writer_thread: m_queue poll buf:" + out_buf);
-                if (out_buf != null && out_buf.length > 0) {
+                if (out_buf == null) {
+                    //queue is empty
+                    Thread.sleep(1);
+                    continue;
+                }
+                if (out_buf.length > 0) {
                     m_os.write(out_buf);
                 }
             }

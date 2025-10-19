@@ -30,7 +30,7 @@ pub fn put_param(params: &mut HashMap<String, Value>, talker_id: String, param: 
     params.insert(key, val.clone());
     params.insert(key_any, val);
     params.insert(key_ts, Value::from(get_current_time_millis()));
-    inc_param(params, talker_id, param_counter);
+    inc_param(params, TALKER_NONE.to_string(), param_counter);
 }
 
 pub fn inc_param(params_state: &mut HashMap<String, Value>, talker_id: String, param_name: String) -> u64
