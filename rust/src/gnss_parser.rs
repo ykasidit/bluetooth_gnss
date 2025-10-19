@@ -15,7 +15,7 @@ pub fn queue_and_parse(
 ) -> Result<Vec<Value>> {
     let mut queue = INPUT_BUFFER.lock().unwrap();
     queue.extend(read_buf);
-    //println!("read_buf len: {}", read_buf.len());
+    println!("read_buf len: {}", read_buf.len());
 
     let mut parsed_objects: Vec<Value> = vec![];
     loop {

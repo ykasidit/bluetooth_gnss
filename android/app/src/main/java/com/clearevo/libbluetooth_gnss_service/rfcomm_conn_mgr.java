@@ -141,6 +141,7 @@ public class rfcomm_conn_mgr implements Closeable {
 
         m_cleanup_closables = new ArrayList<Closeable>();
         m_outgoing_buffers = new ConcurrentLinkedQueue<byte[]>();
+        m_incoming_buffers = new ConcurrentLinkedQueue<byte[]>();
 
         if (m_target_bt_server_dev == null)
             throw new Exception("m_target_bt_server_dev not specified");
@@ -215,9 +216,10 @@ public class rfcomm_conn_mgr implements Closeable {
         Log.d(TAG, "connect() start");
 
         try {
-
+            m_incoming_buffers.clear();
+            m_outgoing_buffers.clear();
             close_gatt();
-            BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+            try {BluetoothAdapter.getDefaultAdapter().cancelDiscovery();} catch (Exception e) {}
             if (m_ble_mode) {
                 connect_ble(m_target_bt_server_dev);
             } else {
@@ -273,7 +275,7 @@ public class rfcomm_conn_mgr implements Closeable {
                 outgoing_thread.start();
 
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(500); //wait to see if threads still alive
                 } catch (Exception e) {
 
                 }
@@ -320,62 +322,68 @@ public class rfcomm_conn_mgr implements Closeable {
                 //watch bluetooth socket state and both threads above
                 m_conn_state_watcher = new Thread() {
                     public void run() {
-                        while (m_conn_state_watcher == this) {
-                            try (rfcomm_conn_mgr.this) {
+                        Log.d(TAG, "m_conn_state_watcher "+hashCode()+" start bluetooth socket");
+                        try (rfcomm_conn_mgr.this) {
+                            while (m_conn_state_watcher == this) {
+                                    Thread.sleep(1000);
 
-                                Thread.sleep(1000);
+                                    if (!incoming_thread.isAlive())
+                                        throw new Exception("bt incoming_thread died");
 
-                                if (!incoming_thread.isAlive())
-                                    throw new Exception("bt incoming_thread died");
+                                    if (!outgoing_thread.isAlive())
+                                        throw new Exception("bt outgoing_thread died");
 
-                                if (!outgoing_thread.isAlive())
-                                    throw new Exception("bt outgoing_thread died");
+                                    Log.d(TAG, "incoming_thread qlen: "+incoming_thread.m_queue.size());
+                                    Log.d(TAG, "outgoing_thread qlen: "+outgoing_thread.m_queue.size());
 
-                                Log.d(TAG, "incoming_thread qlen: "+incoming_thread.m_queue.size());
-                                Log.d(TAG, "outgoing_thread qlen: "+outgoing_thread.m_queue.size());
+                                    if (closed)
+                                        throw new Exception("closed");
 
-                                if (closed)
-                                    break; //if close() was called then dont notify on_bt_disconnected or on_target_tcp_disconnected
-
-                                if (sock_is_reader_thread != null && !sock_is_reader_thread.isAlive()) {
-                                    if (m_rfcomm_to_tcp_callbacks != null)
-                                        m_rfcomm_to_tcp_callbacks.on_rfcomm_disconnected();
-                                    throw new Exception("sock_is_reader_thread died");
-                                }
-
-                                if (sock_os_writer_thread != null && !sock_os_writer_thread.isAlive()) {
-                                    if (m_rfcomm_to_tcp_callbacks != null)
-                                        m_rfcomm_to_tcp_callbacks.on_target_tcp_disconnected();
-                                    throw new Exception("sock_os_writer_thread died");
-                                }
-
-                                if (is_bt_connected() == false) {
-                                    throw new Exception("bluetooth device disconnected");
-                                }
-
-                            } catch (Exception e) {
-                                if (e instanceof InterruptedException) {
-                                    Log.d(TAG, "rfcomm_to_tcp m_conn_state_watcher ending with signal from close()");
-                                } else {
-                                    Log.d(TAG, "rfcomm_to_tcp m_conn_state_watcher ending with exception: " + Log.getStackTraceString(e));
-                                    try {
+                                    if (sock_is_reader_thread != null && !sock_is_reader_thread.isAlive()) {
                                         if (m_rfcomm_to_tcp_callbacks != null)
                                             m_rfcomm_to_tcp_callbacks.on_rfcomm_disconnected();
-                                    } catch (Exception ee) {
+                                        throw new Exception("sock_is_reader_thread died");
                                     }
+
+                                    if (sock_os_writer_thread != null && !sock_os_writer_thread.isAlive()) {
+                                        if (m_rfcomm_to_tcp_callbacks != null)
+                                            m_rfcomm_to_tcp_callbacks.on_target_tcp_disconnected();
+                                        throw new Exception("sock_os_writer_thread died");
+                                    }
+
+                                    if (is_bt_connected() == false) {
+                                        throw new Exception("bluetooth device disconnected");
+                                    }
+                            }
+                        } catch (Exception e) {
+                            if (e instanceof InterruptedException) {
+                                Log.d(TAG, "rfcomm_to_tcp m_conn_state_watcher ending with signal from close()");
+                            } else {
+                                Log.d(TAG, "rfcomm_to_tcp m_conn_state_watcher ending with exception: " + Log.getStackTraceString(e));
+                                try {
+                                    if (m_rfcomm_to_tcp_callbacks != null)
+                                        m_rfcomm_to_tcp_callbacks.on_rfcomm_disconnected();
+                                } catch (Exception ee) {
                                 }
-                                break;
                             }
                         }
+                        Log.d(TAG, "m_conn_state_watcher "+hashCode()+" done bluetooth socket");
                     }
                 };
                 m_conn_state_watcher.start();
             }
+            Log.d(TAG, "connect() success");
         } catch (Exception e) {
             Log.d(TAG, "connect() exception: "+Log.getStackTraceString(e));
             close();
             throw e;
         }
+        Log.d(TAG, "connect() done");
+    }
+
+    public boolean is_conn_state_watcher_alive()
+    {
+        return m_conn_state_watcher != null && m_conn_state_watcher.isAlive();
     }
 
 
@@ -416,11 +424,7 @@ public class rfcomm_conn_mgr implements Closeable {
 
     public synchronized void close()
     {
-        if (closed)
-            return;
-
-        closed = true;
-
+        log(TAG, "rfcomm_conn_mgr "+hashCode()+" close() start");
         try {
             if (m_context != null && mReceiver != null) {
                 m_context.unregisterReceiver(mReceiver);
@@ -460,6 +464,7 @@ public class rfcomm_conn_mgr implements Closeable {
             }
         }
         m_cleanup_closables.clear();
+        log(TAG, "rfcomm_conn_mgr "+hashCode()+" close() done");
     }
 
 
@@ -554,6 +559,7 @@ public class rfcomm_conn_mgr implements Closeable {
                         //watch ble conn state
                         m_conn_state_watcher = new Thread() {
                             public void run() {
+                                Log.d(TAG, "m_conn_state_watcher "+hashCode()+" start ble");
                                 while (m_conn_state_watcher == this) {
                                     try (rfcomm_conn_mgr.this) {
 
@@ -580,6 +586,7 @@ public class rfcomm_conn_mgr implements Closeable {
                                         break;
                                     }
                                 }
+                                Log.d(TAG, "m_conn_state_watcher "+hashCode()+" done ble");
                             }
                         };
                         m_conn_state_watcher.start();

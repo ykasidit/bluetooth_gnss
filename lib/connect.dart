@@ -229,6 +229,8 @@ Future<void> checkConnectState() async {
   connectState.value = state;
 }
 
+bool granted_perm = false;
+
 Future<ConnectState> _checkUpdateSelectedDev(
     Map<String, Icon> icon_map) async {
   try {
@@ -290,13 +292,16 @@ Future<ConnectState> _checkUpdateSelectedDev(
 
   ConnectState ret = ConnectState.PendingRequirements;
 
-  List<String> notGrantedPermissions = await checkPermissions();
-  if (notGrantedPermissions.isNotEmpty) {
-    String msg =
-        "Please allow required app permissions... Re-install app if declined earlier and not seeing permission request pop-up: $notGrantedPermissions";
-    icon_map["App permissions"] = iconFail;
-    connectStatus.value = msg;
-    return ret;
+  if (granted_perm == false) {
+    List<String> notGrantedPermissions = await checkPermissions();
+    if (notGrantedPermissions.isNotEmpty) {
+      String msg =
+          "Please allow required app permissions... Re-install app if declined earlier and not seeing permission request pop-up: $notGrantedPermissions";
+      icon_map["App permissions"] = iconFail;
+      connectStatus.value = msg;
+      return ret;
+    }
+    granted_perm = true;
   }
 
   icon_map["App permissions"] = iconOk;

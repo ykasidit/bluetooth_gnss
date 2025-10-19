@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 
 import org.json.JSONObject;
 
@@ -12,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Objects;
+
+import com.clearevo.libbluetooth_gnss_service.Log;
 import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 
 public class StartConnectionReceiver extends BroadcastReceiver {
@@ -60,7 +61,7 @@ public class StartConnectionReceiver extends BroadcastReceiver {
                     }
                 }
             } catch (Exception e) {
-                Log.e(this.getClass().getSimpleName(), e.getMessage(), e);
+                Log.d(TAG, "WARNING: overrideconnectionwithoptions exception: "+Log.getStackTraceString(e));
             }
         }
     }

@@ -60,6 +60,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 //import com.flutter_rust_bridge.rust_lib_bluetooth_gnss.BuildConfig; //test that it can access
 
@@ -803,34 +804,45 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 log(TAG, "WARNING: on_read_object m_ble_qstarz_mode exception: "+Log.getStackTraceString(e));
             }
         } else {
-            //TODO: handle non qstarz parsed pkt
+            // handle nmea parsed pkt
             try {
-                //log(TAG, "rfcomm on_readline: "+new String(readline, "ascii"));
+                log(TAG, "rfcomm on_read_object: "+object);
                 String nmea_name = object.getString("name");
                 String nmea = object.getString("nmea");
-                log_bt_rx(nmea.getBytes(StandardCharsets.UTF_8));
-                JSONObject parsed_nmea = object;
-                if (nmea_name.startsWith("GGA")) {
-                    if (m_all_ntrip_params_specified) {
-                        start_ntrip_conn_if_specified_but_not_connected();
-                    }
-                    if (m_send_gga_to_ntrip && is_ntrip_connected()) {
-                        log(TAG, "consider send gga to ntrip if not sent since millis: " + SEND_GGA_TO_NTRIP_EVERY_MILLIS);
-                        long now = System.currentTimeMillis();
-                        if (now >= m_last_ntrip_gga_send_ts) {
-                            if (now - m_last_ntrip_gga_send_ts > SEND_GGA_TO_NTRIP_EVERY_MILLIS) {
-                                m_last_ntrip_gga_send_ts = now;
-                                String send_str = (nmea.strip()) + "\r\n";
-                                log(TAG, "yes send to ntrip now: "+send_str);
-                                m_ntrip_conn_mgr.send_buff_to_server(send_str.getBytes("ascii"));
-                            }
-                        } else {
-                            m_last_ntrip_gga_send_ts = 0;
-                        }
-                    }
+                if (nmea != null) {
+                    log_bt_rx(nmea.getBytes(StandardCharsets.UTF_8));
                 }
-                if (parsed_nmea != null) {
-                    mainActivity.onDeviceMessage("nmea", jsonToMap(parsed_nmea));
+                if (nmea_name != null) {
+                    JSONObject parsed_nmea = object;
+                    if (nmea_name.startsWith("GGA")) {
+                        if (m_all_ntrip_params_specified) {
+                            start_ntrip_conn_if_specified_but_not_connected();
+                        }
+                        if (m_send_gga_to_ntrip && is_ntrip_connected()) {
+                            log(TAG, "consider send gga to ntrip if not sent since millis: " + SEND_GGA_TO_NTRIP_EVERY_MILLIS);
+                            long now = System.currentTimeMillis();
+                            if (now >= m_last_ntrip_gga_send_ts) {
+                                if (now - m_last_ntrip_gga_send_ts > SEND_GGA_TO_NTRIP_EVERY_MILLIS) {
+                                    m_last_ntrip_gga_send_ts = now;
+                                    String send_str = (nmea.strip()) + "\r\n";
+                                    log(TAG, "yes send to ntrip now: " + send_str);
+                                    m_ntrip_conn_mgr.send_buff_to_server(send_str.getBytes("ascii"));
+                                }
+                            } else {
+                                m_last_ntrip_gga_send_ts = 0;
+                            }
+                        }
+                    } else if (nmea_name.equals("RMC")) {
+                        log(TAG, "got rmc: " + object);
+                        JSONObject params_state = object.getJSONObject("state");
+                        if (params_state == null) {
+                            throw new Exception("got RMC but 'state' is null");
+                        }
+                        mainActivity.onPositionUpdate(jsonToMap(params_state));
+                    }
+                    if (parsed_nmea != null) {
+                        mainActivity.onDeviceMessage("nmea", jsonToMap(parsed_nmea));
+                    }
                 }
             } catch (Exception e) {
                 log(TAG, "bluetooth_gnss_service on_readline parse exception: "+ getStackTraceString(e));
@@ -842,22 +854,36 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     {
         m_connect_thread = new Thread() {
             public void run() {
+                final AtomicBoolean connected = new AtomicBoolean(false);
                 try (mgr) {
-                    log(TAG, "start_connecting_thread "+hashCode()+" start");
+                    log(TAG, "start_connecting_thread "+hashCode()+" start connect()");
+                    NativeParser.reset_gnss_parser();
                     mgr.connect();
-                    while (mgr.is_bt_connected()) {
+                    connected.set(true);
+                    log(TAG, "start_connecting_thread "+hashCode()+" connect() done");
+                    while (true) {
+                        boolean is_conn_state_watcher_alive = mgr.is_conn_state_watcher_alive();
+                        //log(TAG, "start_connecting_thread "+hashCode()+" is_conn_state_watcher_alive: "+is_conn_state_watcher_alive);
+                        if (!is_conn_state_watcher_alive)
+                            throw new Exception("Disconnected from device");
                         byte[] read_buf = mgr.m_incoming_buffers.poll();
                         if (read_buf == null) {
-                            break;
-                        }
-                        if (read_buf.length == 0)
+                            Thread.sleep(1);
+                            //queue is empty
                             continue;
+                        }
+                        if (read_buf.length == 0) {
+                            throw new Exception("read_buf len is 0");
+                        }
                         try {
                             String parsed_object_json = NativeParser.on_gnss_pkt(read_buf).strip();
                             if (parsed_object_json.isEmpty())
                                 continue;
-                            JSONObject jsonObject = new JSONObject(parsed_object_json);
-                            on_read_object(jsonObject);
+                            JSONArray jsonArray = new JSONArray(parsed_object_json);
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                on_read_object(jsonObject);
+                            }
                         } catch (Exception e) {
                             Log.d(TAG, "WARNING: NativeParser parse read_buff failed: "+Log.getStackTraceString(e));
                         }
@@ -867,13 +893,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             new Runnable() {
                                 @Override
                                 public void run() {
-                                    String emsg = "Connection failed: "+e.toString();
+                                    String emsg = (connected.get()?"Disconnected":"Connected failed")+": "+e;
                                     toast(emsg);
                                     updateNotification("Connect failed: "+ getStackTraceString(e), "Target device: "+m_bdaddr, emsg);
                                 }
                             }
                     );
-                    log(TAG, "mgr connect exception: "+ getStackTraceString(e));
+                    log(TAG, "start_connecting_thread exception: "+ getStackTraceString(e));
                 } finally {
                     log(TAG, "start_connecting_thread "+hashCode()+" done");
                 }

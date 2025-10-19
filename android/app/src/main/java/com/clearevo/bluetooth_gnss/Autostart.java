@@ -3,7 +3,9 @@ package com.clearevo.bluetooth_gnss;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+
+
+import com.clearevo.libbluetooth_gnss_service.Log;
 
 import java.util.HashMap;
 
