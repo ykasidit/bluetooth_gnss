@@ -80,7 +80,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     rfcomm_conn_mgr g_rfcomm_mgr = null;
     ntrip_conn_mgr m_ntrip_conn_mgr = null;
 
-    Thread m_connecting_thread = null;
+    Thread m_connect_thread = null;
     Thread m_ntrip_connecting_thread = null;
     Handler m_handler = new Handler();
     String m_bdaddr = "";
@@ -307,7 +307,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     }
 
     public boolean is_trying_bt_connect() {
-        return m_connecting_thread != null && m_connecting_thread.isAlive();
+        return m_connect_thread != null && m_connect_thread.isAlive();
     }
 
     public boolean is_trying_ntrip_connect() {
@@ -439,8 +439,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     //ok
                 }
                 g_rfcomm_mgr = new rfcomm_conn_mgr(dev, secure, this, m_ble_qstarz_mode, this);
-
-                start_connecting_thread();
+                start_connecting_thread(g_rfcomm_mgr);
             }
             ret = 0;
         } catch (Exception e) {
@@ -577,6 +576,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             }
         } catch (Exception e) {}
         log_file_uri = null;
+
+        try {if (m_connect_thread.isAlive()) m_connect_thread.interrupt();} catch (Exception e) {}
+        m_connect_thread = null;
 
         return was_connected;
     }
@@ -836,31 +838,50 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         }
     }
 
-    public void start_connecting_thread()
+    public void start_connecting_thread(final rfcomm_conn_mgr mgr)
     {
-        m_connecting_thread = new Thread() {
+        m_connect_thread = new Thread() {
             public void run() {
-                try {
-                    log(TAG, "rfcomm connect to dev");
-                    g_rfcomm_mgr.connect();
+                try (mgr) {
+                    log(TAG, "start_connecting_thread "+hashCode()+" start");
+                    mgr.connect();
+                    while (mgr.is_bt_connected()) {
+                        byte[] read_buf = mgr.m_incoming_buffers.poll();
+                        if (read_buf == null) {
+                            break;
+                        }
+                        if (read_buf.length == 0)
+                            continue;
+                        try {
+                            String parsed_object_json = NativeParser.on_gnss_pkt(read_buf).strip();
+                            if (parsed_object_json.isEmpty())
+                                continue;
+                            JSONObject jsonObject = new JSONObject(parsed_object_json);
+                            on_read_object(jsonObject);
+                        } catch (Exception e) {
+                            Log.d(TAG, "WARNING: NativeParser parse read_buff failed: "+Log.getStackTraceString(e));
+                        }
+                    }
                 } catch (final Exception e) {
                     m_handler.post(
                             new Runnable() {
                                 @Override
                                 public void run() {
-                                    String emsg = "Connect failed: "+e.toString();
+                                    String emsg = "Connection failed: "+e.toString();
                                     toast(emsg);
                                     updateNotification("Connect failed: "+ getStackTraceString(e), "Target device: "+m_bdaddr, emsg);
                                 }
                             }
                     );
-                    log(TAG, "g_rfcomm_mgr connect exception: "+ getStackTraceString(e));
+                    log(TAG, "mgr connect exception: "+ getStackTraceString(e));
+                } finally {
+                    log(TAG, "start_connecting_thread "+hashCode()+" done");
                 }
             }
         };
-
-        m_connecting_thread.start();
+        m_connect_thread.start();
     }
+
     Uri log_file_uri = null;
     SimpleDateFormat log_name_sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US);
     SimpleDateFormat csv_sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
