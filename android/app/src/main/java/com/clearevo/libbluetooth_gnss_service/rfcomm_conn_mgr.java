@@ -39,7 +39,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 
-public class rfcomm_conn_mgr {
+public class rfcomm_conn_mgr implements Closeable {
 
     BluetoothSocket m_bluetooth_socket;
     InputStream m_sock_is;
@@ -263,8 +263,9 @@ public class rfcomm_conn_mgr {
                 m_cleanup_closables.add(bs_os);
 
                 //start thread to read from bluetooth socket to incoming_buffer
-                inputstream_to_queue_reader_thread incoming_thread = null;
-                //TODO: read from here to native parser
+                inputstream_to_queue_reader_thread incoming_thread = new inputstream_to_queue_reader_thread(bs_is, m_incoming_buffers);
+                m_cleanup_closables.add(incoming_thread);
+                incoming_thread.start();
 
                 //start thread to read from m_outgoing_buffers to bluetooth socket
                 queue_to_outputstream_writer_thread outgoing_thread = new queue_to_outputstream_writer_thread(m_outgoing_buffers, bs_os);
@@ -277,10 +278,10 @@ public class rfcomm_conn_mgr {
 
                 }
 
-                if (incoming_thread.isAlive() == false)
+                if (!incoming_thread.isAlive())
                     throw new Exception("incoming_thread died - not opening client socket...");
 
-                if (outgoing_thread.isAlive() == false)
+                if (!outgoing_thread.isAlive())
                     throw new Exception("outgoing_thread died - not opening client socket...");
 
                 inputstream_to_queue_reader_thread tmp_sock_is_reader_thread = null;
@@ -320,20 +321,29 @@ public class rfcomm_conn_mgr {
                 m_conn_state_watcher = new Thread() {
                     public void run() {
                         while (m_conn_state_watcher == this) {
-                            try {
+                            try (rfcomm_conn_mgr.this) {
 
-                                Thread.sleep(3000);
+                                Thread.sleep(1000);
+
+                                if (!incoming_thread.isAlive())
+                                    throw new Exception("bt incoming_thread died");
+
+                                if (!outgoing_thread.isAlive())
+                                    throw new Exception("bt outgoing_thread died");
+
+                                Log.d(TAG, "incoming_thread qlen: "+incoming_thread.m_queue.size());
+                                Log.d(TAG, "outgoing_thread qlen: "+outgoing_thread.m_queue.size());
 
                                 if (closed)
                                     break; //if close() was called then dont notify on_bt_disconnected or on_target_tcp_disconnected
 
-                                if (sock_is_reader_thread != null && sock_is_reader_thread.isAlive() == false) {
+                                if (sock_is_reader_thread != null && !sock_is_reader_thread.isAlive()) {
                                     if (m_rfcomm_to_tcp_callbacks != null)
                                         m_rfcomm_to_tcp_callbacks.on_rfcomm_disconnected();
                                     throw new Exception("sock_is_reader_thread died");
                                 }
 
-                                if (sock_os_writer_thread != null && sock_os_writer_thread.isAlive() == false) {
+                                if (sock_os_writer_thread != null && !sock_os_writer_thread.isAlive()) {
                                     if (m_rfcomm_to_tcp_callbacks != null)
                                         m_rfcomm_to_tcp_callbacks.on_target_tcp_disconnected();
                                     throw new Exception("sock_os_writer_thread died");
@@ -545,9 +555,9 @@ public class rfcomm_conn_mgr {
                         m_conn_state_watcher = new Thread() {
                             public void run() {
                                 while (m_conn_state_watcher == this) {
-                                    try {
+                                    try (rfcomm_conn_mgr.this) {
 
-                                        Thread.sleep(3_000);
+                                        Thread.sleep(1_000);
 
                                         if (closed)
                                             break; //if close() was called then dont notify on_bt_disconnected or on_target_tcp_disconnected
