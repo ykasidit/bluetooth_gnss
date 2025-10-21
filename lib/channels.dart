@@ -10,7 +10,6 @@ import 'package:pref/pref.dart';
 const methodChannel = MethodChannel("com.clearevo.bluetooth_gnss/engine");
 const _eventChannel = EventChannel("com.clearevo.bluetooth_gnss/engine_events");
 
-
 Map<String, ValueNotifier<dynamic>> paramMap = {};
 
 class Message {
@@ -37,8 +36,8 @@ StreamSubscription<dynamic> initEventChannels() {
   developer.log("initEventChannels()");
   return _eventChannel.receiveBroadcastStream().listen((dynamic event) {
     //developer.log("eventChannel got: $event");
-    final channel_paramMap = (event as Map<Object?, Object?>).cast<String, dynamic>();
-
+    final channel_paramMap =
+        (event as Map<Object?, Object?>).cast<String, dynamic>();
 
     if (channel_paramMap.containsKey("is_dev_msg_map")) {
       try {
@@ -55,13 +54,15 @@ StreamSubscription<dynamic> initEventChannels() {
       }
       return; //update messages only
     } else {
-      if (channel_paramMap["lat"] != null && channel_paramMap["lat"] is double) {
+      if (channel_paramMap["lat"] != null &&
+          channel_paramMap["lat"] is double) {
         try {
           var pos = LatLng(channel_paramMap["lat"] as double,
               channel_paramMap["lon"] as double);
           mapExternalDevPos.value = pos;
 
-          var pos_ori = LatLng(channel_paramMap["mock_location_base_lat"] as double,
+          var pos_ori = LatLng(
+              channel_paramMap["mock_location_base_lat"] as double,
               channel_paramMap["mock_location_base_lon"] as double);
           mapExternalDevPosOri.value = pos_ori;
         } catch (e, t) {

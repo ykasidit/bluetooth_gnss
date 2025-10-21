@@ -65,19 +65,17 @@ void snackbar(BuildContext context, String msg) {
   }
 }
 
-List<Widget> paramRowList(BuildContext context, List<List<String>> m)
-{
-  return m.map((me) => paramRow(context, me[1], title: me[0])).toList() as List<Widget>;
+List<Widget> paramRowList(BuildContext context, List<List<String>> m) {
+  return m.map((me) => paramRow(context, me[1], title: me[0])).toList()
+      as List<Widget>;
 }
 
 DateTime tsToDateTime(int ts_millis) {
-  DateTime dateTime =
-  DateTime.fromMillisecondsSinceEpoch(ts_millis);
+  DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(ts_millis);
   return dateTime;
 }
 
-String tsToDateTimeStr(int ts_millis)
-{
+String tsToDateTimeStr(int ts_millis) {
   DateTime dateTime = tsToDateTime(ts_millis);
   return "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} "
       "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}.${dateTime.millisecond.toString().padLeft(3, '0')}";
@@ -102,13 +100,13 @@ String? validateDoublePositive(String? newValue) {
   return null;
 }
 
-Row paramRow(BuildContext context, String param, {TextStyle? style, int double_fraction_digits=2, String title=""}) {
+Row paramRow(BuildContext context, String param,
+    {TextStyle? style, int double_fraction_digits = 2, String title = ""}) {
   paramMapSubscribe(param);
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: <Widget>[
-      Text('${title.isEmpty?param.toUpperCase():title}',
-          style: style),
+      Text('${title.isEmpty ? param.toUpperCase() : title}', style: style),
       ValueListenableBuilder<dynamic>(
         valueListenable: paramMap[param]!,
         builder: (context, value, child) {
@@ -122,8 +120,8 @@ Row paramRow(BuildContext context, String param, {TextStyle? style, int double_f
           }
           //developer.log("paramRow updated - param: $param value: $value");
           return Text(
-          '$value',
-          style: style,
+            '$value',
+            style: style,
           );
         },
       ),
@@ -216,10 +214,7 @@ Widget reactivePrefDropDown(String pref_key, String title,
         devlist
             .add(DropdownMenuItem(value: entry.key, child: Text(entry.value)));
       }
-      return PrefDropdown(
-          title: Text(title),
-          items: devlist,
-          pref: pref_key);
+      return PrefDropdown(title: Text(title), items: devlist, pref: pref_key);
     },
   );
 }

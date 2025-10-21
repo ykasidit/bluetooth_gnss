@@ -33,15 +33,13 @@ ValueNotifier<int> ntripPacketsCount = ValueNotifier(0);
 final ValueNotifier<Map<String, Icon>> checkStateMapIcon = ValueNotifier({});
 final ValueNotifier<Map<String, String>> bdMapNotifier = ValueNotifier({});
 
-void paramMapSubscribe(String param)
-{
+void paramMapSubscribe(String param) {
   if (!paramMap.containsKey(param)) {
     paramMap[param] = ValueNotifier<dynamic>('');
   }
 }
 
-(String, String) getLatLon()
-{
+(String, String) getLatLon() {
   var lat = paramMap['lat']?.value;
   var lon = paramMap['lon']?.value;
   if (lat != null && lon != null) {
@@ -54,8 +52,7 @@ void paramMapSubscribe(String param)
   return ("", "");
 }
 
-String getLatLonCsv()
-{
+String getLatLonCsv() {
   var (lat, lon) = getLatLon();
   if (lat.isEmpty || lon.isEmpty) {
     return "";
@@ -146,8 +143,9 @@ Future<void> connect() async {
     final bool ret = (await methodChannel.invokeMethod('connect', {
           "bdaddr": bdaddr,
           'secure': prefService.get('secure') ?? true,
-          "device_cep":  prefService.get('device_cep') ?? "5.0",
-          'reconnect': prefService.get('reconnect') ?? false, //TODO: retest/recode this feature - not well tested - users say no way to stop/disconnect when fail,
+          "device_cep": prefService.get('device_cep') ?? "5.0",
+          'reconnect': prefService.get('reconnect') ??
+              false, //TODO: retest/recode this feature - not well tested - users say no way to stop/disconnect when fail,
           'ble_gap_scan_mode': gapMode,
           'log_bt_rx_log_uri': log_bt_rx_log_uri,
           'disable_ntrip': prefService.get('disable_ntrip') ?? false,
@@ -158,12 +156,15 @@ Future<void> connect() async {
           'ntrip_pass': prefService.get('ntrip_pass'),
           'autostart': autostart,
 
-      'mock_timestamp_use_system_time': true,
-      'mock_timestamp_offset_secs': double.parse(prefService.get('mock_timestamp_offset_secs') ?? "0.0"),
-      'mock_lat_offset_meters': double.parse(prefService.get('mock_lat_offset_meters') ?? "0.0"),
-      'mock_lon_offset_meters': double.parse(prefService.get('mock_lon_offset_meters') ?? "0.0"),
-      'mock_alt_offset_meters': double.parse(prefService.get('mock_alt_offset_meters') ?? "0.0"),
-
+          'mock_timestamp_use_system_time': true,
+          'mock_timestamp_offset_secs': double.parse(
+              prefService.get('mock_timestamp_offset_secs') ?? "0.0"),
+          'mock_lat_offset_meters':
+              double.parse(prefService.get('mock_lat_offset_meters') ?? "0.0"),
+          'mock_lon_offset_meters':
+              double.parse(prefService.get('mock_lon_offset_meters') ?? "0.0"),
+          'mock_alt_offset_meters':
+              double.parse(prefService.get('mock_alt_offset_meters') ?? "0.0"),
         })) as bool? ??
         false;
     developer.log("main.dart connect() start connect done");
@@ -175,7 +176,7 @@ Future<void> connect() async {
     developer.log("main.dart connect() start2");
   } catch (e, t) {
     status = "Failed to start connection: '${e}'";
-    developer.log(status+"$t");
+    developer.log(status + "$t");
   }
 
   developer.log("main.dart connect() start3");
@@ -231,8 +232,7 @@ Future<void> checkConnectState() async {
 
 bool granted_perm = false;
 
-Future<ConnectState> _checkUpdateSelectedDev(
-    Map<String, Icon> icon_map) async {
+Future<ConnectState> _checkUpdateSelectedDev(Map<String, Icon> icon_map) async {
   try {
     isBtConnected.value =
         (await methodChannel.invokeMethod('is_bt_connected')) as bool? ?? false;
@@ -382,21 +382,26 @@ Future<ConnectState> _checkUpdateSelectedDev(
   }
 
   //ok - ready to connect
-  icon_map["'Mock Location app' is 'Bluetooth GNSS'\nWARNING: If you want use internal GPS device again,\nSet 'Select mock location app' to 'Nothing'\n(in 'Developer Settings')."] = iconOk;
+  icon_map[
+          "'Mock Location app' is 'Bluetooth GNSS'\nWARNING: If you want use internal GPS device again,\nSet 'Select mock location app' to 'Nothing'\n(in 'Developer Settings')."] =
+      iconOk;
   connectStatus.value = "Please press the floating button to connect...";
   connectSelectedDevice.value = selected_dev_sum;
 
   return ConnectState.ReadyToConnect;
 }
 
-Future<void> setLiveArgs() async
-{
+Future<void> setLiveArgs() async {
   await methodChannel.invokeMethod('setLiveArgs', {
     'mock_timestamp_use_system_time': true,
-    'mock_timestamp_offset_secs': double.parse(prefService.get('mock_timestamp_offset_secs') ?? "0.0"),
-    'mock_lat_offset_meters': double.parse(prefService.get('mock_lat_offset_meters') ?? "0.0"),
-    'mock_lon_offset_meters': double.parse(prefService.get('mock_lon_offset_meters') ?? "0.0"),
-    'mock_alt_offset_meters': double.parse(prefService.get('mock_alt_offset_meters') ?? "0.0"),
+    'mock_timestamp_offset_secs':
+        double.parse(prefService.get('mock_timestamp_offset_secs') ?? "0.0"),
+    'mock_lat_offset_meters':
+        double.parse(prefService.get('mock_lat_offset_meters') ?? "0.0"),
+    'mock_lon_offset_meters':
+        double.parse(prefService.get('mock_lon_offset_meters') ?? "0.0"),
+    'mock_alt_offset_meters':
+        double.parse(prefService.get('mock_alt_offset_meters') ?? "0.0"),
   });
   developer.log("setLiveArgs setTs");
   setLiveArgsTs.value = DateTime.timestamp();

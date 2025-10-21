@@ -7,7 +7,6 @@ import 'connect_screen_connected.dart';
 import 'connect_screen_connecting.dart';
 import 'connect_screen_idle.dart';
 
-
 class ConnectScreen extends StatelessWidget {
   const ConnectScreen({super.key});
 
@@ -33,4 +32,3 @@ class ConnectScreen extends StatelessWidget {
     );
   }
 }
-

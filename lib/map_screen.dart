@@ -57,7 +57,8 @@ class MapScreenState extends State<MapScreen> {
             prefService.set("mock_lat_offset_meters", lat_offset_m.toString());
             prefService.set("mock_lon_offset_meters", lon_offset_m.toString());
             await setLiveArgs();
-            await toast("Offset: Lat: ${lat_offset_m.toStringAsFixed(2)}m Lon: ${lon_offset_m.toStringAsFixed(2)}m");
+            await toast(
+                "Offset: Lat: ${lat_offset_m.toStringAsFixed(2)}m Lon: ${lon_offset_m.toStringAsFixed(2)}m");
           }
         } catch (e, tr) {
           developer.log("set new lat/lon offset exception: $e $tr");
@@ -90,7 +91,8 @@ class MapScreenState extends State<MapScreen> {
                     mapController.move(externalPos, zoom);
                     if (lastMovedPos == null) {
                       lastMovedPos = externalPos;
-                      String ref_lat_lon = "${externalPos.latitude.toStringAsFixed(7)},${externalPos.longitude.toStringAsFixed(7)}";
+                      String ref_lat_lon =
+                          "${externalPos.latitude.toStringAsFixed(7)},${externalPos.longitude.toStringAsFixed(7)}";
                       prefService.set("ref_lat_lon", ref_lat_lon);
                       await setLiveArgs();
                     }

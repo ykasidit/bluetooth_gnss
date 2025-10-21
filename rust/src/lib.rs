@@ -17,7 +17,7 @@ use crate::qstarz_parser::parse_qstarz_pkt;
 use crate::gnss_parser::queue_and_parse;
 use jni::JNIEnv;
 use jni::objects::{JClass};
-use jni::sys::{jbyteArray, jstring};
+use jni::sys::{jbyteArray, jint, jstring};
 
 lazy_static! {
     static ref INPUT_BUFFER: Mutex<VecDeque<u8>> = Mutex::new(VecDeque::with_capacity(1024));
@@ -26,18 +26,21 @@ lazy_static! {
 }
 
 #[no_mangle]
-pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_on_1gnss_1pkt(
+pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_parse(
     env: JNIEnv,
     _class: JClass,
-    byte_array: jbyteArray
+    byte_array: jbyteArray,
+    nread: jint
 ) -> jstring {
     let byte_vec: Vec<u8> = env.convert_byte_array(byte_array).unwrap();
+    
 
     //////////////
     let mut param_state = OUTPUT_STATE_PARAMS_MAP.lock().unwrap();
     let mut nmea_parser_state_vec = NMEA_PARSER.lock().unwrap();
     let nmea_parser_state = nmea_parser_state_vec.first_mut().unwrap();
-    let parsed_result = queue_and_parse(&mut param_state, nmea_parser_state, byte_vec.as_slice());
+    let read_buf = &byte_vec[0..nread as usize];
+    let parsed_result = queue_and_parse(&mut param_state, nmea_parser_state, &read_buf);
     let json_str = 
     match parsed_result {
         Ok(parsed_objects) => {
@@ -54,7 +57,7 @@ pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_on_
 }
 
 #[no_mangle]
-pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_reset_1gnss_1parser(
+pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_reset(
     _env: JNIEnv,
     _class: JClass,
 ) {

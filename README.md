@@ -23,19 +23,22 @@ Build instructions
 * Install flutter_rust_bridge: match that of flutter_rust_bridge in pubspec.yaml (replace 2.7.0 in below) - see https://cjycode.com/flutter_rust_bridge/quickstart)
 example:
 ```
-rustup install 1.84
-rustup default 1.84
-cargo install flutter_rust_bridge_codegen --version 2.7.0
+rustup install 1.90
+rustup default 1.90
+cargo install flutter_rust_bridge_codegen --version 2.11.1
 ```
 
-* If you modify the rust code then update with:
+* If you modify the rust code or upgrade versions in above then you need to update update with:
 `flutter_rust_bridge_codegen generate`
-But you might have to restore `main.dart` after above command
 
 You might need below if above faces issues:
 ```
 flutter_rust_bridge_codegen integrate
 ```
+
+You might have to restore `main.dart` after above `generate` command:
+`git checkout lib/main.dart`
+
 
 * If you don't already have an android signing key, create one as per:
 <https://docs.flutter.dev/deployment/android#create-an-upload-keystore>
