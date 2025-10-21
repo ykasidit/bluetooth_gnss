@@ -676,16 +676,16 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             String key = keys.next();
             Object value = jsonObj.get(key);
 
-            // If the value is a JSONObject, convert it recursively
-            if (value instanceof JSONObject) {
-                map.put(key, jsonToMap((JSONObject) value));  // Recursion for nested objects
-            }
-            // If the value is a JSONArray, convert it to a List<Object>
-            else if (value instanceof JSONArray) {
-                map.put(key, jsonToList((JSONArray) value));  // Convert JSONArray to List<Object>
+            if (value == JSONObject.NULL) {
+                map.put(key, null); // convert sentinel to real null
+            } else if (value instanceof JSONObject) {
+                map.put(key, jsonToMap((JSONObject) value));
+            } else if (value instanceof JSONArray) {
+                map.put(key, jsonToList((JSONArray) value));
             } else {
-                map.put(key, value);  // Otherwise, put the value directly
+                map.put(key, value);
             }
+
         }
 
         return map;
@@ -1672,7 +1672,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             } else if (params_map.containsKey("course")) {  // value from RMC (RMC course = VTG true course)
                                 course = params_map.get("course");
                             }
-                            //log(TAG, "course: "+course);
+                            log(TAG, "course: "+course);
                             if (course != null) {
                                 bearing = (double) course;
                             }
