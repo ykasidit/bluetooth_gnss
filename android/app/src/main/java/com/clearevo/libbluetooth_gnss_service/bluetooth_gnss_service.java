@@ -866,27 +866,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         //log(TAG, "start_connecting_thread "+hashCode()+" is_conn_state_watcher_alive: "+is_conn_state_watcher_alive);
                         if (!is_conn_state_watcher_alive)
                             throw new Exception("Disconnected from device");
-                        byte[] read_buf = mgr.m_incoming_buffers.poll();
-                        if (read_buf == null) {
-                            Thread.sleep(1);
-                            //queue is empty
-                            continue;
-                        }
-                        if (read_buf.length == 0) {
-                            throw new Exception("read_buf len is 0");
-                        }
-                        try {
-                            String parsed_object_json = NativeParser.on_gnss_pkt(read_buf).strip();
-                            if (parsed_object_json.isEmpty())
-                                continue;
-                            JSONArray jsonArray = new JSONArray(parsed_object_json);
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                                on_read_object(jsonObject);
-                            }
-                        } catch (Exception e) {
-                            Log.d(TAG, "WARNING: NativeParser parse read_buff failed: "+Log.getStackTraceString(e));
-                        }
+                        Thread.sleep(1000);
                     }
                 } catch (final Exception e) {
                     m_handler.post(

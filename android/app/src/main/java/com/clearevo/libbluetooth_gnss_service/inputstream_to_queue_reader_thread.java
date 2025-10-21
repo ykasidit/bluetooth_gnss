@@ -15,7 +15,7 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
 
     final String TAG = "btgnss_istqrt";
 
-    public static final int MAX_READ_BUF_SIZE = 100_000;
+    public static final int MAX_READ_BUF_SIZE = 2048;
     byte[] m_read_buffer = new byte[MAX_READ_BUF_SIZE];
 
     String wk = "kasidit_yak_pai_wangkeaw_leaw_na";
