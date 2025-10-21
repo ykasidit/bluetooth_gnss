@@ -2,6 +2,7 @@ use std::any::type_name;
 use std::any::Any;
 use std::collections::HashMap;
 use anyhow::{anyhow, Result};
+use nmea::sentences::FixType;
 use nmea::sentences::{GnssType};
 use serde_json::{Map, Value};
 use nmea::{parse_nmea_sentence, parse_str, Nmea, ParseResult, Satellite};
@@ -164,13 +165,19 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
         ParseResult::DBK(_) => {}
         ParseResult::DPT(_) => {}
         ParseResult::GBS(_) => {}
-        ParseResult::GGA(_) => {
+        ParseResult::GGA(gga) => {
+	    match gga.fix_type {
+		Some(ft) => {
+		    let ft_str = format!("{:?}", ft);
+		    put_param(params, talker_id.to_string(), "fix_quality".to_string(), Value::from(ft_str));
+		}
+		_ => {}
+	    }
 	    
         }
         ParseResult::GLL(_) => {}
         ParseResult::GNS(_) => {}
         ParseResult::GSA(gsa) => {
-
 	    let sids = gsa.fix_sats_prn;
 	    if let Some(talker) = get_gsa_talker_id_from_gsa_nmea(nmea_str, &sids) {
 		//println!("Detected talker: {}", talker);
@@ -215,27 +222,21 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
 
 	    //dump parser state
             put_param(params, TALKER_NONE.to_string(), "fix_type".to_string(), Value::from(format!("{:?}", fix_type)));
+	    put_param(params, TALKER_NONE.to_string(), "status".to_string(), Value::from(format!("{:?}", rmc.status_of_fix)));
             put_param(params, TALKER_NONE.to_string(), "lat".to_string(), Value::from(parser.latitude));
             put_param(params, TALKER_NONE.to_string(), "lon".to_string(), Value::from(parser.longitude));
-            put_param(params, TALKER_NONE.to_string(), "alt".to_string(), Value::from(parser.altitude));
+            put_param(params, TALKER_NONE.to_string(), "alt".to_string(), Value::from(parser.altitude)); //MSL Altitude in meters
             //Get height/separation of geoid above WGS84 ellipsoid, i.e. difference between WGS-84 earth ellipsoid and mean sea level.
             put_param(params, TALKER_NONE.to_string(), "geoidal_height".to_string(), Value::from(parser.geoid_separation));
 	    //println!("set n_sats_used: {:?}", parser.num_of_fix_satellites);
             put_param(params, TALKER_NONE.to_string(), "n_sats_used".to_string(), Value::from(parser.num_of_fix_satellites));
 	    //put_param(talker_id, "ellipsoidal_height", gga.getAltitude() + gga.getGeoidalHeight());
-	    match parser.altitude {
-		Some(alt) => {
-		    match parser.geoid_separation {
-			Some(sep) => {
-			    put_param(params, TALKER_NONE.to_string(), "ellipsoidal_height".to_string(), Value::from(alt+sep));
-			}
-			None => {}
-		    }
+	    match parser.geoid_altitude() {
+		Some(alt_plus_geodal_height) => {
+		    put_param(params, TALKER_NONE.to_string(), "ellipsoidal_height".to_string(), Value::from(alt_plus_geodal_height));
 		}
 		None => {}
 	    }
-
-	    
             put_param(params, TALKER_NONE.to_string(), "vdop".to_string(), Value::from(parser.vdop));
             put_param(params, TALKER_NONE.to_string(), "hdop".to_string(), Value::from(parser.hdop));
             put_param(params, TALKER_NONE.to_string(), "pdop".to_string(), Value::from(parser.pdop));
