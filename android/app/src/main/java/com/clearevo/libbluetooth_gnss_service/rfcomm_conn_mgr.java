@@ -24,6 +24,7 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -50,9 +51,10 @@ public class rfcomm_conn_mgr implements Closeable {
     List<Closeable> m_cleanup_closables;
     Thread m_conn_state_watcher;
 
-    ConcurrentLinkedQueue<byte[]> m_incoming_buffers;
+    //ConcurrentLinkedQueue<byte[]> m_incoming_buffers; - now loop read and parse directly - parsing is almost instant anyway
     ConcurrentLinkedQueue<byte[]> m_outgoing_buffers;
 
+    public static final int RFCOMM_READ_BUFF_SIZE = 256;
     final int MAX_SDP_FETCH_DURATION_SECS = 15;
     final int BTINCOMING_QUEUE_MAX_LEN = 100;
     static final String TAG = "btgnss_rfcmgr";
@@ -141,7 +143,7 @@ public class rfcomm_conn_mgr implements Closeable {
 
         m_cleanup_closables = new ArrayList<Closeable>();
         m_outgoing_buffers = new ConcurrentLinkedQueue<byte[]>();
-        m_incoming_buffers = new ConcurrentLinkedQueue<byte[]>();
+        //m_incoming_buffers = new ConcurrentLinkedQueue<byte[]>();
 
         if (m_target_bt_server_dev == null)
             throw new Exception("m_target_bt_server_dev not specified");
@@ -212,12 +214,12 @@ public class rfcomm_conn_mgr implements Closeable {
     }
 
 
-    public void connect() throws Exception {
+    public synchronized void connect() throws Exception {
         Log.d(TAG, "connect() start");
 
         try {
-            m_incoming_buffers.clear();
-            m_outgoing_buffers.clear();
+            //m_incoming_buffers = new ConcurrentLinkedQueue<byte[]>();
+            m_outgoing_buffers = new ConcurrentLinkedQueue<byte[]>();
             close_gatt();
             try {BluetoothAdapter.getDefaultAdapter().cancelDiscovery();} catch (Exception e) {}
             if (m_ble_mode) {
@@ -264,10 +266,10 @@ public class rfcomm_conn_mgr implements Closeable {
                 m_cleanup_closables.add(bs_is);
                 m_cleanup_closables.add(bs_os);
 
-                //start thread to read from bluetooth socket to incoming_buffer
+                /*//start thread to read from bluetooth socket to incoming_buffer
                 inputstream_to_queue_reader_thread incoming_thread = new inputstream_to_queue_reader_thread(bs_is, m_incoming_buffers);
                 m_cleanup_closables.add(incoming_thread);
-                incoming_thread.start();
+                incoming_thread.start();*/
 
                 //start thread to read from m_outgoing_buffers to bluetooth socket
                 queue_to_outputstream_writer_thread outgoing_thread = new queue_to_outputstream_writer_thread(m_outgoing_buffers, bs_os);
@@ -275,45 +277,20 @@ public class rfcomm_conn_mgr implements Closeable {
                 outgoing_thread.start();
 
                 try {
-                    Thread.sleep(500); //wait to see if threads still alive
+                    Thread.sleep(100); //wait to see if threads still alive
                 } catch (Exception e) {
 
                 }
 
-                if (!incoming_thread.isAlive())
+                /*if (!incoming_thread.isAlive())
                     throw new Exception("incoming_thread died - not opening client socket...");
+                 */
 
                 if (!outgoing_thread.isAlive())
                     throw new Exception("outgoing_thread died - not opening client socket...");
 
                 inputstream_to_queue_reader_thread tmp_sock_is_reader_thread = null;
                 queue_to_outputstream_writer_thread tmp_sock_os_writer_thread = null;
-
-                if (m_tcp_server_host != null) {
-
-                    //open client socket to target tcp server
-                    Log.d(TAG, "start opening tcp socket to host: " + m_tcp_server_host + " port: " + m_tcp_server_port);
-                    m_tcp_server_sock = new Socket(m_tcp_server_host, m_tcp_server_port);
-                    m_sock_is = m_tcp_server_sock.getInputStream();
-                    m_sock_os = m_tcp_server_sock.getOutputStream();
-                    Log.d(TAG, "done opening tcp socket to host: " + m_tcp_server_host + " port: " + m_tcp_server_port);
-
-                    m_cleanup_closables.add(m_sock_is);
-                    m_cleanup_closables.add(m_sock_os);
-
-                    if (m_rfcomm_to_tcp_callbacks != null)
-                        m_rfcomm_to_tcp_callbacks.on_target_tcp_connected();
-
-                    //start thread to read socket to outgoing_buffer
-                    tmp_sock_is_reader_thread = new inputstream_to_queue_reader_thread(m_sock_is, m_outgoing_buffers);
-                    tmp_sock_is_reader_thread.start();
-                    m_cleanup_closables.add(tmp_sock_is_reader_thread);
-
-                    //start thread to write from incoming buffer to socket
-                    tmp_sock_os_writer_thread = new queue_to_outputstream_writer_thread(m_incoming_buffers, m_sock_os);
-                    tmp_sock_os_writer_thread.start();
-                    m_cleanup_closables.add(tmp_sock_os_writer_thread);
-                }
 
                 final inputstream_to_queue_reader_thread sock_is_reader_thread = tmp_sock_is_reader_thread;
                 final queue_to_outputstream_writer_thread sock_os_writer_thread = tmp_sock_os_writer_thread;
@@ -324,36 +301,53 @@ public class rfcomm_conn_mgr implements Closeable {
                     public void run() {
                         Log.d(TAG, "m_conn_state_watcher "+hashCode()+" start bluetooth socket");
                         try (rfcomm_conn_mgr.this) {
+                            byte[] read_buf = new byte[RFCOMM_READ_BUFF_SIZE];
+                            int nread;
                             while (m_conn_state_watcher == this) {
-                                    Thread.sleep(1000);
-
-                                    if (!incoming_thread.isAlive())
-                                        throw new Exception("bt incoming_thread died");
-
-                                    if (!outgoing_thread.isAlive())
-                                        throw new Exception("bt outgoing_thread died");
-
-                                    Log.d(TAG, "incoming_thread qlen: "+incoming_thread.m_queue.size());
-                                    Log.d(TAG, "outgoing_thread qlen: "+outgoing_thread.m_queue.size());
-
-                                    if (closed)
-                                        throw new Exception("closed");
-
-                                    if (sock_is_reader_thread != null && !sock_is_reader_thread.isAlive()) {
-                                        if (m_rfcomm_to_tcp_callbacks != null)
-                                            m_rfcomm_to_tcp_callbacks.on_rfcomm_disconnected();
-                                        throw new Exception("sock_is_reader_thread died");
+                                nread = bs_is.read(read_buf);
+                                if (nread <= 0) {
+                                    throw new Exception("read_buf nread <= 0 means disconnected: "+nread);
+                                }
+                                try {
+                                    String parsed_object_json = NativeParser.on_gnss_pkt(read_buf).strip();
+                                    if (parsed_object_json.isEmpty())
+                                        continue;
+                                    JSONArray jsonArray = new JSONArray(parsed_object_json);
+                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                        m_rfcomm_to_tcp_callbacks.on_read_object(jsonObject);
                                     }
+                                } catch (Exception e) {
+                                    Log.d(TAG, "WARNING: NativeParser parse read_buff failed: "+Log.getStackTraceString(e));
+                                }
 
-                                    if (sock_os_writer_thread != null && !sock_os_writer_thread.isAlive()) {
-                                        if (m_rfcomm_to_tcp_callbacks != null)
-                                            m_rfcomm_to_tcp_callbacks.on_target_tcp_disconnected();
-                                        throw new Exception("sock_os_writer_thread died");
-                                    }
+                                /*if (!incoming_thread.isAlive())
+                                    throw new Exception("bt incoming_thread died");*/
 
-                                    if (is_bt_connected() == false) {
-                                        throw new Exception("bluetooth device disconnected");
-                                    }
+                                if (!outgoing_thread.isAlive())
+                                    throw new Exception("bt outgoing_thread died");
+
+                                //Log.d(TAG, "incoming_thread qlen: "+incoming_thread.m_queue.size());
+                                Log.d(TAG, "outgoing_thread qlen: "+outgoing_thread.m_queue.size());
+
+                                if (closed)
+                                    throw new Exception("closed");
+
+                                if (sock_is_reader_thread != null && !sock_is_reader_thread.isAlive()) {
+                                    if (m_rfcomm_to_tcp_callbacks != null)
+                                        m_rfcomm_to_tcp_callbacks.on_rfcomm_disconnected();
+                                    throw new Exception("sock_is_reader_thread died");
+                                }
+
+                                if (sock_os_writer_thread != null && !sock_os_writer_thread.isAlive()) {
+                                    if (m_rfcomm_to_tcp_callbacks != null)
+                                        m_rfcomm_to_tcp_callbacks.on_target_tcp_disconnected();
+                                    throw new Exception("sock_os_writer_thread died");
+                                }
+
+                                if (is_bt_connected() == false) {
+                                    throw new Exception("bluetooth device disconnected");
+                                }
                             }
                         } catch (Exception e) {
                             if (e instanceof InterruptedException) {

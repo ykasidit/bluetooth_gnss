@@ -42,7 +42,7 @@ public class ntrip_conn_mgr {
     String m_http_response_header_str;
     ConcurrentLinkedQueue<byte[]> m_incoming_buffers;
     static final String TAG = "btgnss_ntripmgr";
-    volatile private boolean closed = false;
+    volatile boolean closed = false;
 
     ntrip_conn_callbacks m_cb;
     String m_user;
@@ -194,14 +194,17 @@ public class ntrip_conn_mgr {
                     Log.d(TAG, "ntrip m_conn_state_watcher "+hashCode()+" start");
                     while (m_conn_state_watcher == this) {
                         try {
-
-                            Thread.sleep(3000);
-
                             if (closed)
                                 break; //if close() was called then dont notify on_bt_disconnected or on_target_tcp_disconnected
-
-                            if (sock_is_reader_thread != null && sock_is_reader_thread.isAlive() == false) {
+                            if (!sock_is_reader_thread.isAlive()) {
                                 throw new Exception("sock_is_reader_thread died");
+                            }
+                            byte[] ntrip_buf = m_incoming_buffers.poll();
+                            if (ntrip_buf == null) {
+                                //queue is empty
+                                Thread.sleep(1);
+                            } else {
+                                m_cb.on_read(ntrip_buf);
                             }
                         } catch (Exception e) {
                             if (e instanceof InterruptedException) {
@@ -216,8 +219,8 @@ public class ntrip_conn_mgr {
                             }
                             break;
                         }
-                        Log.d(TAG, "ntrip m_conn_state_watcher "+hashCode()+" done");
                     }
+                    Log.d(TAG, "ntrip m_conn_state_watcher "+hashCode()+" done");
 
                 }
             };

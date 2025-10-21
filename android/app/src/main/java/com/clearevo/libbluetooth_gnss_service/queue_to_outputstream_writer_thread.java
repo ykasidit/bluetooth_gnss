@@ -22,6 +22,7 @@ public class queue_to_outputstream_writer_thread extends Thread implements Close
     public void close()
     {
         Log.d(TAG,"close()");
+        closed = true;
         try {
             m_os.close();
         } catch (Exception e) {
@@ -32,11 +33,15 @@ public class queue_to_outputstream_writer_thread extends Thread implements Close
 
     }
 
+    volatile boolean closed = false;
     public void run()
     {
         Log.d(TAG, "queue_to_outputstream_writer_thread "+hashCode()+" start");
         try (this) {
             while (true) {
+                if (closed) {
+                    break;
+                }
                 //System.out.println("m_queue poll pre poll");
                 byte[] out_buf = m_queue.poll();
                 //Log.d(TAG,"queue_to_outputstream_writer_thread: m_queue poll buf:" + out_buf);

@@ -135,7 +135,7 @@ public class test_ntrip_conn_mgr implements ntrip_conn_callbacks{
                 mgr = new ntrip_conn_mgr(host, port, first_mount_point, user, pass, this);
                 mgr.connect();
 
-                Thread.sleep(5000);
+                Thread.sleep(5_000);
 
             } finally {
                 if (mgr != null)
@@ -155,7 +155,7 @@ public class test_ntrip_conn_mgr implements ntrip_conn_callbacks{
     @Override
     public void on_read(byte[] read_buff) {
         try {
-            System.out.println("on_read: "+new String(read_buff, "ascii"));
+            System.out.println("=== on_read ntrip rtcm buffer: "+new String(read_buff, "ascii"));
         } catch (Exception e) {
             System.out.println("on_readline exception: "+ Log.getStackTraceString(e));
         }
