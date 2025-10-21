@@ -133,9 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIndex: currentIndex,
         onDestinationSelected: (index) => setState(() {
           currentIndex = index;
-          if (currentIndex != 0) {
-
-          }
+          if (currentIndex != 0) {}
         }),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.bluetooth), label: 'Connect'),
@@ -145,15 +143,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: currentIndex == 0
           ? FloatingActionButton(
-        onPressed: () async {
-          try {
-            await onFloatingButtonTap();
-          } catch (ex, tr) {
-            developer.log("onFloatingButtonTap exception: $ex: $tr");
-          }
-        },
-        child: reactiveIcon(floatingButtonIcon),
-      ) : null,
+              onPressed: () async {
+                try {
+                  await onFloatingButtonTap();
+                } catch (ex, tr) {
+                  developer.log("onFloatingButtonTap exception: $ex: $tr");
+                }
+              },
+              child: reactiveIcon(floatingButtonIcon),
+            )
+          : null,
     );
   }
 }

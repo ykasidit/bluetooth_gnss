@@ -45,7 +45,7 @@ dependencies:
   modal_progress_hud_nsn: ^0.5.1
   wakelock_plus: ^1.2.7
   share_plus: ^10.0.1
-  flutter_rust_bridge: 2.7.0
+  flutter_rust_bridge: 2.11.1
   rust_lib_bluetooth_gnss:
     path: rust_builder
   flutter_map: ^8.2.1

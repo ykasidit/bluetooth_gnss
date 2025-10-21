@@ -195,7 +195,8 @@ class SettingsScreenState extends State<SettingsScreen> {
             developer.log("chosen_mountpoint: $chosenMountpoint");
             if (chosenMountpoint != null) {
               await prefService.set('ntrip_mountpoint', chosenMountpoint);
-              setMountpointTs.value = DateTime.timestamp(); //trigger ui update in the mountpoint field
+              setMountpointTs.value = DateTime
+                  .timestamp(); //trigger ui update in the mountpoint field
             }
           } else if (eventMap["callback_src"] == "set_log_uri") {
             String log_uri = eventMap["callback_payload"] as String? ?? "";
@@ -233,317 +234,316 @@ class SettingsScreenState extends State<SettingsScreen> {
         child: MaterialApp(
           title: 'Settings',
           home: ModalProgressHUD(
-                inAsyncCall: loading,
-                child: PrefPage(children: [
-                  const PrefTitle(title: Text('Target device:')),
-                  reactivePrefDropDown(
-                      'target_bdaddr',
-                      "Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)",
-                      bdMapNotifier),
-                 PrefText(
-                          key: ValueKey(
-                              'device_cep'),
-                          pref: 'device_cep',
-                          decoration: InputDecoration(
-                            labelText: 'Device CEP (m) (see device spec sheet)',
-                            hintText: "Example: 5",
-                          ),
-                          hintText: "Example: 5",
-                          validator: validateDoublePositive,
-                          keyboardType: TextInputType.numberWithOptions(
-                              decimal: true, signed: false),
-                        ),
-                  const PrefTitle(title: Text('Bluetooth Connection settings')),
-                  const PrefCheckbox(
-                      title: Text("Secure RFCOMM connection"), pref: 'secure'),
-                  const PrefCheckbox(
-                      title: Text("Auto-reconnect - when disconnected"),
-                      pref: 'reconnect'),
-                  const PrefCheckbox(
-                      title: Text("Autostart - connect on phone boot"),
-                      pref: 'autostart'),
-                  /*const PrefCheckbox(
+            inAsyncCall: loading,
+            child: PrefPage(children: [
+              const PrefTitle(title: Text('Target device:')),
+              reactivePrefDropDown(
+                  'target_bdaddr',
+                  "Select a Bluetooth device\n(Pair in Phone Settings > Device connection > Pair new device)",
+                  bdMapNotifier),
+              PrefText(
+                key: ValueKey('device_cep'),
+                pref: 'device_cep',
+                decoration: InputDecoration(
+                  labelText: 'Device CEP (m) (see device spec sheet)',
+                  hintText: "Example: 5",
+                ),
+                hintText: "Example: 5",
+                validator: validateDoublePositive,
+                keyboardType: TextInputType.numberWithOptions(
+                    decimal: true, signed: false),
+              ),
+              const PrefTitle(title: Text('Bluetooth Connection settings')),
+              const PrefCheckbox(
+                  title: Text("Secure RFCOMM connection"), pref: 'secure'),
+              const PrefCheckbox(
+                  title: Text("Auto-reconnect - when disconnected"),
+                  pref: 'reconnect'),
+              const PrefCheckbox(
+                  title: Text("Autostart - connect on phone boot"),
+                  pref: 'autostart'),
+              /*const PrefCheckbox(
                       title: Text(
                           "Check for Settings > 'Location' ON and 'High Accuracy'"),
                       pref: 'check_settings_location'),*/
-                  ValueListenableBuilder<DateTime>(
-                      valueListenable: setLiveArgsTs,
-                      builder: (BuildContext context, DateTime setTs,
-                          Widget? child) {
-                        return PrefText(
-                          key: ValueKey(
-                              'mock_timestamp_offset_secs_${setTs.millisecondsSinceEpoch}'),
-                          pref: 'mock_timestamp_offset_secs',
-                          decoration: InputDecoration(
-                            labelText: 'Live location timestamp offset (secs)',
-                            suffixIcon: IconButton(
-                                icon: Icon(Icons.clear),
-                                onPressed: () async {
-                                  await prefService.set(
-                                      'mock_timestamp_offset_secs', '0.0');
-                                  await setLiveArgs(); // if needed to reflect change
-                                }),
-                          ),
-                          hintText: "Example: -1.5",
-                          validator: validateDouble,
-                          keyboardType: TextInputType.numberWithOptions(
-                              decimal: true, signed: true),
-                          onChange: (s) async => await setLiveArgs(),
-                        );
-                      }),
-                  ValueListenableBuilder<DateTime>(
-                      valueListenable: setLiveArgsTs,
-                      builder: (BuildContext context, DateTime setTs,
-                          Widget? child) {
-                        return PrefText(
-                          key: ValueKey(
-                              'mock_lat_offset_meters_${setTs.millisecondsSinceEpoch}'),
-                          pref: 'mock_lat_offset_meters',
-                          decoration: InputDecoration(
-                            labelText: 'Live latitude offset (meters)',
-                            suffixIcon: IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () async {
-                                  await prefService.set(
-                                      'mock_lat_offset_meters', '0.0');
-                                  await setLiveArgs(); // if needed to reflect change
-                                }),
-                          ),
-                          hintText: "Example: -2.5",
-                          validator: validateDouble,
-                          keyboardType: TextInputType.numberWithOptions(
-                              decimal: true, signed: true),
-                          onChange: (s) async => await setLiveArgs(),
-                        );
-                      }),
-                  ValueListenableBuilder<DateTime>(
-                      valueListenable: setLiveArgsTs,
-                      builder: (BuildContext context, DateTime setTs,
-                          Widget? child) {
-                        return PrefText(
-                          key: ValueKey('mock_lon_offset_meters_${setTs.millisecondsSinceEpoch}'),
-                          pref: 'mock_lon_offset_meters',
-                          decoration: InputDecoration(
-                            labelText: 'Live longitude offset (meters)',
-                            suffixIcon: IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () async {
-                                  await prefService.set(
-                                      'mock_lon_offset_meters', '0.0');
-                                  await setLiveArgs(); // if needed to reflect change
-                                }),
-                          ),
-                          hintText: "Example: 3.5",
-                          validator: validateDouble,
-                          keyboardType: TextInputType.numberWithOptions(
-                              decimal: true, signed: true),
-                          onChange: (s) async => await setLiveArgs(),
-                        );
-                      }),
-                  ValueListenableBuilder<DateTime>(
-                      valueListenable: setLiveArgsTs,
-                      builder: (BuildContext context, DateTime setTs,
-                          Widget? child) {
-                        return PrefText(
-                          key: ValueKey('mock_alt_offset_meters_${setTs.millisecondsSinceEpoch}'),
-                          pref: 'mock_alt_offset_meters',
-                          decoration: InputDecoration(
-                            labelText: 'Live altitude offset (meters)',
-                            suffixIcon: IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () async {
-                                  await prefService.set(
-                                      'mock_alt_offset_meters', '0.0');
-                                  await setLiveArgs(); // if needed to reflect change
-                                }),
-                          ),
-                          hintText: "Example: -10.5",
-                          validator: validateDouble,
-                          keyboardType: TextInputType.numberWithOptions(
-                              decimal: true, signed: true),
-                          onChange: (s) async => await setLiveArgs(),
-                        );
-                      }),
-                  //mock_location_timestamp_offset_millis
-                  PrefCheckbox(
-                      title: Text("Enable Logging $log_bt_rx_log_uri"),
-                      pref: 'log_bt_rx',
-                      onChange: (bool? val) async {
-                        prefService.set('log_bt_rx',
-                            false); //set to false first and await event from java callback to set to true if all perm/folder set pass
-                        prefService.set("log_bt_rx_log_uri", "");
-                        setState(() {
-                          log_bt_rx_log_uri = "";
-                        });
-                        bool enable = val!;
-                        if (enable) {
-                          bool writeEnabled = false;
-                          try {
-                            writeEnabled = (await methodChannel.invokeMethod(
-                                    'is_write_enabled')) as bool? ??
-                                false;
-                          } catch (e) {
-                            await toast(
-                                "WARNING: check _is_connecting failed: $e");
-                          }
-                          if (writeEnabled == false) {
-                            await toast(
-                                "Write external storage permission required for data loggging...");
-                          }
-                          try {
-                            await methodChannel.invokeMethod('set_log_uri');
-                          } catch (e) {
-                            await toast("WARNING: set_log_uri failed: $e");
-                          }
-                        }
-                      }),
-                  const PrefTitle(title: Text('RTK/NTRIP Server settings')),
-                  Text(
-                    "Set these if your Bluetooth GNSS device supports RTK,\n(Like Ardusimple U-Blox F9, etc)",
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const PrefCheckbox(
-                      title: Text("Disable NTRIP"), pref: 'disable_ntrip'),
-                  PrefText(
-                      label: 'Host',
-                      pref: 'ntrip_host',
-                      validator: (str) {
-                        str = str.toString();
-                        if (str == "") {
-                          return "Invalid Host domain/IP";
-                        }
-                        return null;
-                      }),
-                  PrefText(
-                      label: 'Port',
-                      pref: 'ntrip_port',
-                      validator: (str) {
-                        str = str.toString();
-                        int? port = intParse(str);
-                        if (port == null || !(port >= 0 && port <= 65535)) {
-                          return "Invalid port";
-                        }
-                        return null;
-                      }),
-                  ValueListenableBuilder<DateTime>(
-                      valueListenable: setMountpointTs,
-                      builder: (BuildContext context, DateTime setTs,
-                          Widget? child) {
-                        developer.log("rebld pref live setTs:  $setTs");
-                        return PrefText(
-                            key: ValueKey(
-                                'mountpoint_${setTs.millisecondsSinceEpoch}'),
-                            label: "Stream (mount-point)",
-                            pref: 'ntrip_mountpoint',
-                            validator: (str) {
-                              if (str == null) {
-                                return "Invalid mount-point";
-                              }
-                              return null;
-                            });
-                      }),
-                  PrefText(
-                      label: 'User',
-                      pref: 'ntrip_user',
-                      validator: (str) {
-                        return null;
-                      }),
-                  PrefText(
-                      label: 'Password',
-                      pref: 'ntrip_pass',
-                      obscureText: true,
-                      validator: (str) {
-                        return null;
-                      }),
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: ElevatedButton(
-                      child: const Text(
-                        'List streams from above server',
+              ValueListenableBuilder<DateTime>(
+                  valueListenable: setLiveArgsTs,
+                  builder:
+                      (BuildContext context, DateTime setTs, Widget? child) {
+                    return PrefText(
+                      key: ValueKey(
+                          'mock_timestamp_offset_secs_${setTs.millisecondsSinceEpoch}'),
+                      pref: 'mock_timestamp_offset_secs',
+                      decoration: InputDecoration(
+                        labelText: 'Live location timestamp offset (secs)',
+                        suffixIcon: IconButton(
+                            icon: Icon(Icons.clear),
+                            onPressed: () async {
+                              await prefService.set(
+                                  'mock_timestamp_offset_secs', '0.0');
+                              await setLiveArgs(); // if needed to reflect change
+                            }),
                       ),
-                      onPressed: () async {
-                        String host = prefService.get('ntrip_host') ?? "";
-                        String port = prefService.get('ntrip_port') ?? "";
-                        String user = prefService.get('ntrip_user') ?? "";
-                        String pass = prefService.get('ntrip_pass') ?? "";
-                        if (host.isEmpty || port.isEmpty) {
-                          await toast(
-                              "Please specify the ntrip_host and ntrip_port first...");
-                          return;
-                        }
-
-                        int retCode = -1;
-
-                        try {
-                          setState(() {
-                            loading = true;
-                          });
-                          //make sure dialog shows first otherwise if no internet the .dismoiss wont work if immediate fail and progress dialog would block forever
-                          Future.delayed(const Duration(seconds: 0), () async {
-                            try {
-                              retCode = (await methodChannel
-                                      .invokeMethod("get_mountpoint_list", {
-                                    'ntrip_host': host,
-                                    'ntrip_port': port,
-                                    'ntrip_user': user,
-                                    'ntrip_pass': pass,
-                                  })) as int? ??
-                                  -1;
-                              developer.log(
-                                  "get_mountpoint_list req waiting callback ret: $retCode");
-                            } catch (e) {
-                              setState(() {
-                                loading = false;
-                              });
-                              await toast(
-                                  "List mount-points failed invoke: $e");
-                            }
-                          });
-                        } catch (e) {
-                          developer.log(
-                              "WARNING: Choose mount-point failed exception: $e");
-                          try {
-                            setState(() {
-                              loading = false;
-                            });
-                            await toast("List mount-points failed start: $e");
-                          } catch (e) {
-                            developer.log("list mount point failed {e}");
-                          }
-                        }
-                      },
-                    ),
-                  ),
-                  const PrefCheckbox(
-                      title: Text("Sort by nearest to Ref position"),
-                      pref: 'list_nearest_streams_first'),
-
-                  ValueListenableBuilder<DateTime>(
-                      valueListenable: setLiveArgsTs,
-                      builder: (BuildContext context, DateTime setTs,
-                          Widget? child) {
-                        developer.log("rebld pref live setTs:  $setTs");
-                        return PrefText(
-                            key: ValueKey(
-                                'ref_lat_lon_${setTs.millisecondsSinceEpoch}'),
-                            label: "Ref position lat, lon for sorting",
-                            pref: 'ref_lat_lon',
-                            hintText: "Example: 6.691289,101.674621",
-                            validator: (String? t) {
-                              if (t != null && t.contains(",")) {
-                                List<String> parts = t.split(",");
-                                if (parts.length == 2) {
-                                  if (double.tryParse(parts[0]) != null &&
-                                      double.tryParse(parts[1]) != null) {
-                                    return null;
-                                  }
-                                }
-                              }
-                              return "Please enter a valid location: latitude, longitude";
-                            });
-                      }),
-                ]),
+                      hintText: "Example: -1.5",
+                      validator: validateDouble,
+                      keyboardType: TextInputType.numberWithOptions(
+                          decimal: true, signed: true),
+                      onChange: (s) async => await setLiveArgs(),
+                    );
+                  }),
+              ValueListenableBuilder<DateTime>(
+                  valueListenable: setLiveArgsTs,
+                  builder:
+                      (BuildContext context, DateTime setTs, Widget? child) {
+                    return PrefText(
+                      key: ValueKey(
+                          'mock_lat_offset_meters_${setTs.millisecondsSinceEpoch}'),
+                      pref: 'mock_lat_offset_meters',
+                      decoration: InputDecoration(
+                        labelText: 'Live latitude offset (meters)',
+                        suffixIcon: IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () async {
+                              await prefService.set(
+                                  'mock_lat_offset_meters', '0.0');
+                              await setLiveArgs(); // if needed to reflect change
+                            }),
+                      ),
+                      hintText: "Example: -2.5",
+                      validator: validateDouble,
+                      keyboardType: TextInputType.numberWithOptions(
+                          decimal: true, signed: true),
+                      onChange: (s) async => await setLiveArgs(),
+                    );
+                  }),
+              ValueListenableBuilder<DateTime>(
+                  valueListenable: setLiveArgsTs,
+                  builder:
+                      (BuildContext context, DateTime setTs, Widget? child) {
+                    return PrefText(
+                      key: ValueKey(
+                          'mock_lon_offset_meters_${setTs.millisecondsSinceEpoch}'),
+                      pref: 'mock_lon_offset_meters',
+                      decoration: InputDecoration(
+                        labelText: 'Live longitude offset (meters)',
+                        suffixIcon: IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () async {
+                              await prefService.set(
+                                  'mock_lon_offset_meters', '0.0');
+                              await setLiveArgs(); // if needed to reflect change
+                            }),
+                      ),
+                      hintText: "Example: 3.5",
+                      validator: validateDouble,
+                      keyboardType: TextInputType.numberWithOptions(
+                          decimal: true, signed: true),
+                      onChange: (s) async => await setLiveArgs(),
+                    );
+                  }),
+              ValueListenableBuilder<DateTime>(
+                  valueListenable: setLiveArgsTs,
+                  builder:
+                      (BuildContext context, DateTime setTs, Widget? child) {
+                    return PrefText(
+                      key: ValueKey(
+                          'mock_alt_offset_meters_${setTs.millisecondsSinceEpoch}'),
+                      pref: 'mock_alt_offset_meters',
+                      decoration: InputDecoration(
+                        labelText: 'Live altitude offset (meters)',
+                        suffixIcon: IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () async {
+                              await prefService.set(
+                                  'mock_alt_offset_meters', '0.0');
+                              await setLiveArgs(); // if needed to reflect change
+                            }),
+                      ),
+                      hintText: "Example: -10.5",
+                      validator: validateDouble,
+                      keyboardType: TextInputType.numberWithOptions(
+                          decimal: true, signed: true),
+                      onChange: (s) async => await setLiveArgs(),
+                    );
+                  }),
+              //mock_location_timestamp_offset_millis
+              PrefCheckbox(
+                  title: Text("Enable Logging $log_bt_rx_log_uri"),
+                  pref: 'log_bt_rx',
+                  onChange: (bool? val) async {
+                    prefService.set('log_bt_rx',
+                        false); //set to false first and await event from java callback to set to true if all perm/folder set pass
+                    prefService.set("log_bt_rx_log_uri", "");
+                    setState(() {
+                      log_bt_rx_log_uri = "";
+                    });
+                    bool enable = val!;
+                    if (enable) {
+                      bool writeEnabled = false;
+                      try {
+                        writeEnabled = (await methodChannel
+                                .invokeMethod('is_write_enabled')) as bool? ??
+                            false;
+                      } catch (e) {
+                        await toast("WARNING: check _is_connecting failed: $e");
+                      }
+                      if (writeEnabled == false) {
+                        await toast(
+                            "Write external storage permission required for data loggging...");
+                      }
+                      try {
+                        await methodChannel.invokeMethod('set_log_uri');
+                      } catch (e) {
+                        await toast("WARNING: set_log_uri failed: $e");
+                      }
+                    }
+                  }),
+              const PrefTitle(title: Text('RTK/NTRIP Server settings')),
+              Text(
+                "Set these if your Bluetooth GNSS device supports RTK,\n(Like Ardusimple U-Blox F9, etc)",
+                style: Theme.of(context).textTheme.bodySmall,
               ),
+              const PrefCheckbox(
+                  title: Text("Disable NTRIP"), pref: 'disable_ntrip'),
+              PrefText(
+                  label: 'Host',
+                  pref: 'ntrip_host',
+                  validator: (str) {
+                    str = str.toString();
+                    if (str == "") {
+                      return "Invalid Host domain/IP";
+                    }
+                    return null;
+                  }),
+              PrefText(
+                  label: 'Port',
+                  pref: 'ntrip_port',
+                  validator: (str) {
+                    str = str.toString();
+                    int? port = intParse(str);
+                    if (port == null || !(port >= 0 && port <= 65535)) {
+                      return "Invalid port";
+                    }
+                    return null;
+                  }),
+              ValueListenableBuilder<DateTime>(
+                  valueListenable: setMountpointTs,
+                  builder:
+                      (BuildContext context, DateTime setTs, Widget? child) {
+                    developer.log("rebld pref live setTs:  $setTs");
+                    return PrefText(
+                        key: ValueKey(
+                            'mountpoint_${setTs.millisecondsSinceEpoch}'),
+                        label: "Stream (mount-point)",
+                        pref: 'ntrip_mountpoint',
+                        validator: (str) {
+                          if (str == null) {
+                            return "Invalid mount-point";
+                          }
+                          return null;
+                        });
+                  }),
+              PrefText(
+                  label: 'User',
+                  pref: 'ntrip_user',
+                  validator: (str) {
+                    return null;
+                  }),
+              PrefText(
+                  label: 'Password',
+                  pref: 'ntrip_pass',
+                  obscureText: true,
+                  validator: (str) {
+                    return null;
+                  }),
+              Padding(
+                padding: const EdgeInsets.all(5.0),
+                child: ElevatedButton(
+                  child: const Text(
+                    'List streams from above server',
+                  ),
+                  onPressed: () async {
+                    String host = prefService.get('ntrip_host') ?? "";
+                    String port = prefService.get('ntrip_port') ?? "";
+                    String user = prefService.get('ntrip_user') ?? "";
+                    String pass = prefService.get('ntrip_pass') ?? "";
+                    if (host.isEmpty || port.isEmpty) {
+                      await toast(
+                          "Please specify the ntrip_host and ntrip_port first...");
+                      return;
+                    }
+
+                    int retCode = -1;
+
+                    try {
+                      setState(() {
+                        loading = true;
+                      });
+                      //make sure dialog shows first otherwise if no internet the .dismoiss wont work if immediate fail and progress dialog would block forever
+                      Future.delayed(const Duration(seconds: 0), () async {
+                        try {
+                          retCode = (await methodChannel
+                                  .invokeMethod("get_mountpoint_list", {
+                                'ntrip_host': host,
+                                'ntrip_port': port,
+                                'ntrip_user': user,
+                                'ntrip_pass': pass,
+                              })) as int? ??
+                              -1;
+                          developer.log(
+                              "get_mountpoint_list req waiting callback ret: $retCode");
+                        } catch (e) {
+                          setState(() {
+                            loading = false;
+                          });
+                          await toast("List mount-points failed invoke: $e");
+                        }
+                      });
+                    } catch (e) {
+                      developer.log(
+                          "WARNING: Choose mount-point failed exception: $e");
+                      try {
+                        setState(() {
+                          loading = false;
+                        });
+                        await toast("List mount-points failed start: $e");
+                      } catch (e) {
+                        developer.log("list mount point failed {e}");
+                      }
+                    }
+                  },
+                ),
+              ),
+              const PrefCheckbox(
+                  title: Text("Sort by nearest to Ref position"),
+                  pref: 'list_nearest_streams_first'),
+
+              ValueListenableBuilder<DateTime>(
+                  valueListenable: setLiveArgsTs,
+                  builder:
+                      (BuildContext context, DateTime setTs, Widget? child) {
+                    developer.log("rebld pref live setTs:  $setTs");
+                    return PrefText(
+                        key: ValueKey(
+                            'ref_lat_lon_${setTs.millisecondsSinceEpoch}'),
+                        label: "Ref position lat, lon for sorting",
+                        pref: 'ref_lat_lon',
+                        hintText: "Example: 6.691289,101.674621",
+                        validator: (String? t) {
+                          if (t != null && t.contains(",")) {
+                            List<String> parts = t.split(",");
+                            if (parts.length == 2) {
+                              if (double.tryParse(parts[0]) != null &&
+                                  double.tryParse(parts[1]) != null) {
+                                return null;
+                              }
+                            }
+                          }
+                          return "Please enter a valid location: latitude, longitude";
+                        });
+                  }),
+            ]),
+          ),
         ));
   }
 }

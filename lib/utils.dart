@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-
 Future<void> wakelockEnable() async {
   if (await WakelockPlus.enabled == false) {
     await WakelockPlus
@@ -16,8 +15,8 @@ Future<void> wakelockDisable() async {
   }
 }
 
-void notifyIfMapChanged(ValueNotifier<Map<dynamic, dynamic>> vn, Map<dynamic, dynamic> v)
-{
+void notifyIfMapChanged(
+    ValueNotifier<Map<dynamic, dynamic>> vn, Map<dynamic, dynamic> v) {
   if (!mapEquals(vn.value, v)) {
     vn.value = v;
   }

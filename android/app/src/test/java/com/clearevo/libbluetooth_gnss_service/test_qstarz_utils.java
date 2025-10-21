@@ -1,6 +1,6 @@
 package com.clearevo.libbluetooth_gnss_service;
 
-import static com.clearevo.libbluetooth_gnss_service.NativeParser.parse_qstarz_pkt;
+import static com.clearevo.libbluetooth_gnss_service.NativeParser.parse_qstarz;
 import static com.clearevo.libbluetooth_gnss_service.QstarzUtils.getQstarzRCRLogType;
 import static org.junit.Assert.assertEquals;
 

@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:test/test.dart';
 
@@ -8,5 +7,4 @@ void main() {
     androidLocation.value = 1;
     expect(1, androidLocation.value);
   });
-
 }

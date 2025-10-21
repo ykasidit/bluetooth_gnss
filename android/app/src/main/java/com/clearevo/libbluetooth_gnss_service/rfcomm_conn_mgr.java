@@ -1,6 +1,6 @@
 package com.clearevo.libbluetooth_gnss_service;
 
-import static com.clearevo.libbluetooth_gnss_service.NativeParser.parse_qstarz_pkt;
+import static com.clearevo.libbluetooth_gnss_service.NativeParser.parse_qstarz;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.log;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.nordic_uart_service_uuid;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.qstarz_chrc_tx_uuid;
@@ -309,7 +309,10 @@ public class rfcomm_conn_mgr implements Closeable {
                                     throw new Exception("read_buf nread <= 0 means disconnected: "+nread);
                                 }
                                 try {
-                                    String parsed_object_json = NativeParser.on_gnss_pkt(read_buf).strip();
+                                    //Log.d(TAG, "call native parser read_buf nread: "+nread);
+                                    byte[] read_buf_copy = new byte[nread]; //todo tell nread to parser
+                                    System.arraycopy(read_buf, 0, read_buf_copy, 0, nread);
+                                    String parsed_object_json = NativeParser.parse(read_buf_copy, nread).strip();
                                     if (parsed_object_json.isEmpty())
                                         continue;
                                     JSONArray jsonArray = new JSONArray(parsed_object_json);
@@ -328,7 +331,7 @@ public class rfcomm_conn_mgr implements Closeable {
                                     throw new Exception("bt outgoing_thread died");
 
                                 //Log.d(TAG, "incoming_thread qlen: "+incoming_thread.m_queue.size());
-                                Log.d(TAG, "outgoing_thread qlen: "+outgoing_thread.m_queue.size());
+                                //Log.d(TAG, "outgoing_thread qlen: "+outgoing_thread.m_queue.size());
 
                                 if (closed)
                                     throw new Exception("closed");
@@ -655,7 +658,7 @@ public class rfcomm_conn_mgr implements Closeable {
                             }
                             byte[] pkt_bytes = pkt.toByteArray();
                             //Log.d(TAG, "got qstarz pkt len: "+pkt.size()+" pkt hex: "+toHexString(pkt_bytes));
-                            String ret_json = parse_qstarz_pkt(pkt_bytes);
+                            String ret_json = parse_qstarz(pkt_bytes);
                             //Log.d(TAG, "got parse_qstarz_pkt ret: "+ret_json);
                             JSONObject object = new JSONObject(ret_json);
                             m_rfcomm_to_tcp_callbacks.on_read_object(object);

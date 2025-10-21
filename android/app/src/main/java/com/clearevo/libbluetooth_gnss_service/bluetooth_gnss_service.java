@@ -768,6 +768,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 * */
             try {
                 //d(TAG, "on_read_object ondevicemessage start: "+object);
+                HashMap<String, Object> qstarz_param_map = jsonToMap(object);
                 if (object.getInt("fix_status") >= 3) {
                     //3D so fix is ok now - get lat lon to send mock location
                     double lat = new BigDecimal(object.getString("latitude")).doubleValue(); //handle old phone precision lost
@@ -789,9 +790,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         object.put("time", time_str);
                     } catch (Exception e) {};
                     //d(TAG, "time: "+time_str);
-                    setMock(lat, lon, (float) accuracy, (float) vaccuracy, float_height_m, heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts, object);
+
+                    setMock(lat, lon, (float) accuracy, (float) vaccuracy, float_height_m, heading_degrees, (float) float_speed_kmh, false, satellite_count_used, hdop, "QSTARZ_BLE", new_ts, qstarz_param_map);
                 }
-                HashMap<String, Object> qstarz_param_map = jsonToMap(object);
+
                 try {
                     if (mainActivity != null) {
                         mainActivity.onPositionUpdate(qstarz_param_map);
@@ -833,12 +835,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             }
                         }
                     } else if (nmea_name.equals("RMC")) {
-                        log(TAG, "got rmc: " + object);
+                        //log(TAG, "got rmc: " + object);
                         JSONObject params_state = object.getJSONObject("state");
                         if (params_state == null) {
                             throw new Exception("got RMC but 'state' is null");
                         }
-                        mainActivity.onPositionUpdate(jsonToMap(params_state));
+                        onPositionUpdate(jsonToMap(params_state));
                     }
                     if (parsed_nmea != null) {
                         mainActivity.onDeviceMessage("nmea", jsonToMap(parsed_nmea));
@@ -857,7 +859,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 final AtomicBoolean connected = new AtomicBoolean(false);
                 try (mgr) {
                     log(TAG, "start_connecting_thread "+hashCode()+" start connect()");
-                    NativeParser.reset_gnss_parser();
+                    NativeParser.reset();
                     mgr.connect();
                     connected.set(true);
                     log(TAG, "start_connecting_thread "+hashCode()+" connect() done");
@@ -1214,7 +1216,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final float DEFAULT_MOCK_ACCURACY = 5.0f;
     String[] providers_to_mock = new String[] {FUSED_PROVIDER, GPS_PROVIDER};
 
-    private void setMock(double latitude, double longitude, float accuracy, float vaccuracy, double altitude, double bearing_degrees, float speed_m_s, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts, JSONObject out_object) throws Exception
+    private void setMock(double latitude, double longitude, float accuracy, float vaccuracy, double altitude, double bearing_degrees, float speed_m_s, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts, HashMap<String, Object> out_object) throws Exception
     {
         if (closing) {
             d(TAG, "setmock ignore as already closing");
@@ -1630,22 +1632,22 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         //try set_mock
         double lat = Double.NaN, lon = Double.NaN, alt = Double.NaN, hdop = Double.NaN, vdop = Double.NaN, speed = 0.0, bearing = Double.NaN, accuracy = Double.NaN;
         int n_sats = 0;
-        for (String talker : GGA_MESSAGE_TALKER_TRY_LIST) {
+        {
 
             try {
-                if (params_map.containsKey(talker+"_lat_ts")) {
-                    long new_ts = (long) params_map.get(talker+"_rmc_ts");
+                if (params_map.containsKey("lat_ts")) {
+                    long new_ts = (long) params_map.get("lat_ts");
                     if (new_ts > 0) {
-                        lat = (double) params_map.get(talker+"_lat");
-                        lon = (double) params_map.get(talker+"_lon");
-                        String ellips_height_key = talker+"_ellipsoidal_height";
+                        lat = (double) params_map.get("lat");
+                        lon = (double) params_map.get("lon");
+                        String ellips_height_key = "ellipsoidal_height";
                         boolean alt_is_ellipsoidal = false;
                         if (params_map.containsKey(ellips_height_key)) {
                             alt_is_ellipsoidal = true;
                             alt = (double) params_map.get(ellips_height_key);
                             //log(TAG, "ellips_height_key valid");
                         } else {
-                            alt = (double) params_map.get(talker+"_alt");
+                            alt = (double) params_map.get("alt");
                             //log(TAG, "ellips_height_key not valid");
                         }
 
@@ -1657,18 +1659,18 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                 }
                             }
                         }
-                        hdop = (double) params_map.get(talker+"_hdop");
-                        speed = (double) params_map.get(talker+"_speed"); //Speed in knots (nautical miles per hour).
+                        hdop = (double) params_map.get("hdop");
+                        speed = (double) params_map.get("speed_over_ground"); //Speed in knots (nautical miles per hour).
                         try {
-                            vdop = (double) params_map.get("ANY_gsa_vdop");
+                            vdop = (double) params_map.get("vdop");
                         } catch (Exception e) {}
                         speed = speed * 0.514444; //convert to m/s
                         try {
                             Object course = null;
-                            if (params_map.containsKey(talker+"_true_course")) {  // value from VTG
-                                course = params_map.get(talker+"_true_course");
-                            } else if (params_map.containsKey(talker+"_course")) {  // value from RMC (RMC course = VTG true course)
-                                course = params_map.get(talker+"_course");
+                            if (params_map.containsKey("true_course")) {  // value from VTG
+                                course = params_map.get("true_course");
+                            } else if (params_map.containsKey("course")) {  // value from RMC (RMC course = VTG true course)
+                                course = params_map.get("course");
                             }
                             //log(TAG, "course: "+course);
                             if (course != null) {
@@ -1696,14 +1698,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         if (Double.isNaN(vaccuracy)) {
                             vaccuracy = vdop * get_connected_device_CEP();
                         }
-                        setMock(lat, lon, (float) accuracy, (float) vaccuracy, alt, bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, talker, new_ts, jo);
-                        break;
+                        setMock(lat, lon, (float) accuracy, (float) vaccuracy, alt, bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, "", new_ts, params_map);
                     } else {
                         //omit as same ts as last
                     }
                 }
             } catch (Exception e) {
-                log(TAG, "bluetooth_gnss_service on_updated_nmea_params talker: "+talker+" exception: "+ getStackTraceString(e));
+                log(TAG, "bluetooth_gnss_service on_updated_nmea_params talker: "+""+" exception: "+ getStackTraceString(e));
             }
         }
 
@@ -1712,7 +1713,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         //report params to activity
         try {
             if (mainActivity != null) {
-                mainActivity.onPositionUpdate((HashMap<String, Object>) params_map.clone());
+                mainActivity.onPositionUpdate(params_map);
             }
         } catch (Exception e) {
             log(TAG, "bluetooth_gnss_service call callback in m_activity_for_nmea_param_callbacks exception: "+ getStackTraceString(e));

@@ -37,7 +37,6 @@ class ConnectScreenConnectedState extends State<ConnectScreenConnected> {
 List<Widget> connectedRows(BuildContext context) {
   developer.log("connectingRows build start");
   return <Widget>[
-
     Card(
       child: Container(
           padding: const EdgeInsets.all(8.0),
@@ -63,10 +62,9 @@ List<Widget> connectedRows(BuildContext context) {
               ),
               Text(
                   "- You can now use other apps like 'OsmAnd' or 'Waze' for navigation normally.\n"
-                      "- NOT compatible with 'Google Maps' - it uses other location sources too and might behave strangely.\n"
-                      "- Some apps that ignore 'mock' location, will not work correctly.\n"
-                      "- Developers can also get position json Android Intents broadcasted as: \"com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE\"\n"
-                  ,
+                  "- NOT compatible with 'Google Maps' - it uses other location sources too and might behave strangely.\n"
+                  "- Some apps that ignore 'mock' location, will not work correctly.\n"
+                  "- Developers can also get position json Android Intents broadcasted as: \"com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE\"\n",
                   style: Theme.of(context).textTheme.bodySmall),
               const Padding(
                 padding: EdgeInsets.all(5.0),
@@ -81,65 +79,65 @@ List<Widget> connectedRows(BuildContext context) {
       child: Container(
         padding: const EdgeInsets.all(10.0),
         child: Column(
-          children: <Widget>[
-                Text(
-                  'Live status',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      fontFamily: 'GoogleSans', color: Colors.blueGrey),
-                ),
-                paramRow(context, 'lat',
-                    double_fraction_digits: POS_FRACTION_DIGITS,
-                    style: Theme.of(context).textTheme.headlineSmall),
-                paramRow(context, 'lon',
-                    double_fraction_digits: POS_FRACTION_DIGITS,
-                    style: Theme.of(context).textTheme.headlineSmall),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    ElevatedButton(
-                      onPressed: () async {
-                        var lcsv = getLatLonCsv();
-                        if (lcsv.isEmpty) {
-                          await toast("Position not ready");
-                          return;
-                        }
-                        await Share.share(
-                            'https://www.google.com/maps/search/?api=1&query=$lcsv');
-                        if (context.mounted) {
-                          snackbar(context, 'Shared: $lcsv');
-                        }
-                      },
-                      child: const Icon(Icons.share),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.all(2.0),
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        var lcsv = getLatLonCsv();
-                        if (lcsv.isEmpty) {
-                          await toast("Position not ready");
-                          return;
-                        }
-                        await Clipboard.setData(ClipboardData(text: lcsv));
-                        if (context.mounted) {
-                          snackbar(context, 'Copied to clipboard: $lcsv');
-                        }
-                      },
-                      child: const Icon(Icons.content_copy),
-                    )
-                  ],
-                )
-              ] +
-              getDevSepcificRows(context) +
-              [  const Padding(
-                padding: EdgeInsets.all(5.0),
-              )]+
-              getStatRows(context)
-        ),
+            children: <Widget>[
+                  Text(
+                    'Live status',
+                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                        fontFamily: 'GoogleSans', color: Colors.blueGrey),
+                  ),
+                  paramRow(context, 'lat',
+                      double_fraction_digits: POS_FRACTION_DIGITS,
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  paramRow(context, 'lon',
+                      double_fraction_digits: POS_FRACTION_DIGITS,
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      ElevatedButton(
+                        onPressed: () async {
+                          var lcsv = getLatLonCsv();
+                          if (lcsv.isEmpty) {
+                            await toast("Position not ready");
+                            return;
+                          }
+                          await Share.share(
+                              'https://www.google.com/maps/search/?api=1&query=$lcsv');
+                          if (context.mounted) {
+                            snackbar(context, 'Shared: $lcsv');
+                          }
+                        },
+                        child: const Icon(Icons.share),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.all(2.0),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          var lcsv = getLatLonCsv();
+                          if (lcsv.isEmpty) {
+                            await toast("Position not ready");
+                            return;
+                          }
+                          await Clipboard.setData(ClipboardData(text: lcsv));
+                          if (context.mounted) {
+                            snackbar(context, 'Copied to clipboard: $lcsv');
+                          }
+                        },
+                        child: const Icon(Icons.content_copy),
+                      )
+                    ],
+                  )
+                ] +
+                getDevSepcificRows(context) +
+                [
+                  const Padding(
+                    padding: EdgeInsets.all(5.0),
+                  )
+                ] +
+                getStatRows(context)),
       ),
     ),
-
     Padding(
         padding: const EdgeInsets.all(5.0),
         child: Card(
@@ -227,7 +225,9 @@ List<Widget> connectedRows(BuildContext context) {
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
-              const Padding(padding: EdgeInsets.all(50.0)), //so above dosnt get blocked/unreadable by the FAB
+              const Padding(
+                  padding: EdgeInsets.all(
+                      50.0)), //so above dosnt get blocked/unreadable by the FAB
             ],
           ),
         )))
@@ -236,26 +236,26 @@ List<Widget> connectedRows(BuildContext context) {
 
 List<Widget> getDevSepcificRows(BuildContext context) {
   if (isQstarz.value) {
-      List<List<String>> m = [
-        ["Device Time", "QSTARZ_timestamp"],
-        ["Fix status", "QSTARZ_fix_status_matched"],
-        ['RCR', "QSTARZ_rcr_logtype"],
-        //['RCR_raw', "QSTARZ_rcr"],
-        ['Float speed (km/h)', "QSTARZ_float_speed_kmh"],
-        ['Float height (m)', "QSTARZ_float_height_m"],
-        ["Heading (degrees)", "QSTARZ_heading_degrees"],
-        ['G-sensor X', "QSTARZ_g_sensor_x"],
-        ['G-sensor Y', "QSTARZ_g_sensor_y"],
-        ['G-sensor Z', "QSTARZ_g_sensor_z"],
-        ["Max SNR", "QSTARZ_max_snr"],
-        ["HDOP", "QSTARZ_hdop"],
-        ["VDOP", "QSTARZ_vdop"],
-        ['N Satellites in view', "QSTARZ_satellite_count_view"],
-        ['N Satellites used', "QSTARZ_satellite_count_used_str"],
-        ['Fix quality', "QSTARZ_fix_quality_matched"],
-        ['Battery (%)', "QSTARZ_battery_percent"],
-      ];
-      return paramRowList(context, m);
+    List<List<String>> m = [
+      ["Device Time", "QSTARZ_timestamp"],
+      ["Fix status", "QSTARZ_fix_status_matched"],
+      ['RCR', "QSTARZ_rcr_logtype"],
+      //['RCR_raw', "QSTARZ_rcr"],
+      ['Float speed (km/h)', "QSTARZ_float_speed_kmh"],
+      ['Float height (m)', "QSTARZ_float_height_m"],
+      ["Heading (degrees)", "QSTARZ_heading_degrees"],
+      ['G-sensor X', "QSTARZ_g_sensor_x"],
+      ['G-sensor Y', "QSTARZ_g_sensor_y"],
+      ['G-sensor Z', "QSTARZ_g_sensor_z"],
+      ["Max SNR", "QSTARZ_max_snr"],
+      ["HDOP", "QSTARZ_hdop"],
+      ["VDOP", "QSTARZ_vdop"],
+      ['N Satellites in view', "QSTARZ_satellite_count_view"],
+      ['N Satellites used', "QSTARZ_satellite_count_used_str"],
+      ['Fix quality', "QSTARZ_fix_quality_matched"],
+      ['Battery (%)', "QSTARZ_battery_percent"],
+    ];
+    return paramRowList(context, m);
   } else {
     List<List<String>> m = [
       ["Time from GNSS", "ANY_rmc_ts"],
@@ -286,23 +286,19 @@ List<Widget> getDevSepcificRows(BuildContext context) {
   }
 }
 
-List<Widget> getStatRows(BuildContext context)
-{
+List<Widget> getStatRows(BuildContext context) {
   List<List<String>> m = [
     ["System Time at Mock", "mock_location_system_ts"],
     ["GNSS Time at Mock", "mock_location_gnss_ts"],
     ["Mock use System Time", "mock_location_timestamp_use_system_time"],
-
     ["Ori Time", "mock_location_base_ts"],
     ["Ori Lat (deg)", "mock_location_base_lat"],
     ["Ori Lon (deg)", "mock_location_base_lon"],
     ["Ori Alt (m)", "mock_location_base_alt"],
-
     ["Time Offset (secs)", "mock_timestamp_offset_secs"],
     ["Lat offset (m)", "mock_lat_offset_meters"],
     ["Lon offset (m)", "mock_lon_offset_meters"],
     ["Alt offset (m)", "mock_alt_offset_meters"],
-
     ["Final Mock Time", "mock_location_set_ts"],
     ["Final Mock Lat (deg)", "mock_location_set_lat"],
     ["Final Mock Lon (deg)", "mock_location_set_lon"],
@@ -310,8 +306,6 @@ List<Widget> getStatRows(BuildContext context)
     ["Final Mock V-accuracy (m)", "mock_location_set_vaccuracy"],
     ["Final Mock Alt (m)", "mock_location_set_alt"],
     ["Final Mock Bearing (deg)", "mock_location_set_bearing"],
-
-
     ["Mock altitude type", "alt_type"],
     ["GGA count", "GN_GGA_count"],
     ["RMC count", "GN_RMC_count"],
