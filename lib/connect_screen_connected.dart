@@ -61,14 +61,13 @@ List<Widget> connectedRows(BuildContext context) {
                 padding: EdgeInsets.all(5.0),
               ),
               Text(
-"""
+                """
 • You can now use navigation apps like Waze, Google Maps, or OsmAnd normally.
 • Some apps that ignore mock locations may not work correctly.
 • App developers can also receive position JSON via the intent: "com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE"
 """,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-
               const Padding(
                 padding: EdgeInsets.all(5.0),
               ),
@@ -87,6 +86,17 @@ List<Widget> connectedRows(BuildContext context) {
                     'Live status',
                     style: Theme.of(context).textTheme.titleMedium!.copyWith(
                         fontFamily: 'GoogleSans', color: Colors.blueGrey),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.all(5.0),
+                  ),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        reactiveText(mockLocationSetStatus),
+                      ]),
+                  const Padding(
+                    padding: EdgeInsets.all(5.0),
                   ),
                   paramRow(context, 'lat',
                       double_fraction_digits: POS_FRACTION_DIGITS,
@@ -274,7 +284,7 @@ List<Widget> getDevSepcificRows(BuildContext context) {
       ["Ellipsoidal Height", "ANY_ellipsoidal_height"],
       ['HDOP', "hdop"],
       ['VDOP', "vdop"],
-      ["N Sats used TOTAL", "n_sats"],
+      ["N Sats used TOTAL", "n_sats_used"],
       ["N Galileo in use", "GA_n_sats_used"],
       ['N GPS in use', "GP_n_sats_used"],
       ['N GLONASS in use', "GL_n_sats_used"],

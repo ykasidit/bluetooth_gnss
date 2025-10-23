@@ -1639,11 +1639,13 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         {
 
             try {
-                if (params_map.containsKey("lat_ts")) {
+                if (params_map.containsKey("lat_ts") && params_map.containsKey("lat") && params_map.containsKey("lon")) {
                     long new_ts = (long) params_map.get("lat_ts");
-                    if (new_ts > 0) {
-                        lat = (double) params_map.get("lat");
-                        lon = (double) params_map.get("lon");
+                    Object lat_obj = params_map.get("lat");
+                    Object lon_obj = params_map.get("lon");
+                    if (new_ts > 0 && lat_obj != null && lon_obj != null) {
+                        lat = (double) lat_obj;
+                        lon = (double) lon_obj;
                         String ellips_height_key = "ellipsoidal_height";
                         boolean alt_is_ellipsoidal = false;
                         if (params_map.containsKey(ellips_height_key)) {
@@ -1749,12 +1751,20 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         }
     }
 
-    boolean m_is_bound = false;
+    volatile boolean m_is_bound = false;
 
     @Override
     public boolean onUnbind(Intent intent) {
+        log(TAG, "onUnbind()");
         m_is_bound = false;
         return super.onUnbind(intent);
+    }
+
+    @Override
+    public void onRebind(Intent intent) {
+        log(TAG, "onRebind()");
+        m_is_bound = true;
+        super.onRebind(intent);
     }
 
     @Override
