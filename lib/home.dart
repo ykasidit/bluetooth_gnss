@@ -63,11 +63,21 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Bluetooth GNSS'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.bluetooth_disabled),
-            tooltip: "Disconnect/stop",
-            onPressed: () async {
-              await disconnect();
+          ValueListenableBuilder<ConnectState>(
+            valueListenable: connectState,
+            builder: (context, connectState, _) {
+              return Row(
+                children: connectState == ConnectState.Connected
+                    ? [
+                  IconButton(
+                    icon: const Icon(Icons.bluetooth_disabled),
+                    tooltip: "Disconnect/stop",
+                    onPressed: () async {
+                      await disconnect();
+                    },
+                  ),
+                ] : [],
+              );
             },
           ),
           /*IconButton(

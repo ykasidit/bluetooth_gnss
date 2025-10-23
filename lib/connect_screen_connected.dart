@@ -61,11 +61,14 @@ List<Widget> connectedRows(BuildContext context) {
                 padding: EdgeInsets.all(5.0),
               ),
               Text(
-                  "- You can now use other apps like 'OsmAnd' or 'Waze' for navigation normally.\n"
-                  "- NOT compatible with 'Google Maps' - it uses other location sources too and might behave strangely.\n"
-                  "- Some apps that ignore 'mock' location, will not work correctly.\n"
-                  "- Developers can also get position json Android Intents broadcasted as: \"com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE\"\n",
-                  style: Theme.of(context).textTheme.bodySmall),
+"""
+• You can now use navigation apps like Waze, Google Maps, or OsmAnd normally.
+• Some apps that ignore mock locations may not work correctly.
+• App developers can also receive position JSON via the intent: "com.clearevo.libbluetooth_gnss_service.POSITION_UPDATE"
+""",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+
               const Padding(
                 padding: EdgeInsets.all(5.0),
               ),
@@ -276,7 +279,7 @@ List<Widget> getDevSepcificRows(BuildContext context) {
       ['N GPS in use', "GP_n_sats_used"],
       ['N GLONASS in use', "GL_n_sats_used"],
       ['N BeiDou in use', "GB_n_sats_used"],
-      ['N QZSS in use/view', "GQ_n_sats_used"],
+      ['N QZSS in use', "GQ_n_sats_used"],
       ['UBLOX Fix Type', "UBX_POSITION_navStat"],
       ['UBLOX XY Accuracy (m)', "UBX_POSITION_hAcc"],
       ["UBLOX Z Accuracy(m)", "UBX_POSITION_vAcc"],

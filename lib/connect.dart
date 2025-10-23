@@ -382,9 +382,15 @@ Future<ConnectState> _checkUpdateSelectedDev(Map<String, Icon> icon_map) async {
   }
 
   //ok - ready to connect
+  icon_map["'Mock Location app' is 'Bluetooth GNSS'"] = iconOk;
   icon_map[
-          "'Mock Location app' is 'Bluetooth GNSS'\nWARNING: If you want use internal GPS device again,\nSet 'Select mock location app' to 'Nothing'\n(in 'Developer Settings')."] =
-      iconOk;
+"""
+⚠️ Mock Location Active
+• While enabled, most apps get location only when this app is connected to the external Bluetooth GPS.
+• When disconnected, the internal GPS won’t work for most apps.
+• To restore normal GPS, open Developer Settings → Select mock location app → None.
+"""
+  ] = iconWarning;
   connectStatus.value = "Please press the floating button to connect...";
   connectSelectedDevice.value = selected_dev_sum;
 

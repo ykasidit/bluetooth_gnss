@@ -876,8 +876,12 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                 @Override
                                 public void run() {
                                     String emsg = (connected.get()?"Disconnected":"Connected failed")+": "+e;
-                                    toast(emsg);
-                                    updateNotification("Connect failed: "+ getStackTraceString(e), "Target device: "+m_bdaddr, emsg);
+                                    if (e instanceof InterruptedException) {
+                                        updateNotification("Disconnected", "Target device: "+m_bdaddr, "");
+                                    } else {
+                                        toast(emsg);
+                                        updateNotification("Connect failed: " + getStackTraceString(e), "Target device: " + m_bdaddr, emsg);
+                                    }
                                 }
                             }
                     );
@@ -1465,7 +1469,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             @Override
                             public void run() {
                                 log(TAG, "deactivate_mock_location toast");
-                                toast("Deactivated Mock location provider...");
+                                toast("Stopped Mock location provider...");
                                 updateNotification("Bluetooth GNSS - Not active...", "Deactivated", "");
                             }
                         }
@@ -1538,7 +1542,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             @Override
                             public void run() {
                                 log(TAG, "activate_mock_location 1");
-                                toast("Activated Mock location provider...");
+                                toast("Started Mock location provider...");
                                 updateNotification("Bluetooth GNSS - Active...", "Connected to: "+get_connected_device_alias(), "");
                             }
                         }
@@ -1554,7 +1558,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             new Runnable() {
                                 @Override
                                 public void run() {
-                                    toast("Activated Mock location provider...");
+                                    toast("Started Mock location provider...");
                                     updateNotification("Bluetooth GNSS - Active...", "Connected to: "+get_connected_device_alias(), "");
                                 }
                             }

@@ -1,4 +1,4 @@
-<i>Bluetooth GNSS</i> lets you use accurate satellite positioning from powerful external Bluetooth GPS/Galileo/GLONASS/BeiDou receivers instead of the less powerful internal A-GPS of phones/tablets - for better location accuracy with your favorite Maps and Navigation apps like Google Maps, etc.
+<i>Bluetooth GNSS</i> lets you use accurate satellite positioning from powerful external Bluetooth GPS/Galileo/GLONASS/BeiDou receivers instead of the less powerful internal A-GPS of phones/tablets - for better location accuracy with your favorite Maps and Navigation apps like Google Maps, Waze, OsmAnd etc.
 
 You must first get an external Bluetooth GNSS/GPS device like the EcoDroidGPS (www.ClearEvo.com), HOLUX, Garmin GLO, etc to use with this app, which is free and open-source software. If your Bluetooth GNSS/GPS device supports RTK, this app also supports overlay of NTRIP server data streams for professional RTK positioning (centimeter-level accuracy - depends on device).
 
