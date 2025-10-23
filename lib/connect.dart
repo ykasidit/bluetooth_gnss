@@ -231,6 +231,7 @@ Future<void> checkConnectState() async {
 }
 
 bool granted_perm = false;
+int location_status_update_spinner_count = 0;
 
 Future<ConnectState> _checkUpdateSelectedDev(Map<String, Icon> icon_map) async {
   try {
@@ -248,25 +249,6 @@ Future<ConnectState> _checkUpdateSelectedDev(Map<String, Icon> icon_map) async {
     }
 
     if (isBtConnected.value) {
-      try {
-        int mockSetMillisAgo;
-        DateTime now = DateTime.now();
-        int nowts = now.millisecondsSinceEpoch;
-        mockLocationSetStatus.value = "";
-        mockSetMillisAgo = nowts - mockLocationSetTs.value;
-        //developer.log("mock_location_set_ts $mock_set_ts, nowts $nowts");
-
-        double secsAgo = mockSetMillisAgo / 1000.0;
-
-        if (mockLocationSetTs.value == 0) {
-          mockLocationSetStatus.value = "Never";
-        } else {
-          mockLocationSetStatus.value =
-              "${secsAgo.toStringAsFixed(3)} Seconds ago";
-        }
-      } catch (e, trace) {
-        developer.log('get parsed param exception: $e $trace');
-      }
       connectStatus.value = "Connected";
       return ConnectState.Connected;
     }

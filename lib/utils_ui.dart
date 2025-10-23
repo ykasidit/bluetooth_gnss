@@ -125,7 +125,7 @@ Row paramRow(BuildContext context, String param,
           }
           //developer.log("paramRow updated - param: $param value: $value");
           return Text(
-            '$value',
+            value == null ? 'No data':'$value',
             style: style,
           );
         },

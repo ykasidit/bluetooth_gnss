@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 
+import 'package:bluetooth_gnss/connect.dart';
 import 'package:bluetooth_gnss/map_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:pref/pref.dart';
+
+import 'const.dart';
 
 const methodChannel = MethodChannel("com.clearevo.bluetooth_gnss/engine");
 const _eventChannel = EventChannel("com.clearevo.bluetooth_gnss/engine_events");
@@ -54,6 +57,35 @@ StreamSubscription<dynamic> initEventChannels() {
       }
       return; //update messages only
     } else {
+      dynamic mock_lat = channel_paramMap["mock_location_set_ts"];
+      if (mock_lat != null && mock_lat is int) {
+        mockLocationSetTs.value = mock_lat;
+        try {
+          int mockSetMillisAgo;
+          DateTime now = DateTime.now();
+          int nowts = now.millisecondsSinceEpoch;
+          mockLocationSetStatus.value = "";
+          mockSetMillisAgo = nowts - mockLocationSetTs.value;
+          developer.log("mockSetMillisAgo: $mockSetMillisAgo");
+          double secsAgo = mockSetMillisAgo / 1000.0;
+          String state = 'NO valid location sent to other apps';
+          bool ok = false;
+          location_status_update_spinner_count += 1;
+          String update_suffix = flashFrames[location_status_update_spinner_count%flashFrames.length];
+          if (mockLocationSetTs.value == 0) {
+          } else {
+            state = "Location sent ${secsAgo.toStringAsFixed(3)} seconds ago";
+            if (secsAgo < 3.0) {
+              ok = true;
+            } else {
+              state += " (expired)";
+            }
+          }
+          mockLocationSetStatus.value = (ok?okEmoji:errorEmoji)+" "+state + " " + update_suffix;
+        } catch (e, trace) {
+          developer.log('get parsed param exception: $e $trace');
+        }
+      }
       if (channel_paramMap["lat"] != null &&
           channel_paramMap["lat"] is double) {
         try {
