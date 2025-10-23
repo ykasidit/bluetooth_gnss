@@ -21,7 +21,7 @@ class ConnectScreenIdleState extends State<ConnectScreenIdle> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
         child: Padding(
-      padding: const EdgeInsets.all(5.0),
+      padding: const EdgeInsets.all(15.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: idleRows(context),

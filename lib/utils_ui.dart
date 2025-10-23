@@ -41,6 +41,11 @@ const iconOk = Icon(
   color: Colors.lightBlueAccent,
   size: defaultChecklistIconSize,
 );
+const iconWarning = Icon(
+  Icons.warning,
+  color: Colors.lightBlueAccent,
+  size: defaultChecklistIconSize,
+);
 const iconFail = Icon(
   Icons.cancel,
   color: Colors.blueGrey,
@@ -169,12 +174,15 @@ Widget reactiveIconMapCard(ValueNotifier<Map<String, Icon>> value) {
       for (String key in _checkStateMapIcon.keys) {
         Row row = Row(mainAxisAlignment: MainAxisAlignment.start, children: [
           _checkStateMapIcon[key]!,
-          Container(
-              padding: const EdgeInsets.all(8.0),
+            const SizedBox(width: 8),
+            Expanded(
               child: Text(
                 key,
                 style: Theme.of(context).textTheme.bodySmall,
-              )),
+                softWrap: true,
+                overflow: TextOverflow.fade,
+              ),
+            ),
         ]);
         checklist.add(row);
       }
