@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.InputStream;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 
@@ -49,12 +51,13 @@ public class rfcomm_conn_mgr implements Closeable {
     public BluetoothDevice m_target_bt_server_dev;
 
     List<Closeable> m_cleanup_closables;
-    Thread m_conn_state_watcher;
+    volatile Thread m_conn_state_watcher;
 
     //ConcurrentLinkedQueue<byte[]> m_incoming_buffers; - now loop read and parse directly - parsing is almost instant anyway
-    ConcurrentLinkedQueue<byte[]> m_outgoing_buffers;
+    LinkedBlockingQueue<byte[]> m_outgoing_buffers;
 
-    public static final int RFCOMM_READ_BUFF_SIZE = 256;
+    public static final int RFCOMM_READ_BUFF_SIZE = 4*1024;
+    public static final int RFCOMM_READ_DEFAULT_BLOCK_LEN = 128; //this is the common n read seend from read into buffer for an older badelf gps and should be safe in general
     final int MAX_SDP_FETCH_DURATION_SECS = 15;
     final int BTINCOMING_QUEUE_MAX_LEN = 100;
     static final String TAG = "btgnss_rfcmgr";
@@ -142,7 +145,7 @@ public class rfcomm_conn_mgr implements Closeable {
         m_tcp_server_port = tcp_server_port;
 
         m_cleanup_closables = new ArrayList<Closeable>();
-        m_outgoing_buffers = new ConcurrentLinkedQueue<byte[]>();
+        m_outgoing_buffers = new LinkedBlockingQueue<>();// ConcurrentLinkedQueue<byte[]>();
         //m_incoming_buffers = new ConcurrentLinkedQueue<byte[]>();
 
         if (m_target_bt_server_dev == null)
@@ -219,7 +222,7 @@ public class rfcomm_conn_mgr implements Closeable {
 
         try {
             //m_incoming_buffers = new ConcurrentLinkedQueue<byte[]>();
-            m_outgoing_buffers = new ConcurrentLinkedQueue<byte[]>();
+            m_outgoing_buffers = new LinkedBlockingQueue<>();
             close_gatt();
             try {BluetoothAdapter.getDefaultAdapter().cancelDiscovery();} catch (Exception e) {}
             if (m_ble_mode) {
@@ -260,10 +263,11 @@ public class rfcomm_conn_mgr implements Closeable {
                 Log.d(TAG, "calling m_bluetooth_socket.connect() DONE m_target_bt_server_dev: name: " + m_target_bt_server_dev.getName() + " bdaddr: " + m_target_bt_server_dev.getAddress());
                 if (m_rfcomm_to_tcp_callbacks != null)
                     m_rfcomm_to_tcp_callbacks.on_rfcomm_connected();
-                InputStream bs_is = m_bluetooth_socket.getInputStream();
-                OutputStream bs_os = m_bluetooth_socket.getOutputStream();
-
+                InputStream _bs_is = m_bluetooth_socket.getInputStream();
+                m_cleanup_closables.add(_bs_is);
+                BufferedInputStream bs_is = new BufferedInputStream(_bs_is);
                 m_cleanup_closables.add(bs_is);
+                OutputStream bs_os = m_bluetooth_socket.getOutputStream();
                 m_cleanup_closables.add(bs_os);
 
                 /*//start thread to read from bluetooth socket to incoming_buffer
@@ -303,16 +307,39 @@ public class rfcomm_conn_mgr implements Closeable {
                         try (rfcomm_conn_mgr.this) {
                             byte[] read_buf = new byte[RFCOMM_READ_BUFF_SIZE];
                             int nread;
+                            int n_avail;
+                            long last_read_ts = 0;
+                            long ts_diff_sum = 0;
+                            long ts_diff_n = 0;
+                            long read_max = 0;
+
                             while (m_conn_state_watcher == this) {
-                                nread = bs_is.read(read_buf);
+                                n_avail = bs_is.available();
+                                if (n_avail < 0) {
+                                    break;
+                                }
+                                //if n_avail is 0 then block read for RFCOMM_READ_DEFAULT_BLOCK_LEN else read what is avail that readbuf len can hold
+                                final int n_to_read = n_avail == 0 ? RFCOMM_READ_DEFAULT_BLOCK_LEN : Math.min(n_avail, read_buf.length);
+                                nread = bs_is.read(read_buf, 0, n_to_read);
+                                long now = System.currentTimeMillis();
+                                if (last_read_ts == 0) {
+
+                                } else {
+                                    long dur_from_last_read = now - last_read_ts;
+                                    ts_diff_sum += dur_from_last_read;
+                                    ts_diff_n += 1;
+                                    if (dur_from_last_read > read_max)
+                                        read_max = dur_from_last_read;
+                                    long read_avg = ts_diff_sum/ts_diff_n;
+                                    Log.d(TAG, "m_conn_state_watcher "+hashCode()+" bs_is n_avail: "+ n_avail+" read_buf.length: "+read_buf.length +" n_to_read: "+n_to_read+" read_max: "+read_max+" ms read_avg: "+read_avg+" ms");
+                                }
+                                last_read_ts = now;
                                 if (nread <= 0) {
                                     throw new Exception("read_buf nread <= 0 means disconnected: "+nread);
                                 }
                                 try {
                                     //Log.d(TAG, "call native parser read_buf nread: "+nread);
-                                    byte[] read_buf_copy = new byte[nread]; //todo tell nread to parser
-                                    System.arraycopy(read_buf, 0, read_buf_copy, 0, nread);
-                                    String parsed_object_json = NativeParser.parse(read_buf_copy, nread).strip();
+                                    String parsed_object_json = NativeParser.parse(read_buf, nread).strip();
                                     if (parsed_object_json.isEmpty())
                                         continue;
                                     JSONArray jsonArray = new JSONArray(parsed_object_json);
@@ -454,9 +481,10 @@ public class rfcomm_conn_mgr implements Closeable {
         }
         m_tcp_server_sock = null;
 
-        for (Closeable closeable : m_cleanup_closables) {
+        final int clen  = m_cleanup_closables.size();
+        for (int c = clen - 1; c >= 0 ; c--) {
             try {
-                closeable.close();
+                m_cleanup_closables.get(c).close();
             } catch (Exception e) {
             }
         }

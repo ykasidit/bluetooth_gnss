@@ -5,13 +5,14 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.InputStream;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class inputstream_to_queue_reader_thread extends Thread implements Closeable {
 
     int n_read;
     InputStream m_is;
-    ConcurrentLinkedQueue<byte[]> m_queue;
+    LinkedBlockingQueue<byte[]> m_queue;
 
     final String TAG = "btgnss_istqrt";
 
@@ -24,7 +25,7 @@ public class inputstream_to_queue_reader_thread extends Thread implements Closea
 
 
     //read to queue mode
-    public inputstream_to_queue_reader_thread(InputStream is, ConcurrentLinkedQueue<byte[]> queue) throws Exception
+    public inputstream_to_queue_reader_thread(InputStream is, LinkedBlockingQueue<byte[]> queue) throws Exception
     {
         assert is != null;
         m_is = is;
