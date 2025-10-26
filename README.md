@@ -5,6 +5,10 @@ Connect your Android phone to external Bluetooth GPS, GLONASS, Galileo and BeiDo
 
 Official app is available on Google Play as [Bluetooth GNSS](https://play.google.com/store/apps/details?id=com.clearevo.bluetooth_gnss&hl=en&gl=US).
 
+Note: This project is maintained in open spirit and evolves slowly as/when I get time and energy outside my day job.
+If it’s useful to your research or work, you can sponsor or support development — every small gesture helps sustain independent engineering. 🌞
+
+
 Build instructions
 -----------
 
