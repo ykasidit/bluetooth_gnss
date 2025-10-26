@@ -284,7 +284,7 @@ List<Widget> getDevSepcificRows(BuildContext context) {
       ["Ellipsoidal Height", "ANY_ellipsoidal_height"],
       ['HDOP', "hdop"],
       ['VDOP', "vdop"],
-      ["N Sats used TOTAL", "n_sats_used"],
+      ["N Sats used TOTAL", "n_sats"],
       ["N Galileo in use", "GA_n_sats_used"],
       ['N GPS in use', "GP_n_sats_used"],
       ['N GLONASS in use', "GL_n_sats_used"],

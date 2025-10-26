@@ -20,7 +20,7 @@ Build instructions
 * Install Rust - follow instructions in:
 `https://rustup.rs/`
 
-* Install flutter_rust_bridge: match that of flutter_rust_bridge in pubspec.yaml (replace 2.7.0 in below) - see https://cjycode.com/flutter_rust_bridge/quickstart)
+* Install flutter_rust_bridge: match that of flutter_rust_bridge in pubspec.yaml - see https://cjycode.com/flutter_rust_bridge/quickstart)
 example:
 ```
 rustup install 1.90

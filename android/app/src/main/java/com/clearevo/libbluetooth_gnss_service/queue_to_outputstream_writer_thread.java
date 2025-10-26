@@ -4,16 +4,18 @@ package com.clearevo.libbluetooth_gnss_service;
 import java.io.Closeable;
 import java.io.OutputStream;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 
 public class queue_to_outputstream_writer_thread extends Thread implements Closeable {
 
-    ConcurrentLinkedQueue<byte[]> m_queue;
+    LinkedBlockingQueue<byte[]> m_queue;
     OutputStream m_os;
     final String TAG = "btgnss_qtowt";
     public static final int SLEEP_IF_NO_DATA_MILLIS = 1;
 
-    public queue_to_outputstream_writer_thread(ConcurrentLinkedQueue<byte[]> queue, OutputStream os)
+    public queue_to_outputstream_writer_thread(LinkedBlockingQueue<byte[]> queue, OutputStream os)
     {
         m_queue = queue;
         m_os = os;
@@ -43,11 +45,9 @@ public class queue_to_outputstream_writer_thread extends Thread implements Close
                     break;
                 }
                 //System.out.println("m_queue poll pre poll");
-                byte[] out_buf = m_queue.poll();
+                byte[] out_buf = m_queue.poll(1, TimeUnit.SECONDS);
                 //Log.d(TAG,"queue_to_outputstream_writer_thread: m_queue poll buf:" + out_buf);
                 if (out_buf == null) {
-                    //queue is empty
-                    Thread.sleep(1);
                     continue;
                 }
                 if (out_buf.length > 0) {

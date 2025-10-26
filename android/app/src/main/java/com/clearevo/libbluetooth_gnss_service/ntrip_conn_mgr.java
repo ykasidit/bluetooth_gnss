@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -40,7 +41,7 @@ public class ntrip_conn_mgr {
     Thread m_conn_state_watcher;
     ArrayList<String> m_http_response_header_lines;
     String m_http_response_header_str;
-    ConcurrentLinkedQueue<byte[]> m_incoming_buffers;
+    LinkedBlockingQueue<byte[]> m_incoming_buffers;
     static final String TAG = "btgnss_ntripmgr";
     volatile boolean closed = false;
 
@@ -65,7 +66,7 @@ public class ntrip_conn_mgr {
         m_mount_point = mount_point;
 
         m_cleanup_closables = new ArrayList<Closeable>();
-        m_incoming_buffers = new ConcurrentLinkedQueue<byte[]>();
+        m_incoming_buffers = new LinkedBlockingQueue<byte[]>();
     }
 
     public ArrayList<String> get_mount_point_list() throws Exception
