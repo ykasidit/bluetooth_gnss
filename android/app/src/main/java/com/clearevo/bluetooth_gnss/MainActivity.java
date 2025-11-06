@@ -733,6 +733,14 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
         try {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             if (adapter != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(activity,
+                                new String[]{Manifest.permission.BLUETOOTH_CONNECT}, 2);
+                        return ret;
+                    }
+                }
                 Set<BluetoothDevice> bonded_devs = adapter.getBondedDevices();
                 for (BluetoothDevice bonded_dev : bonded_devs) {
                     ret.put(bonded_dev.getAddress(), bonded_dev.getName());
