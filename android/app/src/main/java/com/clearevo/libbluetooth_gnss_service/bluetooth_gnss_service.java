@@ -847,7 +847,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         } else {
             // handle nmea parsed pkt
             try {
-                log(TAG, "rfcomm on_read_object: "+object);
+                //log(TAG, "rfcomm on_read_object: "+object);
                 String nmea_name = object.getString("name");
                 String nmea = object.getString("nmea");
                 if (nmea != null) {
