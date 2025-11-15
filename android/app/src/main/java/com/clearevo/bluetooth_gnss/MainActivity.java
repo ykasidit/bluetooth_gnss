@@ -30,6 +30,7 @@ import com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service;
 import com.clearevo.libbluetooth_gnss_service.ntrip_conn_mgr;
 import com.clearevo.libbluetooth_gnss_service.rfcomm_conn_mgr;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,7 +54,7 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
     private static final String SETTINGS_EVENTS_CHANNEL = "com.clearevo.bluetooth_gnss/settings_events";
     public static final String MAIN_ACTIVITY_CLASSNAME = "com.clearevo.bluetooth_gnss.MainActivity";
     private static final int CHOOSE_FOLDER = 1;
-    static final String TAG = "btgnss_mainactvty";
+    static final String TAG = "btgnss_main";
     EventChannel.EventSink m_events_sink;
     EventChannel.EventSink m_settings_events_sink;
     bluetooth_gnss_service m_service;
@@ -69,6 +70,8 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
+        Log.initTraceFile(getApplicationContext());
+
         GeneratedPluginRegistrant.registerWith(flutterEngine);
         BinaryMessenger messenger = flutterEngine.getDartExecutor().getBinaryMessenger();
         new EventChannel(messenger, ENGINE_EVENTS_CHANNEL).setStreamHandler(
@@ -158,6 +161,9 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
                                 } else if (call.method.equals("setLiveArgs")) {
                                     m_service.setLiveArgs(call.arguments());
                                     return_success_val = 0;
+                                } else if (call.method.equals("dlog")) {
+                                    Log.d("btgnss_ui", call.argument("msg"));
+                                    return_success_val = 0;
                                 } else if (call.method.equals("disconnect")) {
                                     try {
                                         Log.d(TAG, "disconnect0");
@@ -226,6 +232,8 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
                                     return_success_val = open_phone_bluetooth_settings();
                                 } else if (call.method.equals("open_phone_location_settings")) {
                                     return_success_val = open_phone_location_settings();
+                                } else if (call.method.equals("clear_trace_file")) {
+                                    return_success_val = Log.clearTraceFile(getApplicationContext());
                                 } else if (call.method.equals("set_log_uri")) {
                                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
                                     // Optionally, specify a URI for the directory that should be opened in
@@ -233,8 +241,13 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
                                     //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Do);
                                     startActivityForResult(intent, CHOOSE_FOLDER);
                                     return_success_val = true;
-                                } else if (call.method.equals("test_can_create_file_in_chosen_folder")) {
-                                    return_success_val = bluetooth_gnss_service.test_can_create_file_in_chosen_folder(getApplicationContext(), call.argument("log_bt_rx_log_uri"));
+                                } else if (call.method.equals("get_log_dir")) {
+                                    File log_dir = Log.getLogsDir(getApplicationContext());
+                                    if (log_dir == null) {
+                                        return_success_val = "";
+                                    } else {
+                                        return_success_val = log_dir.getAbsolutePath();
+                                    }
                                 } else if (call.method.equals("is_write_enabled")) {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                         /*android 11 - no need writ ext storage perm*/
@@ -308,12 +321,11 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
 
                                 } else if (call.method.equals("is_coarse_location_enabled")) {
 
-                                    Log.d(TAG, "is_coarse_location_enabled 0");
                                     if (
                                             ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
                                     ) {
 
-                                        Log.d(TAG, "is_coarse_location_enabled check locaiton permission already granted");
+                                        //Log.d(TAG, "is_coarse_location_enabled check locaiton permission already granted");
                                         return_success_val = true;
                                     } else {
                                         Log.d(TAG, "is_coarse_location_enabled check locaiton permission not granted yet so requesting permission now");
@@ -570,12 +582,6 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
     }
 
     @Override
-    public void onBackPressed() {
-        Log.d(TAG, "onBackPressed()");
-        super.onBackPressed();
-    }
-
-    @Override
     protected void onStart() {
         Log.d(TAG, "onStart()");
         super.onStart();
@@ -729,22 +735,38 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
 
     @SuppressLint("MissingPermission")
     public static HashMap<String, String> get_bd_map(Handler handler, Context context, Activity activity) {
+        Log.d(TAG, "get_bd_map() start");
         HashMap<String, String> ret = new HashMap<String, String>();
         try {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+            // Check if Bluetooth is enabled
+            if (!adapter.isEnabled()) {
+                // Prompt user to enable Bluetooth (not shown here)
+                Log.d(TAG, "get_bd_map() Bluetooth is not enabled");
+                return ret;
+            }
             if (adapter != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
                             != PackageManager.PERMISSION_GRANTED) {
+                        Log.d(TAG, "get_bd_map() perm not granted, requesting bluetooth_connect");
                         ActivityCompat.requestPermissions(activity,
                                 new String[]{Manifest.permission.BLUETOOTH_CONNECT}, 2);
                         return ret;
                     }
                 }
                 Set<BluetoothDevice> bonded_devs = adapter.getBondedDevices();
+                Log.d(TAG, "get_bd_map() adapter bonded dev len: "+bonded_devs.size());
                 for (BluetoothDevice bonded_dev : bonded_devs) {
-                    ret.put(bonded_dev.getAddress(), bonded_dev.getName());
+                    String bname = bonded_dev.getName();
+                    String bdaddr = bonded_dev.getAddress();
+                    if (bdaddr == null)
+                        continue;
+                    if (bname == null)
+                        bname = bdaddr;
+                    ret.put(bdaddr, bname);
                 }
+                Log.d(TAG, "get_bd_map() bdmap ret len: "+ret.size());
             }
         } catch (Exception e) {
             Log.d(TAG, "CRITICAL WARNING: get_bd_map exception: "+Log.getStackTraceString(e));

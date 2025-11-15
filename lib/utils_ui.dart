@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
@@ -55,7 +54,7 @@ const iconFail = Icon(
 Future<void> toast(String msg) async {
   try {
     await methodChannel.invokeMethod("toast", {"msg": msg});
-    developer.log("toast: $msg");
+    dlog("toast: $msg");
   } catch (e) {
     print("WARNING: toast failed exception: $e");
   }
@@ -111,7 +110,11 @@ Row paramRow(BuildContext context, String param,
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: <Widget>[
-      Text('${title.isEmpty ? param.toUpperCase() : title}', style: style),
+      Text(
+        '${title.isEmpty ? param.toUpperCase() : title}',
+        style: style,
+
+      ),
       ValueListenableBuilder<dynamic>(
         valueListenable: paramMap[param]!,
         builder: (context, value, child) {
@@ -122,11 +125,20 @@ Row paramRow(BuildContext context, String param,
             value = value.toStringAsFixed(double_fraction_digits);
           } else if (param.endsWith("_ts") && value is int) {
             value = tsToDateTimeStr(value);
+          } else if (param.endsWith("_n_bytes") && value is int) {
+            value = "${(value/1000).toInt()} kB";
+          } else if (param.endsWith("_folder") && value is String) {
+            value = display_dir(value);
           }
-          //developer.log("paramRow updated - param: $param value: $value");
-          return Text(
-            value == null ? 'No data':'$value',
-            style: style,
+          //dlog("paramRow updated - param: $param value: $value");
+          return Expanded(
+              child: Text(
+                value == null ? 'No data':'$value',
+                textAlign: TextAlign.end,
+                style: style,
+                softWrap: true,
+                overflow: TextOverflow.fade,
+              )
           );
         },
       ),
@@ -169,7 +181,7 @@ Widget reactiveIconMapCard(ValueNotifier<Map<String, Icon>> value) {
     valueListenable: value,
     builder: (BuildContext context, Map<String, Icon> _checkStateMapIcon,
         Widget? child) {
-      developer.log("reactiveIconMapCard build");
+      dlog("reactiveIconMapCard build");
       List<Widget> checklist = [];
       for (String key in _checkStateMapIcon.keys) {
         Row row = Row(mainAxisAlignment: MainAxisAlignment.start, children: [
@@ -216,7 +228,7 @@ Widget reactivePrefDropDown(String pref_key, String title,
     valueListenable: bdaddr_to_name_map,
     builder: (BuildContext context, Map<String, String> bdaddr_to_name_map,
         Widget? child) {
-      developer.log("reactivePrefDropDown build");
+      dlog("reactivePrefDropDown build");
       List<DropdownMenuItem<String>> devlist = List.empty(growable: true);
       for (MapEntry<String, String> entry in bdaddr_to_name_map.entries) {
         devlist
@@ -225,4 +237,9 @@ Widget reactivePrefDropDown(String pref_key, String title,
       return PrefDropdown(title: Text(title), items: devlist, pref: pref_key);
     },
   );
+}
+
+String display_dir(String dir)
+{
+     return dir.replaceFirst("/storage/emulated/0/", "Internal storage: ");
 }

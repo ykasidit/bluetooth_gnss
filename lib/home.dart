@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
 import 'package:bluetooth_gnss/connect_screen.dart';
+import 'package:bluetooth_gnss/log_viewer.dart';
+import 'package:bluetooth_gnss/main.dart';
 import 'package:bluetooth_gnss/settings_screen.dart';
 import 'package:bluetooth_gnss/utils_ui.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'channels.dart';
 import 'connect.dart';
 import 'map_screen.dart';
+import 'package:path/path.dart' as path;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,11 +23,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
 
-  final screens = [
-    const ConnectScreen(),
-    MapScreen(),
-    const SettingsScreen(),
-  ];
+  final screens = {
+    NavigationDestination(icon: Icon(Icons.bluetooth), label: 'Connect'): const ConnectScreen(),
+    NavigationDestination(icon: Icon(Icons.map), label: 'Map'): MapScreen(),
+    NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'): const SettingsScreen(),
+    NavigationDestination(icon: Icon(Icons.terminal), label: 'Messages'): LogViewerXtermPage(filePath: path.join(log_dir, "app_trace.txt"))
+  };
 
   Timer? _checkConnectTimer;
   StreamSubscription<dynamic>? _eventChannelSubscription;
@@ -33,8 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    developer.log("home initState()");
-    developer.log("home event stream sub");
+    dlog("home initState()");
+    dlog("home event stream sub");
     _eventChannelSubscription = initEventChannels();
     Timer.periodic(const Duration(seconds: 2), (timer) {
       checkConnectState();
@@ -43,8 +46,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    developer.log("home dispose()");
-    developer.log("home event stream cancel");
+    dlog("home dispose()");
+    dlog("home event stream cancel");
     _checkConnectTimer?.cancel();
     _eventChannelSubscription?.cancel();
     super.dispose();
@@ -103,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: () => _launchUrl(
                             'https://github.com/ykasidit/bluetooth_gnss'),
                         child: const Text(
-                          '🔗 Project homepage',
+                          'Project homepage',
                           style: TextStyle(color: Colors.blue),
                         ),
                       ),
@@ -112,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: () => _launchUrl(
                             'https://github.com/ykasidit/bluetooth_gnss/issues'),
                         child: const Text(
-                          '🐞 Report an issue',
+                          'Report an issue',
                           style: TextStyle(color: Colors.blue),
                         ),
                       ),
@@ -124,18 +127,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: IndexedStack(index: currentIndex, children: screens),
+      body: IndexedStack(index: currentIndex, children: screens.values.toList()),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         onDestinationSelected: (index) => setState(() {
           currentIndex = index;
           if (currentIndex != 0) {}
         }),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.bluetooth), label: 'Connect'),
-          NavigationDestination(icon: Icon(Icons.map), label: 'Map'),
-          NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
-        ],
+        destinations: screens.keys.toList(),
       ),
       floatingActionButton: currentIndex == 0
           ? FloatingActionButton(
@@ -143,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 try {
                   await onFloatingButtonTap();
                 } catch (ex, tr) {
-                  developer.log("onFloatingButtonTap exception: $ex: $tr");
+                  dlog("onFloatingButtonTap exception: $ex: $tr");
                 }
               },
               child: reactiveIcon(floatingButtonIcon),

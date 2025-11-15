@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 
 import 'package:bluetooth_gnss/main.dart';
 import 'package:bluetooth_gnss/utils.dart';
@@ -80,15 +79,18 @@ Future<void> disconnect() async {
     //call it in any case just to be sure service it is stopped (.close()) method called
     await methodChannel.invokeMethod('disconnect');
   } on Exception catch (e, trace) {
-    developer.log("WARNING: disconnect failed exception: $e $trace");
+    dlog("WARNING: disconnect failed exception: $e $trace");
   }
 }
 
 Future<void> connect() async {
-  developer.log("main.dart connect() start");
-  String log_bt_rx_log_uri = prefService.get('log_bt_rx_log_uri') ?? "";
+  dlog("main.dart connect() start");
+  String log_bt_rx_log_uri = (prefService.get('log_bt_rx') ?? false) ? log_dir : "";
   bool autostart = prefService.get('autostart') ?? false;
   bool gapMode = prefService.get('ble_gap_scan_mode') ?? false;
+
+  /*
+  just use simple log_dir now
   String log_uri = prefService.get('log_bt_rx_log_uri') as String? ?? "";
   if (log_bt_rx_log_uri.isNotEmpty) {
     bool writeEnabled = false;
@@ -106,7 +108,7 @@ Future<void> connect() async {
     if (canCreateFile == false) {
       throw "Please go to Settings > re-tick 'Enable logging' (failed to access chosen log folder)";
     }
-  }
+  }*/
   if (gapMode) {
     bool coarseLocationEnabled = await isCoarseLocationEnabled();
     if (coarseLocationEnabled == false) {
@@ -134,12 +136,12 @@ Future<void> connect() async {
   if (bdaddr.isEmpty) {
     throw "No bluetooth device selected in settings";
   }
-  developer.log("main.dart connect() start1");
+  dlog("main.dart connect() start1");
   paramMap.clear();
 
   String status = "unknown";
   try {
-    developer.log("main.dart connect() start connect start");
+    dlog("main.dart connect() start connect start");
     final bool ret = (await methodChannel.invokeMethod('connect', {
           "bdaddr": bdaddr,
           'secure': prefService.get('secure') ?? true,
@@ -167,32 +169,32 @@ Future<void> connect() async {
               double.parse(prefService.get('mock_alt_offset_meters') ?? "0.0"),
         })) as bool? ??
         false;
-    developer.log("main.dart connect() start connect done");
+    dlog("main.dart connect() start connect done");
     if (ret) {
       status = "Connecting - please wait ...";
     } else {
       status = "Failed to connect...";
     }
-    developer.log("main.dart connect() start2");
+    dlog("main.dart connect() start2");
   } catch (e, t) {
     status = "Failed to start connection: '${e}'";
-    developer.log(status + "$t");
+    dlog(status + "$t");
   }
 
-  developer.log("main.dart connect() start3");
+  dlog("main.dart connect() start3");
 
   connectStatus.value = status;
 
-  developer.log("main.dart connect() start4");
+  dlog("main.dart connect() start4");
 
-  developer.log("marin.dart connect() done");
+  dlog("marin.dart connect() done");
 }
 
 Future<String> getSelectedBdSummary(BasePrefService prefService) async {
-  //developer.log("get_selected_bd_summary 0");
+  //dlog("get_selected_bd_summary 0");
   String ret = '';
   String bdaddr = getSelectedBdaddr(prefService);
-  //developer.log("get_selected_bd_summary selected bdaddr: $bdaddr");
+  //dlog("get_selected_bd_summary selected bdaddr: $bdaddr");
   String bdname = await getSelectedBdname(prefService);
   if (bdname.startsWith("QSTARZ")) {
     isQstarz.value = true;
@@ -205,7 +207,7 @@ Future<String> getSelectedBdSummary(BasePrefService prefService) async {
     ret += bdname;
     ret += " ($bdaddr)";
   }
-  //developer.log("get_selected_bd_summary ret $ret");
+  //dlog("get_selected_bd_summary ret $ret");
   return ret;
 }
 
@@ -261,7 +263,7 @@ Future<ConnectState> _checkUpdateSelectedDev(Map<String, Icon> icon_map) async {
     isBtConnThreadConnecting.value =
         await methodChannel.invokeMethod('is_conn_thread_alive') as bool? ??
             false;
-    /*developer.log(
+    /*dlog(
         "_is_bt_conn_thread_alive_likely_connecting: ${isBtConnThreadConnecting.value}");*/
     if (isBtConnThreadConnecting.value) {
       connectStatus.value = "Connecting...";
@@ -296,12 +298,12 @@ Future<ConnectState> _checkUpdateSelectedDev(Map<String, Icon> icon_map) async {
   }
 
   icon_map["Bluetooth powered ON"] = iconOk;
-  //developer.log('check_and_update_selected_device5');
+  //dlog('check_and_update_selected_device5');
 
   Map<String, String> bdMap = await getBdMap();
   notifyIfMapChanged(bdMapNotifier, bdMap);
   bdMapNotifier.value;
-  //developer.log('check_and_update_selected_device6 got bdMap: $bdMap');
+  //dlog('check_and_update_selected_device6 got bdMap: $bdMap');
   String selected_dev_sum = await getSelectedBdSummary(prefService);
 
   bool gapMode = prefService.get('ble_gap_scan_mode') ?? false;
@@ -312,18 +314,20 @@ Future<ConnectState> _checkUpdateSelectedDev(Map<String, Icon> icon_map) async {
     //bt connect mode
     if (bdMap.isEmpty) {
       String msg =
-          "Please pair your Bluetooth GPS/GNSS Receiver in phone Settings > Bluetooth first.\n\nClick floating button to go there...";
+          "Please pair your Bluetooth GPS/GNSS Receiver in phone Settings > Bluetooth first.\n\n";
       icon_map["No paired Bluetooth devices"] = iconFail;
       connectStatus.value = msg;
       connectSelectedDevice.value = "No paired Bluetooth devices found...";
       return ret;
     }
-    //developer.log('check_and_update_selected_device7');
+    //dlog('check_and_update_selected_device7');
     icon_map["Found paired Bluetooth devices"] = iconOk;
 
-    //developer.log('check_and_update_selected_device8');
+    //dlog('check_and_update_selected_device8');
 
-    //developer.log('check_and_update_selected_device9');
+    //dlog('check_and_update_selected_device9');
+
+
 
     if (getSelectedBdaddr(prefService).isEmpty ||
         (await getSelectedBdname(prefService)).isEmpty) {
@@ -351,9 +355,17 @@ Future<ConnectState> _checkUpdateSelectedDev(Map<String, Icon> icon_map) async {
       connectStatus.value = msg;
       return ret;
     }
-    //developer.log('check_and_update_selected_device13');
+    //dlog('check_and_update_selected_device13');
     icon_map["Location is on and 'High Accuracy'"] = iconOk;
   }*/
+
+  if (!(await isCoarseLocationEnabled())) {
+    String msg =
+        "Please go to phone Settings > Developer Options > Under 'Debugging', set 'Mock Location app' to 'Bluetooth GNSS'...";
+    icon_map["'Mock Location app' not 'Bluetooth GNSS'\n"] = iconFail;
+    connectStatus.value = msg;
+    return ret;
+  }
 
   if (!(await isMockLocationEnabled())) {
     String msg =
@@ -391,7 +403,7 @@ Future<void> setLiveArgs() async {
     'mock_alt_offset_meters':
         double.parse(prefService.get('mock_alt_offset_meters') ?? "0.0"),
   });
-  developer.log("setLiveArgs setTs");
+  dlog("setLiveArgs setTs");
   setLiveArgsTs.value = DateTime.timestamp();
-  developer.log("setLiveArgs setTs done: ${setLiveArgsTs.value}");
+  dlog("setLiveArgs setTs done: ${setLiveArgsTs.value}");
 }

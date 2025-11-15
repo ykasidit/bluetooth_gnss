@@ -8,7 +8,6 @@ import static com.clearevo.bluetooth_gnss.MainActivity.get_bd_map;
 import static com.clearevo.libbluetooth_gnss_service.Log.LogObserver;
 import static com.clearevo.libbluetooth_gnss_service.Log.d;
 import static com.clearevo.libbluetooth_gnss_service.Log.getStackTraceString;
-import static com.clearevo.libbluetooth_gnss_service.Log.m_log_operations_fos;
 import static com.clearevo.libbluetooth_gnss_service.Utils.fromHexString;
 
 import android.app.AppOpsManager;
@@ -24,7 +23,6 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,7 +33,6 @@ import android.text.TextUtils;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
-import androidx.documentfile.provider.DocumentFile;
 
 import com.clearevo.bluetooth_gnss.MainActivity;
 import com.clearevo.bluetooth_gnss.R;
@@ -45,6 +42,8 @@ import com.google.android.gms.location.LocationServices;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -59,6 +58,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -194,10 +194,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     m_target_activity_class = Class.forName(MAIN_ACTIVITY_CLASSNAME);
                     m_icon_id = R.mipmap.ic_launcher;
 
-                    if (m_log_bt_rx_log_uri != null && (!m_log_bt_rx_log_uri.isEmpty())) {
+                    if (m_log_bt_rx_log_uri != null) {
                         String log_uri = m_log_bt_rx_log_uri;
                         if (!log_uri.isEmpty()) {
-                            curInstance.prepare_log_output_streams(log_uri);
+                            curInstance.prepare_log_output_streams();
                         }
                     }
 
@@ -571,13 +571,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 m_log_bt_rx_csv_fos = null;
             }
         } catch (Exception e) {}
-        try {
-            if (m_log_operations_fos != null) {
-                m_log_operations_fos.close();
-                m_log_operations_fos = null;
-            }
-        } catch (Exception e) {}
-        log_file_uri = null;
+        logfile_rx = null;
+        logfile_location = null;
+
+        //logfile_trace is kept open no need to close
 
         try {if (m_connect_thread.isAlive()) m_connect_thread.interrupt();} catch (Exception e) {}
         m_connect_thread = null;
@@ -933,7 +930,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         m_connect_thread.start();
     }
 
-    Uri log_file_uri = null;
+    File logfile_rx = null;
+    File logfile_location = null;
     SimpleDateFormat log_name_sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US);
     SimpleDateFormat csv_sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
     public void log_bt_rx(byte[] read_buf)
@@ -941,7 +939,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         if (read_buf == null || read_buf.length == 0)
             return;
         try {
-            if (log_file_uri != null) {
+            if (logfile_folder != null) {
                 if (m_log_bt_rx_log_uri != null && (!m_log_bt_rx_log_uri.isEmpty()) && read_buf != null) {
                     if (m_log_bt_rx_fos != null) {
                         m_log_bt_rx_fos.write(read_buf);
@@ -965,7 +963,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         d(tag, msg);
     }
 
-    public static boolean test_can_create_file_in_chosen_folder(Context context, String log_uri)
+    /*public static boolean test_can_create_file_in_chosen_folder(Context context, String log_uri)
     {
         try {
             if (log_uri.isEmpty()) {
@@ -977,77 +975,40 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             log(TAG, msg);
             return false;
         }
-    }
+    }*/
 
-
-    public static boolean test_can_create_file(Context context, String log_folder_uri_str)
-    {
-        try {
-            DocumentFile df = create_new_file(context, log_folder_uri_str, "text/plain", "test_folder_access");
-            if (df.exists()) {
-                df.delete();
-                return true;
-            }
-        } catch (Throwable tr) {
-            String msg = "WARNING: test_can_create_file failed exception: "+ getStackTraceString(tr);
-            log(TAG, msg);
-            return false;
-        }
-        return false;
-    }
-
-    public static DocumentFile create_new_file(Context context, String log_folder_uri_str, String mime, String fname) throws Exception {
-        if (log_folder_uri_str == null) {
+    public static File create_new_file(File log_folder, String fname) throws Exception {
+        if (log_folder == null) {
             throw new Exception("no log folder set in settings");
         }
-            Uri log_folder_uri = Uri.parse(log_folder_uri_str);
-            //ref: https://stackoverflow.com/questions/61118918/create-new-file-in-the-directory-returned-by-intent-action-open-document-tree
-            DocumentFile dd = DocumentFile.fromTreeUri(context, log_folder_uri);
-            if (dd == null) {
-                throw new Exception("Failed to access folder");
-            }
-            DocumentFile df = dd.createFile(mime, fname);
-            if (df == null) {
-                throw new Exception("Failed to create file in folder");
-            }
-            if (df.exists()) {
-                df.delete();
-            }
-            df = dd.createFile(mime, fname);
-            if (!df.exists()) {
-                throw new Exception("Failed to create file in folder after delete of old file");
-            }
+        File df = new File(log_folder, fname);
+        if (df.exists()) {
+            df.delete();
+        }
+        if (df.createNewFile()) {
             return df;
+        }
+        return null;
     }
 
-    public OutputStream get_df_os(DocumentFile df) throws Exception {
-        return getApplicationContext().getContentResolver().openOutputStream(df.getUri());
+    public OutputStream get_df_os(File df) throws Exception {
+        return new FileOutputStream(df);
     }
 
-    public void prepare_log_output_streams(String log_folder_uri_str) {
+    public void prepare_log_output_streams() {
         try {
-            if (log_folder_uri_str == null) {
-                throw new Exception("no log folder set in settings");
+            if (!logfile_folder.isDirectory()) {
+                throw new Exception("failed to create log folder");
             }
-            Uri log_folder_uri = Uri.parse(log_folder_uri_str);
-            //ref: https://stackoverflow.com/questions/61118918/create-new-file-in-the-directory-returned-by-intent-action-open-document-tree
-            DocumentFile dd = DocumentFile.fromTreeUri(getApplicationContext(), log_folder_uri);
-            if (dd == null) {
-                throw new Exception("Failed to access folder");
-            }
-
-            DocumentFile df = create_new_file(getApplicationContext(), log_folder_uri_str, "text/plain", (log_name_sdf.format(new Date()) + "_rx_log.txt"));
-            DocumentFile df_csv = create_new_file(getApplicationContext(), log_folder_uri_str, "text/csv", (log_name_sdf.format(new Date()) + "_location_log.csv"));
-            DocumentFile lf = create_new_file(getApplicationContext(), log_folder_uri_str, "text/plain", (log_name_sdf.format(new Date()) + "_operations_log.txt"));
-            if (df == null) {
-                throw new Exception("Failed to create file in folder");
-            }
-            log_file_uri = df.getUri();
-            log(TAG, "log_bt_rx: log_fp: " + df.getUri().toString());
+            Date d = new Date();
+            File df = create_new_file(logfile_folder, (log_name_sdf.format(d) + "_rx.txt"));
+            logfile_rx = df;
+            File df_csv = create_new_file(logfile_folder, (log_name_sdf.format(d) + "_location.csv"));
+            logfile_location = df_csv;
+            log(TAG, "log_bt_rx: log_fp: " + logfile_folder.getAbsolutePath());
             log_bt_rx_bytes_written = 0;
             m_log_bt_rx_fos = get_df_os(df);
             m_log_bt_rx_csv_fos = get_df_os(df_csv);
-            m_log_operations_fos = get_df_os(lf);
             m_log_bt_rx_csv_fos.write("time,lat,lon,alt\n".getBytes());
             m_log_bt_rx_csv_fos.flush();
             log(TAG, "log_bt_rx: m_log_bt_rx_fos ready");
@@ -1095,10 +1056,15 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         log(TAG, "on_target_tcp_disconnected()");
     }
 
+    File logfile_folder;
+    File logfile_trace;
+
     @Override
     public void onCreate() {
         log(TAG, "onCreate()");
         super.onCreate();
+        logfile_folder = Log.getLogsDir(getApplicationContext());
+        logfile_trace = Log.getTraceLog(getApplicationContext());
     }
 
     void start_foreground(String title, String text, String ticker)
@@ -1266,6 +1232,14 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
             return;
         }
 
+        if (Double.isNaN(latitude)) {
+            Log.d(TAG, "lat is NaN - omit setmock");
+            return;
+        }
+        if (Double.isNaN(longitude)) {
+            Log.d(TAG, "lon is NaN - omit setmock");
+            return;
+        }
         if (Float.isNaN(accuracy)) {
             accuracy = DEFAULT_MOCK_ACCURACY;
         }
@@ -1285,9 +1259,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
         long system_ts = System.currentTimeMillis();
         long system_ts_nanos = SystemClock.elapsedRealtimeNanos();
-        //Log.d(TAG, "setMock gnss_ts: "+gnss_ts +" vs system_ts: "+system_ts+" = system_to_gnss_ts_diff: "+system_to_gnss_ts_diff);
-
-
+        Log.d(TAG, "setMock start gnss_ts: "+gnss_ts);
         activate_mock_location(); //this will check a static flag and not re-activate if already active
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         long mock_base_ts = (mock_location_timestamp_use_system_time? system_ts : gnss_ts);
@@ -1363,6 +1335,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
                 if (!TextUtils.equals(provider, FUSED_PROVIDER)) {
                     locationManager.setTestProviderLocation(provider, newLocation);
+                    Log.d(TAG, "setmock mock done for provider: "+provider);
                 } else  {
                     //FUSED_PROVIDER
                     try {
@@ -1371,7 +1344,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             fusedClient.setMockMode(true);
                         }
                         fusedClient.setMockLocation(newLocation);
-                        //Log.d(TAG, "fusedClient mock done for provider: "+provider);
+                        Log.d(TAG, "setmock fusedClient mock done for provider: "+provider);
                     } catch (Throwable e) {
                         Log.d(TAG, "WARNING: fusedClient mock failed: " + Log.getStackTraceString(e));
                     }
@@ -1428,23 +1401,25 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         out_object.put("accuracy", accuracy);
 
         //intent_pos_broadcast_ts
-        if (log_file_uri != null) {
-            out_object.put("logfile_uri", log_file_uri.toString());
-            log(TAG, "log_file_uri.toString() "+log_file_uri.toString());
-            String ls = log_file_uri.getLastPathSegment();
-            if (ls.contains("/")) {
-                String[] parts = ls.split("/");
-                if (parts.length > 1) {
-                    out_object.put("logfile_folder", parts[0]);
-                    out_object.put("logfile_name", parts[1]);
-                }
-            } else {
-                log(TAG, "ls: "+log_file_uri.toString());
-                out_object.put("logfile_folder", log_file_uri.toString());
-                out_object.put("logfile_name", ls);
+        if (logfile_folder != null && logfile_trace != null) {
+            out_object.put("logfile_folder", logfile_folder.getAbsolutePath());
+            try {
+                out_object.put("logfile_trace", logfile_trace.getName());
+                out_object.put("logfile_trace_n_bytes", logfile_trace.length());
+            } catch (Exception e) {
             }
-            out_object.put("logfile_n_bytes", log_bt_rx_bytes_written);
-            out_object.put("logfile_size_mb", ((double)log_bt_rx_bytes_written)/1_000_000.0);
+            if (logfile_rx != null && logfile_location != null) {
+                try {
+                    out_object.put("logfile_rx", logfile_rx.getName());
+                    out_object.put("logfile_rx_n_bytes", logfile_rx.length());
+                } catch (Exception e) {
+                }
+                try {
+                    out_object.put("logfile_location", logfile_location.getName());
+                    out_object.put("logfile_location_n_bytes", logfile_location.length());
+                } catch (Exception e) {
+                }
+            }
         }
         if (m_log_bt_rx_csv_fos != null) {
             try {
@@ -1648,6 +1623,11 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     {
         return m_device_cep;
     }
+
+    public static double getDoubleOrNaN(Map<String,Object> map, String key) {
+        Object v = map.get(key);
+        return (v instanceof Number) ? ((Number)v).doubleValue() : Double.NaN;
+    }
     
     public void onPositionUpdate(HashMap<String, Object> params_map) {
 
@@ -1678,7 +1658,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
         {
 
             try {
-                if (params_map.containsKey("lat_ts") && params_map.containsKey("lat") && params_map.containsKey("lon")) {
+                if (params_map.containsKey("lat_ts") && params_map.containsKey("lat") && params_map.containsKey("lon") && params_map.containsKey("lon")) {
                     long new_ts = (long) params_map.get("lat_ts");
                     Object lat_obj = params_map.get("lat");
                     Object lon_obj = params_map.get("lon");
@@ -1689,10 +1669,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         boolean alt_is_ellipsoidal = false;
                         if (params_map.containsKey(ellips_height_key)) {
                             alt_is_ellipsoidal = true;
-                            alt = (double) params_map.get(ellips_height_key);
+                            alt = getDoubleOrNaN(params_map, ellips_height_key);
                             //log(TAG, "ellips_height_key valid");
                         } else {
-                            alt = (double) params_map.get("alt");
+                            alt = getDoubleOrNaN(params_map, "alt");
                             //log(TAG, "ellips_height_key not valid");
                         }
 
@@ -1713,10 +1693,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                                 }
                             }
                         }
-                        hdop = (double) params_map.get("hdop");
-                        speed = (double) params_map.get("speed_over_ground"); //Speed in knots (nautical miles per hour).
+                        hdop = getDoubleOrNaN(params_map,"hdop");
+                        speed = getDoubleOrNaN(params_map, "speed_over_ground"); //Speed in knots (nautical miles per hour).
                         try {
-                            vdop = (double) params_map.get("vdop");
+                            vdop = (double)getDoubleOrNaN(params_map,"vdop");
                         } catch (Exception e) {}
                         speed = speed * 0.514444; //convert to m/s
                         try {
@@ -1726,7 +1706,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                             } else if (params_map.containsKey("course")) {  // value from RMC (RMC course = VTG true course)
                                 course = params_map.get("course");
                             }
-                            log(TAG, "course: "+course);
+                            //log(TAG, "course: "+course);
                             if (course != null) {
                                 bearing = (double) course;
                             }
@@ -1752,7 +1732,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         if (Double.isNaN(vaccuracy)) {
                             vaccuracy = vdop * get_connected_device_CEP();
                         }
+
                         setMock(lat, lon, (float) accuracy, (float) vaccuracy, alt, bearing, (float) speed, alt_is_ellipsoidal, n_sats, hdop, "", new_ts, params_map);
+
                     } else {
                         //omit as same ts as last
                     }

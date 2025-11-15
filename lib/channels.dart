@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:developer' as developer;
+
 
 import 'package:bluetooth_gnss/connect.dart';
 import 'package:bluetooth_gnss/map_screen.dart';
@@ -22,7 +22,7 @@ class Message {
   Message({required this.tx, required this.name, required this.contents});
   // Factory constructor to create a Message from a Map<String, Object>
   factory Message.fromMap(Map<dynamic, dynamic> map) {
-    //developer.log("got Message map: $map");
+    //dlog("got Message map: $map");
     return Message(
       tx: map['tx'] as bool? ?? false,
       name: map['name'] as String? ?? "",
@@ -34,11 +34,10 @@ class Message {
 List<String> MESSAGE_NAMES_CACHE = [];
 List<Message> MESSAGE_LIST_CACHE = [];
 const maxMsgListSize = 100;
-
 StreamSubscription<dynamic> initEventChannels() {
-  developer.log("initEventChannels()");
+  dlog("initEventChannels()");
   return _eventChannel.receiveBroadcastStream().listen((dynamic event) {
-    //developer.log("eventChannel got: $event");
+    //dlog("eventChannel got: $event");
     final channel_paramMap =
         (event as Map<Object?, Object?>).cast<String, dynamic>();
 
@@ -53,7 +52,7 @@ StreamSubscription<dynamic> initEventChannels() {
           MESSAGE_LIST_CACHE.removeAt(0);
         }
       } catch (e) {
-        developer.log('parse msg exception: $e');
+        dlog('parse msg exception: $e');
       }
       return; //update messages only
     } else {
@@ -66,7 +65,7 @@ StreamSubscription<dynamic> initEventChannels() {
           int nowts = now.millisecondsSinceEpoch;
           mockLocationSetStatus.value = "";
           mockSetMillisAgo = nowts - mockLocationSetTs.value;
-          developer.log("mockSetMillisAgo: $mockSetMillisAgo");
+          //dlog("mockSetMillisAgo: $mockSetMillisAgo");
           double secsAgo = mockSetMillisAgo / 1000.0;
           String state = 'NO valid location sent to other apps';
           bool ok = false;
@@ -83,7 +82,7 @@ StreamSubscription<dynamic> initEventChannels() {
           }
           mockLocationSetStatus.value = (ok?okEmoji:errorEmoji)+" "+state + " " + update_suffix;
         } catch (e, trace) {
-          developer.log('get parsed param exception: $e $trace');
+          dlog('get parsed param exception: $e $trace');
         }
       }
       if (channel_paramMap["lat"] != null &&
@@ -98,7 +97,7 @@ StreamSubscription<dynamic> initEventChannels() {
               channel_paramMap["mock_location_base_lon"] as double);
           mapExternalDevPosOri.value = pos_ori;
         } catch (e, t) {
-          developer.log("set mapExternalDevPos failed: $e: $t");
+          dlog("set mapExternalDevPos failed: $e: $t");
         }
       }
       for (MapEntry<String, dynamic> entry in channel_paramMap.entries) {
@@ -111,7 +110,7 @@ StreamSubscription<dynamic> initEventChannels() {
       }
     }
   }, onError: (dynamic error) {
-    developer.log('Received error: ${error.message}');
+    dlog('Received error: ${error.message}');
   });
 }
 
@@ -128,6 +127,17 @@ Future<String> getSelectedBdname(BasePrefService prefService) async {
   return (bdMap[bdaddr] ?? "").toString();
 }
 
+Future<String> getLogDir() async {
+  String? ret;
+  try {
+    ret = await methodChannel.invokeMethod<String>('get_log_dir');
+  } catch (e, trace) {
+    String status = "warning: get_log_dir exception: $e trace: $trace";
+    dlog(status);
+  }
+  return ret ?? "";
+}
+
 Future<Map<String, String>> getBdMap() async {
   Map<String, String> ret = {};
   try {
@@ -136,7 +146,7 @@ Future<Map<String, String>> getBdMap() async {
     ret = Map<String, String>.from(oret!);
   } catch (e, trace) {
     String status = "warning: get_bd_map exception: $e trace: $trace";
-    developer.log(status);
+    dlog(status);
   }
   return ret;
 }
@@ -147,7 +157,7 @@ Future<bool> isBluetoothOn() async {
     ret = await methodChannel.invokeMethod<bool>('is_bluetooth_on');
   } catch (e, trace) {
     String status = "is_bluetooth_on error: '${e}': $trace";
-    developer.log(status);
+    dlog(status);
   }
   return ret!;
 }
@@ -168,12 +178,12 @@ Future<List<String>> checkPermissions() async {
 Future<bool> isLocationEnabled() async {
   bool? ret = false;
   try {
-    //developer.log("is_location_enabled try0");
+    //dlog("is_location_enabled try0");
     ret = await methodChannel.invokeMethod<bool>('is_location_enabled');
-    //developer.log("is_location_enabled got ret: $ret");
+    //dlog("is_location_enabled got ret: $ret");
   } catch (e, trace) {
     String status = "is_location_enabled exception: '${e}': $trace";
-    developer.log(status);
+    dlog(status);
   }
   return ret!;
 }
@@ -181,12 +191,12 @@ Future<bool> isLocationEnabled() async {
 Future<bool> isCoarseLocationEnabled() async {
   bool? ret = false;
   try {
-    //developer.log("is_coarse_location_enabled try0");
+    //dlog("is_coarse_location_enabled try0");
     ret = await methodChannel.invokeMethod<bool>('is_coarse_location_enabled');
-    //developer.log("is_coarse_location_enabled got ret: $ret");
+    //dlog("is_coarse_location_enabled got ret: $ret");
   } catch (e, trace) {
     String status = "is_coarse_location_enabled exception: '${e}': $trace";
-    developer.log(status);
+    dlog(status);
   }
   return ret!;
 }
@@ -194,12 +204,36 @@ Future<bool> isCoarseLocationEnabled() async {
 Future<bool> isMockLocationEnabled() async {
   bool? ret = false;
   try {
-    //developer.log("is_mock_location_enabled try0");
+    //dlog("is_mock_location_enabled try0");
     ret = await methodChannel.invokeMethod<bool>('is_mock_location_enabled');
-    //developer.log("is_mock_location_enabled got ret $ret");
+    //dlog("is_mock_location_enabled got ret $ret");
   } catch (e, trace) {
     String status = "is_mock_location_enabled exception: '${e}': $trace";
-    developer.log(status);
+    dlog(status);
   }
   return ret!;
+}
+
+void dlog(String msg) {
+  try {
+    //dlog("is_location_enabled try0");
+    methodChannel.invokeMethod('dlog', {"msg": msg});
+    //dlog("is_location_enabled got ret: $ret");
+  } catch (e, trace) {
+    String status = "WARNING: dlog exception: '${e}': $trace";
+    print(status);
+  }
+}
+
+Future<bool> clearTraceFile() async {
+  try {
+    //dlog("is_location_enabled try0");
+    bool? ret =  await methodChannel.invokeMethod<bool>('clear_trace_file');
+    return ret ?? false;
+    //dlog("is_location_enabled got ret: $ret");
+  } catch (e, trace) {
+    String status = "WARNING: clearTraceFiled exception: '${e}': $trace";
+    dlog(status);
+  }
+  return false;
 }
