@@ -42,7 +42,7 @@ public class ntrip_conn_mgr {
     ArrayList<String> m_http_response_header_lines;
     String m_http_response_header_str;
     LinkedBlockingQueue<byte[]> m_incoming_buffers;
-    static final String TAG = "btgnss_ntripmgr";
+    static final String TAG = "btgnss_ntrip";
     volatile boolean closed = false;
 
     ntrip_conn_callbacks m_cb;

@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
-
+import 'channels.dart';
 import 'home.dart';
 
 const String bleUartModeKey = 'ble_uart_mode';
 const String bleQstarzModeKey = 'ble_qstarz_mode';
 late final PrefServiceShared prefService;
+
+String log_dir = "";
+
 
 Future<void> main() async {
   WidgetsFlutterBinding
@@ -34,6 +37,8 @@ Future<void> main() async {
     "mock_alt_offset_meters": "0.0",
 
   });
+  log_dir = await getLogDir();
+  dlog("log_dir: $log_dir");
   runApp(App());
 }
 

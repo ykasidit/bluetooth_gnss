@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 import 'dart:math' show cos, sqrt, asin;
 
 import 'package:bluetooth_gnss/utils_ui.dart';
@@ -25,13 +24,13 @@ class SettingsScreen extends StatefulWidget {
 
 class SettingsScreenState extends State<SettingsScreen> {
   bool loading = false;
-  String log_bt_rx_log_uri = "";
+  //String log_bt_rx_log_uri = ""; - use simpler log_dir from main instead - easier to let users save and share debug logs
   Stream<dynamic>? event_stream;
   StreamSubscription<dynamic>? event_stream_sub;
   ValueNotifier<DateTime> setMountpointTs = ValueNotifier(DateTime.now());
   @override
   void dispose() {
-    developer.log("settings event stream cancel");
+    dlog("settings event stream cancel");
     event_stream_sub?.cancel();
     super.dispose();
   }
@@ -39,22 +38,21 @@ class SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    log_bt_rx_log_uri = prefService.get('log_bt_rx_log_uri') ?? "";
     event_stream = _settingsEventChannel.receiveBroadcastStream();
     if (true) {
-      developer.log("settings event stream sub");
+      dlog("settings event stream sub");
       event_stream_sub = event_stream!.listen((dynamic event) async {
         Map<dynamic, dynamic> eventMap = event as Map<dynamic, dynamic>? ?? {};
 
         if (eventMap.containsKey('callback_src')) {
           try {
-            developer.log("settings got callback event: $eventMap");
+            dlog("settings got callback event: $eventMap");
           } catch (e) {
-            developer.log('parse event_map exception: $e');
+            dlog('parse event_map exception: $e');
           }
 
           if (eventMap["callback_src"] == "get_mountpoint_list") {
-            developer.log("dismiss progress dialog now0");
+            dlog("dismiss progress dialog now0");
 
             setState(() {
               loading = false;
@@ -63,7 +61,7 @@ class SettingsScreenState extends State<SettingsScreen> {
             //get list from native engine
             List<dynamic> oriMpl =
                 eventMap["callback_payload"] as List<dynamic>? ?? [];
-            developer.log("got mpl: $oriMpl");
+            dlog("got mpl: $oriMpl");
             if (oriMpl.isEmpty) {
               await toast(
                   "Failed to list mount-points list from server specified...");
@@ -87,13 +85,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                 mountPointStrList.where((s) => s.contains(';')).toList();
 
             mountPointStrList.sort();
-            developer.log("mount_point_str_list: $mountPointStrList");
+            dlog("mount_point_str_list: $mountPointStrList");
 
             int nmpl = mountPointStrList.length;
             await toast("Found $nmpl mountpoints...");
             bool sortByNearest =
                 prefService.get('list_nearest_streams_first') ?? false;
-            developer.log('sort_by_nearest: $sortByNearest');
+            dlog('sort_by_nearest: $sortByNearest');
 
             List<Map<String, String>> mountPointMapList =
                 List.empty(growable: true);
@@ -127,13 +125,11 @@ class SettingsScreenState extends State<SettingsScreen> {
                       lastLon = double.parse(parts[1]);
                       lastPosValid = true;
                     } catch (e) {
-                      developer
-                          .log("WARNING: parse last lat/lon exception {e}");
+                      dlog("WARNING: parse last lat/lon exception {e}");
                     }
                   }
                 }
-                developer
-                    .log('last_pos_valid: $lastPosValid $lastLat $lastLon');
+                dlog('last_pos_valid: $lastPosValid $lastLat $lastLon');
 
                 if (lastPosValid) {
                   //calc distance into the map in the list
@@ -145,7 +141,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       distanceKm =
                           calculateDistance(lastLat, lastLon, lat, lon);
                     } catch (e) {
-                      developer.log('parse lat/lon exception: $e');
+                      dlog('parse lat/lon exception: $e');
                     }
                     vmap["distance_km"] =
                         distanceKm.truncateToDouble().toString();
@@ -161,7 +157,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       "Sort by distance failed: Invalid Ref lat,lon position");
                 }
               } catch (e) {
-                developer.log('sort_by_nearest exception: $e');
+                dlog('sort_by_nearest exception: $e');
                 await toast("Sort by distance failed: $e");
               }
             }
@@ -178,7 +174,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       children: mountPointMapList.map((valmap) {
                         String dispText =
                             "${valmap["mountpoint"]}: ${valmap["identifier"]} @ ${valmap["lat"]}, ${valmap["lon"]}";
-                        developer.log(
+                        dlog(
                             "disp_text sort_by_nearest $sortByNearest last_pos_valid $lastPosValid");
                         if (sortByNearest && lastPosValid) {
                           dispText += ": ${valmap["distance_km"]} km";
@@ -192,30 +188,30 @@ class SettingsScreenState extends State<SettingsScreen> {
                     );
                   });
             }
-            developer.log("chosen_mountpoint: $chosenMountpoint");
+            dlog("chosen_mountpoint: $chosenMountpoint");
             if (chosenMountpoint != null) {
               await prefService.set('ntrip_mountpoint', chosenMountpoint);
               setMountpointTs.value = DateTime
                   .timestamp(); //trigger ui update in the mountpoint field
             }
-          } else if (eventMap["callback_src"] == "set_log_uri") {
+          } /*else if (eventMap["callback_src"] == "set_log_uri") {
             String log_uri = eventMap["callback_payload"] as String? ?? "";
             if (log_uri.isNotEmpty) {
-              developer.log("set log_uri: $log_uri");
+              dlog("set log_uri: $log_uri");
               prefService.set('log_bt_rx', true);
               prefService.set('log_bt_rx_log_uri', log_uri);
             } else {
-              developer.log("clear log_uri");
+              dlog("clear log_uri");
               prefService.set('log_bt_rx', false);
               prefService.set('log_bt_rx_log_uri', log_uri);
             }
             setState(() {
               log_bt_rx_log_uri = Uri.decodeFull(log_uri);
             });
-          }
+          }*/
         }
       }, onError: (dynamic error) {
-        developer.log('Received error: ${error.message}');
+        dlog('Received error: ${error.message}');
       });
     }
   }
@@ -368,9 +364,12 @@ class SettingsScreenState extends State<SettingsScreen> {
                   }),
               //mock_location_timestamp_offset_millis
               PrefCheckbox(
-                  title: Text("Enable Logging $log_bt_rx_log_uri"),
-                  pref: 'log_bt_rx',
-                  onChange: (bool? val) async {
+                title: Text("""Enable location CSV and received payload logging"""),
+                subtitle: Text(
+                    """Saving to ${display_dir(log_dir)}"""
+                ),
+                pref: 'log_bt_rx',
+                /*onChange: (bool? val) async {
                     prefService.set('log_bt_rx',
                         false); //set to false first and await event from java callback to set to true if all perm/folder set pass
                     prefService.set("log_bt_rx_log_uri", "");
@@ -397,12 +396,14 @@ class SettingsScreenState extends State<SettingsScreen> {
                         await toast("WARNING: set_log_uri failed: $e");
                       }
                     }
-                  }),
-              const PrefTitle(title: Text('RTK/NTRIP Server settings')),
-              Text(
-                "Set these if your Bluetooth GNSS device supports RTK,\n(Like Ardusimple U-Blox F9, etc)",
-                style: Theme.of(context).textTheme.bodySmall,
+                  }*/
               ),
+              PrefTitle(
+                  title: Text('RTK/NTRIP Server settings'),
+                  subtitle: Text(
+                    "Set these if your Bluetooth GNSS device supports RTK,\n(Like Ardusimple U-Blox F9, etc)",
+                    style: Theme.of(context).textTheme.bodySmall,
+                  )),
               const PrefCheckbox(
                   title: Text("Disable NTRIP"), pref: 'disable_ntrip'),
               PrefText(
@@ -430,7 +431,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                   valueListenable: setMountpointTs,
                   builder:
                       (BuildContext context, DateTime setTs, Widget? child) {
-                    developer.log("rebld pref live setTs:  $setTs");
+                    dlog("rebld pref live setTs:  $setTs");
                     return PrefText(
                         key: ValueKey(
                             'mountpoint_${setTs.millisecondsSinceEpoch}'),
@@ -490,7 +491,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                                 'ntrip_pass': pass,
                               })) as int? ??
                               -1;
-                          developer.log(
+                          dlog(
                               "get_mountpoint_list req waiting callback ret: $retCode");
                         } catch (e) {
                           setState(() {
@@ -500,7 +501,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                         }
                       });
                     } catch (e) {
-                      developer.log(
+                      dlog(
                           "WARNING: Choose mount-point failed exception: $e");
                       try {
                         setState(() {
@@ -508,7 +509,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                         });
                         await toast("List mount-points failed start: $e");
                       } catch (e) {
-                        developer.log("list mount point failed {e}");
+                        dlog("list mount point failed {e}");
                       }
                     }
                   },
@@ -522,7 +523,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                   valueListenable: setLiveArgsTs,
                   builder:
                       (BuildContext context, DateTime setTs, Widget? child) {
-                    developer.log("rebld pref live setTs:  $setTs");
+                    dlog("rebld pref live setTs:  $setTs");
                     return PrefText(
                         key: ValueKey(
                             'ref_lat_lon_${setTs.millisecondsSinceEpoch}'),

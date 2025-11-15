@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 
 import 'package:bluetooth_gnss/connect.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:pref/pref.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'channels.dart';
 import 'const.dart';
 import 'utils_ui.dart';
 
@@ -35,7 +35,7 @@ class ConnectScreenConnectedState extends State<ConnectScreenConnected> {
 }
 
 List<Widget> connectedRows(BuildContext context) {
-  developer.log("connectingRows build start");
+  dlog("connectingRows build start");
   return <Widget>[
     Card(
       child: Container(
@@ -323,8 +323,12 @@ List<Widget> getStatRows(BuildContext context) {
     ["GGA count", "GN_GGA_count"],
     ["RMC count", "GN_RMC_count"],
     ["Log folder", "logfile_folder"],
-    ["Logfile name", "logfile_name"],
-    ["Logfile size (MB)", "logfile_size_mb"],
+    ["Trace log", "logfile_trace"],
+    ["Trace log size", "logfile_trace_n_bytes"],
+    ["Rx log", "logfile_rx"],
+    ["Rx log size", "logfile_rx_n_bytes"],
+    ["Location log", "logfile_location"],
+    ["Location log size", "logfile_location_n_bytes"],
   ];
   List<Widget> ret = paramRowList(context, m);
   return ret;

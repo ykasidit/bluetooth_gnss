@@ -1,8 +1,8 @@
-import 'dart:developer' as developer;
 
 import 'package:bluetooth_gnss/connect.dart';
 import 'package:flutter/material.dart';
 
+import 'channels.dart';
 import 'connect_screen_connected.dart';
 import 'connect_screen_connecting.dart';
 import 'connect_screen_idle.dart';
@@ -15,7 +15,7 @@ class ConnectScreen extends StatelessWidget {
     return ValueListenableBuilder<ConnectState>(
       valueListenable: connectState,
       builder: (context, state, child) {
-        developer.log("connec_screen rebuild connect_state: $state");
+        dlog("connec_screen rebuild connect_state: $state");
         switch (state) {
           case ConnectState.Loading:
             return const Center(child: CircularProgressIndicator());

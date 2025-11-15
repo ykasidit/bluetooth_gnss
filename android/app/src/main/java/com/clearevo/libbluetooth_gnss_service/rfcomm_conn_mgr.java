@@ -331,7 +331,7 @@ public class rfcomm_conn_mgr implements Closeable {
                                     if (dur_from_last_read > read_max)
                                         read_max = dur_from_last_read;
                                     long read_avg = ts_diff_sum/ts_diff_n;
-                                    Log.d(TAG, "m_conn_state_watcher "+hashCode()+" bs_is n_avail: "+ n_avail+" read_buf.length: "+read_buf.length +" n_to_read: "+n_to_read+" read_max: "+read_max+" ms read_avg: "+read_avg+" ms");
+                                    //Log.d(TAG, "m_conn_state_watcher "+hashCode()+" bs_is n_avail: "+ n_avail+" n_read: "+nread+" read_buf.length: "+read_buf.length +" n_to_read: "+n_to_read+" read_max: "+read_max+" ms read_avg: "+read_avg+" ms");
                                 }
                                 last_read_ts = now;
                                 if (nread <= 0) {

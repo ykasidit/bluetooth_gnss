@@ -1,8 +1,8 @@
-import 'dart:developer' as developer;
 
 import 'package:bluetooth_gnss/connect.dart';
 import 'package:flutter/material.dart';
 
+import 'channels.dart';
 import 'utils_ui.dart';
 
 class ConnectScreenIdle extends StatefulWidget {
@@ -31,7 +31,7 @@ class ConnectScreenIdleState extends State<ConnectScreenIdle> {
 }
 
 List<Widget> idleRows(BuildContext context) {
-  developer.log("idleRows build start");
+  dlog("idleRows build start");
   List<Widget> rows = <Widget>[
     Text(
       'Pre-connect checklist',
@@ -79,6 +79,6 @@ List<Widget> idleRows(BuildContext context) {
     ))
   ];
   rows.addAll(bottomWidgets);
-  developer.log("notConnectedRows build done");
+  dlog("notConnectedRows build done");
   return rows;
 }

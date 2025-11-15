@@ -1,11 +1,10 @@
-import 'dart:developer' as developer;
-
 import 'package:bluetooth_gnss/main.dart';
 import 'package:bluetooth_gnss/utils_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import 'channels.dart';
 import 'connect.dart';
 import 'const.dart';
 
@@ -28,7 +27,7 @@ class MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
-    developer.log("mapscreen dispose");
+    dlog("mapscreen dispose");
     super.dispose();
   }
 
@@ -61,7 +60,7 @@ class MapScreenState extends State<MapScreen> {
                 "Offset: Lat: ${lat_offset_m.toStringAsFixed(2)}m Lon: ${lon_offset_m.toStringAsFixed(2)}m");
           }
         } catch (e, tr) {
-          developer.log("set new lat/lon offset exception: $e $tr");
+          dlog("set new lat/lon offset exception: $e $tr");
         }
       },
       onPositionChanged: (position, hasGesture) {
@@ -98,7 +97,7 @@ class MapScreenState extends State<MapScreen> {
                     }
                   });
                 }
-                /*developer.log(
+                /*dlog(
                     "building new MarkerLayer for externalPos: $externalPos");*/
                 return MarkerLayer(
                   markers: [
@@ -117,7 +116,7 @@ class MapScreenState extends State<MapScreen> {
             ValueListenableBuilder<LatLng?>(
               valueListenable: mapExternalDevPosOri,
               builder: (context, externalPos, _) {
-                /*developer.log(
+                /*dlog(
                     "building new MarkerLayer for mapExternalDevPosOri: $mapExternalDevPosOri");*/
                 return MarkerLayer(
                   markers: [

@@ -1,8 +1,7 @@
-import 'dart:developer' as developer;
-
 import 'package:bluetooth_gnss/connect.dart';
 import 'package:flutter/material.dart';
 
+import 'channels.dart';
 import 'utils_ui.dart';
 
 class ConnectScreenConnecting extends StatefulWidget {
@@ -31,7 +30,7 @@ class ConnectScreenConnectingState extends State<ConnectScreenConnecting> {
 }
 
 List<Widget> connectingRows(BuildContext context) {
-  developer.log("connectingRows build start");
+  dlog("connectingRows build start");
   return <Widget>[
     const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       iconLoading,
