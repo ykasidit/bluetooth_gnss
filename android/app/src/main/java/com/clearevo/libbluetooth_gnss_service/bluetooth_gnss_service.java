@@ -55,10 +55,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -1224,6 +1226,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String GPS_PROVIDER = "gps";
     public static final float DEFAULT_MOCK_ACCURACY = 5.0f;
     String[] providers_to_mock = new String[] {FUSED_PROVIDER, GPS_PROVIDER};
+    Set<String> registered_test_providers = new HashSet<>();
 
     private void setMock(double latitude, double longitude, float accuracy, float vaccuracy, double altitude, double bearing_degrees, float speed_m_s, boolean alt_is_elipsoidal, int n_sats, double hdop, String talker, long gnss_ts, HashMap<String, Object> out_object) throws Exception
     {
@@ -1334,6 +1337,9 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 newLocation.setElapsedRealtimeNanos(system_ts_nanos);
 
                 if (!TextUtils.equals(provider, FUSED_PROVIDER)) {
+                    if (!registered_test_providers.contains(provider)) {
+                        continue;
+                    }
                     locationManager.setTestProviderLocation(provider, newLocation);
                     Log.d(TAG, "setmock mock done for provider: "+provider);
                 } else  {
@@ -1477,6 +1483,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                     }
                 }
 
+                registered_test_providers.clear();
                 g_mock_location_active = false;
                 m_handler.post(
                         new Runnable() {
@@ -1528,19 +1535,36 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                         }
                         //Log.d(TAG, "activate_mock_location() provider: " + provider+" START");
                         LocationProvider providerObj = locationManager.getProvider(provider);
-                        locationManager.addTestProvider(
-                                provider,
-                                providerObj.requiresNetwork(),
-                                providerObj.requiresSatellite(),
-                                providerObj.requiresCell(),
-                                providerObj.hasMonetaryCost(),
-                                providerObj.supportsAltitude(),
-                                providerObj.supportsSpeed(),
-                                providerObj.supportsBearing(),
-                                providerObj.getPowerRequirement(),
-                                providerObj.getAccuracy()
-                        );
+                        if (providerObj != null) {
+                            locationManager.addTestProvider(
+                                    provider,
+                                    providerObj.requiresNetwork(),
+                                    providerObj.requiresSatellite(),
+                                    providerObj.requiresCell(),
+                                    providerObj.hasMonetaryCost(),
+                                    providerObj.supportsAltitude(),
+                                    providerObj.supportsSpeed(),
+                                    providerObj.supportsBearing(),
+                                    providerObj.getPowerRequirement(),
+                                    providerObj.getAccuracy()
+                            );
+                        } else {
+                            log("activate_mock_location: getProvider(" + provider + ") returned null, using defaults");
+                            locationManager.addTestProvider(
+                                    provider,
+                                    false,  // requiresNetwork
+                                    true,   // requiresSatellite
+                                    false,  // requiresCell
+                                    false,  // hasMonetaryCost
+                                    true,   // supportsAltitude
+                                    true,   // supportsSpeed
+                                    true,   // supportsBearing
+                                    android.location.Criteria.POWER_LOW,
+                                    android.location.Criteria.ACCURACY_FINE
+                            );
+                        }
                         locationManager.setTestProviderEnabled(provider, true);
+                        registered_test_providers.add(provider);
                         //Log.d(TAG, "activate_mock_location() provider: " + provider+" SUCCESS");
                     } catch (Throwable tr) {
                         //Log.d(TAG, "activate_mock_location() provider: " + provider+" FAILED exception: "+Log.getStackTraceString(tr));
