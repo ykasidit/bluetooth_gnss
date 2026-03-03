@@ -127,13 +127,15 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
 
     if nmea_str.starts_with(TALKER_PUBX_NMEA_PREFIX) {
 	println!("got pubx");
+	ret.insert("name".to_string(), Value::from("PUBX"));
+	ret.insert("nmea".to_string(), Value::from(nmea_str));
 	let parts: Vec<&str> = nmea_str.split(',').collect();
 	if parts.len() > 1 {
 	    let p1 = parts.get(1).unwrap();
 	    if p1.to_string() == "00" {
 		let emsg = "pubx position parse error: {e}";
 		for (k, v) in PUBX_LOCATION_PARAMS.iter() {
-		    
+
 		    put_param(params, TALKER_UBX.to_string(), v.clone(), Value::from(parts.get(*k).ok_or(emsg).map_err(|e| {anyhow!(emsg)})?.to_string()));
 		}
 	    }
