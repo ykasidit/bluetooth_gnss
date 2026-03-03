@@ -537,7 +537,6 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public boolean close() {
         closing = true;
         log(TAG, "close()0");
-        m_config_tx_thread = null;
         deactivate_mock_location();
 
 
@@ -631,59 +630,22 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 }
         );
 
-        //try send some initial ubx queries to device:
+        //send ubx queries to device to enable pubx accuracies and poll device info:
         if (m_ubx_mode && m_ubx_send_enable_extra_used_packets) {
-            /*final String mtkDefaultEnableAllNmea =
-                    "$PMTK314,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1*1C\r\n";*/
-            final String mtkDefault = "$PMTK314,-1*04\r\n";
-            String[] enableAllUbx = new String[] {
-                    "$PUBX,40,GGA,0,1,0,0,0,0*5B\r\n",
-                    "$PUBX,40,GSA,0,1,0,0,0,0*4E\r\n",
-                    "$PUBX,40,GSV,0,1,0,0,0,0*59\r\n",
-                    "$PUBX,40,RMC,0,1,0,0,0,0*46\r\n",
-                    "$PUBX,40,VTG,0,1,0,0,0,0*5E\r\n",
-                    "$PUBX,40,ZDA,0,1,0,0,0,0*44\r\n"
-            };
-
-
-            m_config_tx_thread = new Thread() {
+            new Thread() {
                 public void run() {
                     try {
-
-                        Thread.sleep(3_000); // let parsers and ui settle down before send cfg
-
-                        if (m_config_tx_thread != this)
-                            return;
-                        g_rfcomm_mgr.add_send_buffer(mtkDefault.getBytes(StandardCharsets.US_ASCII));
-                        Thread.sleep(1000); // brief gap for module to process
-                        if (m_config_tx_thread != this)
-                            return;
-                        for (String cmd : enableAllUbx) {
-                            g_rfcomm_mgr.add_send_buffer(cmd.getBytes(StandardCharsets.US_ASCII));
-                            Thread.sleep(1000); // brief gap for module to process
-                        }
-                        if (m_config_tx_thread != this)
-                            return;
                         g_rfcomm_mgr.add_send_buffer(fromHexString("B5 62 06 01 03 00 F1 00 01 FC 13"));  //enable pubx config data - for pubx accuracies
-                        Thread.sleep(1000); // brief gap for module to process
-                        if (m_config_tx_thread != this)
-                            return;
                         g_rfcomm_mgr.add_send_buffer(fromHexString("B5 62 0A 04 00 00 0E 34"));  //poll ubx-mon-ver for hardware/firmware info of the receiver
-                        Thread.sleep(1000); // brief gap for module to process
-                        if (m_config_tx_thread != this)
-                            return;
                         g_rfcomm_mgr.add_send_buffer(fromHexString("B5 62 0A 28 00 00 32 A0"));  //poll ubx-mon-gnss default system-settings
-                        Thread.sleep(1000); // brief gap for module to process
                     } catch (Exception e) {
                         log(TAG, "m_ubx_send_enable_extra_used_packets exception: "+ getStackTraceString(e));
                     }
                 }
-            };
-            //dont mess with user cfg - m_config_tx_thread.start();
+            }.start();
         }
     }
 
-    Thread m_config_tx_thread;
 
 
 

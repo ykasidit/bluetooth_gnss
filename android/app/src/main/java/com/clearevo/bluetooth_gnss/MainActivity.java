@@ -735,28 +735,23 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
 
     @SuppressLint("MissingPermission")
     public static HashMap<String, String> get_bd_map(Handler handler, Context context, Activity activity) {
-        Log.d(TAG, "get_bd_map() start");
         HashMap<String, String> ret = new HashMap<String, String>();
         try {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             // Check if Bluetooth is enabled
             if (!adapter.isEnabled()) {
-                // Prompt user to enable Bluetooth (not shown here)
-                Log.d(TAG, "get_bd_map() Bluetooth is not enabled");
                 return ret;
             }
             if (adapter != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
                             != PackageManager.PERMISSION_GRANTED) {
-                        Log.d(TAG, "get_bd_map() perm not granted, requesting bluetooth_connect");
                         ActivityCompat.requestPermissions(activity,
                                 new String[]{Manifest.permission.BLUETOOTH_CONNECT}, 2);
                         return ret;
                     }
                 }
                 Set<BluetoothDevice> bonded_devs = adapter.getBondedDevices();
-                Log.d(TAG, "get_bd_map() adapter bonded dev len: "+bonded_devs.size());
                 for (BluetoothDevice bonded_dev : bonded_devs) {
                     String bname = bonded_dev.getName();
                     String bdaddr = bonded_dev.getAddress();
@@ -766,7 +761,6 @@ D/btgnss_mainactvty(15208): 	at com.clearevo.bluetooth_gnss.MainActivity$1.handl
                         bname = bdaddr;
                     ret.put(bdaddr, bname);
                 }
-                Log.d(TAG, "get_bd_map() bdmap ret len: "+ret.size());
             }
         } catch (Exception e) {
             Log.d(TAG, "CRITICAL WARNING: get_bd_map exception: "+Log.getStackTraceString(e));
