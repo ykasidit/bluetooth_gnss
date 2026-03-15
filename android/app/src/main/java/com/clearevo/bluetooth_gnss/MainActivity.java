@@ -15,6 +15,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -368,6 +369,79 @@ public static final String APPLICATION_ID = "com.clearevo.bluetooth_gnss";
                 );
 
         create();
+
+        // Handle Tasker/external intent if launched with bluetooth.CONNECT, bluetooth.DISCONNECT, or tasker.MOCK
+        handleExternalIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleExternalIntent(intent);
+    }
+
+    private void handleExternalIntent(Intent intent) {
+        if (intent == null) return;
+        String action = intent.getAction();
+        if (action == null) return;
+
+        if ("bluetooth.CONNECT".equals(action) || "tasker.MOCK".equals(action)) {
+            Log.d(TAG, "handleExternalIntent: action=" + action);
+            try {
+                final HashMap<String, Object> connectArgs = Util.load_last_connect_args(getApplicationContext());
+
+                // Apply config overrides from intent extras (for bluetooth.CONNECT)
+                if ("bluetooth.CONNECT".equals(action)) {
+                    final Bundle extras = intent.getExtras();
+                    if (extras != null) {
+                        final String configStr = extras.getString("config");
+                        if (configStr != null && !configStr.isEmpty()) {
+                            try {
+                                final org.json.JSONObject overrides = new org.json.JSONObject(configStr);
+                                ArrayList<String> all_args = new ArrayList<String>();
+                                all_args.addAll(Arrays.asList(bluetooth_gnss_service.BT_CONNECT_ARGS));
+                                all_args.addAll(Arrays.asList(bluetooth_gnss_service.BT_MOCK_ARGS));
+                                all_args.addAll(Arrays.asList(bluetooth_gnss_service.NTRIP_CONNECT_ARGS));
+                                for (String pk : all_args) {
+                                    final String value = overrides.optString(pk, null);
+                                    if (value != null) connectArgs.put(pk, value);
+                                }
+                            } catch (Exception e) {
+                                Log.d(TAG, "handleExternalIntent config override exception: " + Log.getStackTraceString(e));
+                            }
+                        }
+                    }
+                }
+
+                final Context context = getApplicationContext();
+                new Thread() {
+                    public void run() {
+                        try {
+                            Util.connect(context, connectArgs);
+                        } catch (Throwable tr) {
+                            Log.d(TAG, "handleExternalIntent connect exception: " + Log.getStackTraceString(tr));
+                        }
+                    }
+                }.start();
+            } catch (Exception e) {
+                Log.d(TAG, "handleExternalIntent exception: " + Log.getStackTraceString(e));
+            }
+            // Clear the action so it doesn't re-trigger on config changes
+            intent.setAction(null);
+        } else if ("bluetooth.DISCONNECT".equals(action)) {
+            Log.d(TAG, "handleExternalIntent: disconnect");
+            try {
+                if (m_service != null && mBound) {
+                    try { m_service.stop_auto_reconnect_thread(); } catch (Throwable tr) {}
+                    try { m_service.close(); } catch (Throwable tr) {}
+                }
+                Intent serviceIntent = new Intent(getApplicationContext(), bluetooth_gnss_service.class);
+                stopService(serviceIntent);
+            } catch (Exception e) {
+                Log.d(TAG, "handleExternalIntent disconnect exception: " + Log.getStackTraceString(e));
+            }
+            intent.setAction(null);
+        }
     }
 
 

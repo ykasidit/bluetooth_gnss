@@ -62,15 +62,16 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="bluetooth.CONNECT" />
+                <action android:name="bluetooth.DISCONNECT" />
+                <action android:name="tasker.MOCK" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <receiver android:name=".StartConnectionReceiver" android:exported="true" >
             <intent-filter>
                 <action android:name="bluetooth.CONNECT" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
             </intent-filter>
         </receiver>
         <receiver android:name=".Autostart" android:enabled="true" android:exported="true">

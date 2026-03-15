@@ -85,18 +85,24 @@ Regen icons
 
 Initiate connection using external intent
 -----------------------------------------
-I'm using [Tasker](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) to send the intent, but other methods are possible
+I'm using [Tasker](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm) to send the intent, but other methods are possible.
+
+**Important:** You must have connected at least once from the app before using Tasker intents, so that the connection parameters are saved.
 
 ### Configure the task
 On the `TASKS` tab, create a new task (e.g. _Connect GPS_) and add the action _Send Intent_. It is configured as follows:
 * Action: `bluetooth.CONNECT`
 * Cat: `Default`
-* Mime Type: `text/plain`
+* Mime Type: _&lt;empty&gt;_
 * Data: _&lt;empty&gt;_
 * Extra: _&lt;see json string below&gt;_
 * Package: `com.clearevo.bluetooth_gnss`
-* Class: _&lt;empty&gt;_
-* Target: `Broadcast Receiver`
+* Class: `com.clearevo.bluetooth_gnss.MainActivity`
+* Target: `Activity`
+
+**Note for Android 12+ users:** You **must** use Target `Activity` (not `Broadcast Receiver`). On Android 12+, starting foreground services from broadcast receivers is restricted. Sending the intent to the Activity works reliably on all Android versions. The app window will briefly appear when the intent is received.
+
+To disconnect via Tasker, use the same settings but with Action: `bluetooth.DISCONNECT` (no Extra needed).
 
 **json string in Extra field**
 
