@@ -104,8 +104,28 @@ Test coverage is minimal — `test/widget_test.dart` and `test/some_test.dart` e
 - Analysis uses `flutter_lints` with `strict-casts: true` and `strict-raw-types: true`
 - Snake_case identifiers are allowed (non_constant_identifier_names and constant_identifier_names disabled)
 - Java code uses snake_case for class names (e.g., `bluetooth_gnss_service`, `rfcomm_conn_mgr`)
-- Minification is disabled in release builds (prevents runtime crashes)
+- Minification is disabled in release builds (prevents runtime crashes with Rust/JNI)
 - Target ABI: arm64-v8a only
+- Android Gradle lint: `abortOnError = true`, `warningsAsErrors = true`
+
+### Tasker/External Intent Support
+
+External apps (Tasker, Automate, etc.) can trigger connect/disconnect via intents. On Android 12+ (API 31+), intents must target the **Activity** (not Broadcast Receiver) because foreground service starts from broadcast receivers are restricted.
+
+- **Intent actions**: `bluetooth.CONNECT`, `bluetooth.DISCONNECT`, `tasker.MOCK`
+- **MainActivity** handles intents via `onNewIntent()` (singleTop) and `configureFlutterEngine()` (fresh launch)
+- **BroadcastReceivers** (`StartConnectionReceiver`, `Autostart`) still exist for backward compatibility — on Android 12+ they forward to MainActivity
+- **BOOT_COMPLETED** is exempt from the restriction and starts the service directly via `Autostart`
+- Connection parameters are loaded from `last_connect_dev.json` (saved by `Util.save_connect_args()` on each connect from the app)
+- `bluetooth.CONNECT` supports a `config` extra with JSON overrides for keys in `BT_CONNECT_ARGS`, `BT_MOCK_ARGS`, `NTRIP_CONNECT_ARGS`
+
+### Mock Location Providers
+
+Uses microg's `play-services-location` (`org.microg.gms:play-services-location`) — not Google Play Services. Sets mock location on both `"fused"` and `"gps"` providers.
+
+## Git Workflow
+
+- Use `git pull` and `git push` — **never rebase**. Exact commit history and line-by-line authorship must be preserved.
 
 ## Key Build Notes
 
