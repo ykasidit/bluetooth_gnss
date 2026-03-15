@@ -4,9 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Bluetooth GNSS is an Android app (Flutter + Rust + Java) that connects to external Bluetooth GPS/GNSS receivers and provides location data to Android via mock location providers. Published on Google Play as [Bluetooth GNSS](https://play.google.com/store/apps/details?id=com.clearevo.bluetooth_gnss). Licensed under GPL v2.
+This repo builds two Android apps from one codebase using Flutter flavors:
+- **Bluetooth GNSS** — connects to external Bluetooth GPS/GNSS receivers and provides location data to Android via mock location providers. Published on [Google Play](https://play.google.com/store/apps/details?id=com.clearevo.bluetooth_gnss). Entry point: `lib/main.dart`
+- **BatRay** — (in development). Entry point: `lib/main_batray.dart`
+
+Both share the same Flutter + Rust + Java three-language stack and `libbluetooth_gnss_service`. Licensed under GPL v2.
 
 ## Build Commands
+
+The project uses **Flutter flavors** to build two apps from one codebase:
+- **btgnss** — Bluetooth GNSS (applicationId: `com.clearevo.bluetooth_gnss`)
+- **batray** — BatRay (applicationId: `com.clearevo.batray`)
 
 ```bash
 # Install dependencies
@@ -15,14 +23,21 @@ flutter pub get
 # Analyze (strict mode: --fatal-warnings)
 flutter analyze --fatal-warnings
 
-# Build release APK
-flutter build apk
+# Build Bluetooth GNSS (btgnss flavor)
+flutter build apk --flavor btgnss -t lib/main.dart
+./build.sh                        # full release: analyze + clean + build + copy APK
 
-# Full release build (analyze + clean + build + copy APK)
-./build.sh
+# Build BatRay (batray flavor)
+flutter build apk --flavor batray -t lib/main_batray.dart
+./build_batray.sh                 # full release: analyze + clean + build + copy APK
 
-# Debug run on connected device
-flutter run
+# Debug run
+flutter run --flavor btgnss -t lib/main.dart
+flutter run --flavor batray -t lib/main_batray.dart
+
+# Release build + push
+./build_and_push_release.sh       # btgnss
+./build_and_push_release_batray.sh  # batray
 
 # Regenerate Rust FFI bindings (after modifying rust code)
 flutter_rust_bridge_codegen generate

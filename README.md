@@ -1,9 +1,10 @@
-Bluetooth GNSS
---------------
+Bluetooth GNSS / BatRay
+-----------------------
 
-Connect your Android phone to external Bluetooth GPS, GLONASS, Galileo and BeiDou receivers and use the received location in your android phone via the mock location provider.
+This repo builds two Android apps from one codebase using Flutter flavors:
 
-Official app is available on Google Play as [Bluetooth GNSS](https://play.google.com/store/apps/details?id=com.clearevo.bluetooth_gnss&hl=en&gl=US).
+- **Bluetooth GNSS** — Connect your Android phone to external Bluetooth GPS, GLONASS, Galileo and BeiDou receivers and use the received location via the mock location provider. Available on Google Play as [Bluetooth GNSS](https://play.google.com/store/apps/details?id=com.clearevo.bluetooth_gnss&hl=en&gl=US).
+- **BatRay** — (in development)
 
 This project is maintained in open spirit and evolves gradually as time and energy allow outside my main work.
 If it contributes to your organization’s research or company’s products, you’re welcome to [sponsor or support its development via GitHub Sponsors](https://github.com/sponsors/ykasidit).
@@ -62,13 +63,24 @@ keyPassword=**********
 `adb devices`
 
 * Try build and run the app in debug mode:
-`flutter run`
+```
+flutter run --flavor btgnss -t lib/main.dart          # Bluetooth GNSS
+flutter run --flavor batray -t lib/main_batray.dart    # BatRay
+```
 If all went well, you would see the app now run in your connected phone.
 
 * Try build a release android installer (apk) file:
-`flutter build apk`
-If all went well, it would create the apk file in the folder:
-`build/app/outputs/flutter-apk/app-release.apk`
+```
+flutter build apk --flavor btgnss -t lib/main.dart          # Bluetooth GNSS
+flutter build apk --flavor batray -t lib/main_batray.dart    # BatRay
+```
+Or use the build scripts:
+```
+./build.sh                          # Bluetooth GNSS
+./build_batray.sh                   # BatRay
+./build_and_push_release.sh         # Bluetooth GNSS build + push
+./build_and_push_release_batray.sh  # BatRay build + push
+```
 
 * Develop in Android studio:
   - Open android studio, and choose 'Projects' > 'Open' to this folder (or File > Open... menu) and you can edit the source code then run 'main.dart' from there. This is suitable for editing the dart files in the lib folder.
