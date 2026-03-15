@@ -82,14 +82,15 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
-            minifyEnabled false  //required otherwise built release apk would crash on app entry
-            shrinkResources false //required for minifyEnabled false above
-            }
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
         debug {
             signingConfig signingConfigs.release
-            minifyEnabled false  //required otherwise built release apk would crash on app entry
-            shrinkResources false //required for minifyEnabled false above
-            }
+            minifyEnabled false
+            shrinkResources false
+        }
     }
 
     lint {
@@ -109,11 +110,9 @@ flutter {
 }
 
 dependencies {
-    implementation "androidx.documentfile:documentfile:1.0.1"
     implementation 'com.google.code.gson:gson:2.11.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation group: 'net.sf.marineapi', name: 'marineapi', version: '0.11.0'
     implementation 'org.microg.gms:play-services-location:0.3.6.244735'
 }
