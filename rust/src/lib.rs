@@ -5,6 +5,9 @@ mod qstarz_parser;
 mod gnss_parser;
 mod nmea_parser;
 mod utils;
+mod protocol;
+mod ubx_parser;
+mod unified_parser;
 
 extern crate jni;
 
@@ -13,8 +16,8 @@ use lazy_static::lazy_static;
 use serde_json::{json, Value};
 use std::sync::Mutex;
 use nmea::Nmea;
-use crate::qstarz_parser::parse_qstarz_pkt;
-use crate::gnss_parser::queue_and_parse;
+use crate::protocol::ProtocolHint;
+use crate::unified_parser::{unified_feed_and_parse, clear_qstarz_ble_buffer};
 use jni::JNIEnv;
 use jni::objects::{JClass};
 use jni::sys::{jbyteArray, jint, jstring};
@@ -26,32 +29,17 @@ lazy_static! {
 }
 
 #[no_mangle]
-pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_parse(
+pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_feed_1bytes(
     env: JNIEnv,
     _class: JClass,
     byte_array: jbyteArray,
-    nread: jint
+    nread: jint,
+    protocol_hint: jint,
 ) -> jstring {
     let byte_vec: Vec<u8> = env.convert_byte_array(byte_array).unwrap();
-    
-
-    //////////////
-    let mut param_state = OUTPUT_STATE_PARAMS_MAP.lock().unwrap();
-    let mut nmea_parser_state_vec = NMEA_PARSER.lock().unwrap();
-    let nmea_parser_state = nmea_parser_state_vec.first_mut().unwrap();
-    let read_buf = &byte_vec[0..nread as usize];
-    let parsed_result = queue_and_parse(&mut param_state, nmea_parser_state, &read_buf);
-    let json_str = 
-    match parsed_result {
-        Ok(parsed_objects) => {
-            serde_json::to_string(&parsed_objects).unwrap()
-        }
-        Err(e) => {
-            serde_json::to_string(&json!({"error": e.to_string()})).unwrap()
-        }
-    };
-
-    //////////////////
+    let data = &byte_vec[0..nread as usize];
+    let hint = ProtocolHint::from_i32(protocol_hint).unwrap_or(ProtocolHint::AutoDetectStream);
+    let json_str = unified_feed_and_parse(data, hint);
     let output = env.new_string(json_str).unwrap();
     output.into_inner()
 }
@@ -65,23 +53,5 @@ pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_res
     p.clear();
     p.push(Nmea::default());
     OUTPUT_STATE_PARAMS_MAP.lock().unwrap().clear();
-}
-
-
-// This is the Rust function exposed to Java using JNI.
-#[no_mangle]
-pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_parse_1qstarz_1pkt(
-    env: JNIEnv,
-    _class: JClass,
-    byte_array: jbyteArray
-) -> jstring {
-    // Step 1: Convert the incoming Java byte array to Rust Vec<u8>
-    let byte_vec: Vec<u8> = env.convert_byte_array(byte_array).unwrap();
-
-    // Step 2: Perform your processing (for demonstration, we'll convert the byte array to a String)
-    let processed_str = parse_qstarz_pkt(byte_vec);
-
-    // Step 3: Return the processed string back to Java as a jstring
-    let output = env.new_string(processed_str).unwrap();
-    output.into_inner()
+    clear_qstarz_ble_buffer();
 }

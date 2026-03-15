@@ -6,8 +6,7 @@ public class NativeParser {
         System.loadLibrary("rust_lib_bluetooth_gnss");
     }
 
-    public static native String parse(byte[] byteArray, int nread);
     public static native void reset();
 
-    public static native String parse_qstarz(byte[] byteArray);
+    public static native String feed_bytes(byte[] byteArray, int nread, int protocolHint);
 }

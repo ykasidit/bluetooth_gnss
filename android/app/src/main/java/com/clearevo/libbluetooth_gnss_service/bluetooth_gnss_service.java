@@ -78,6 +78,7 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String BLE_GAP_SCAN_MODE = "ble_gap_scan_mode";
     public static final UUID nordic_uart_service_uuid = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
     public static final UUID qstarz_chrc_tx_uuid = UUID.fromString("6E400004-B5A3-F393-E0A9-E50E24DCCA9E");
+    public static final UUID nus_chrc_tx_uuid = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
     String[] SATS_USED_KEYS = new String[]{"GP_n_sats_used", "GL_n_sats_used", "GA_n_sats_used", "GB_n_sats_used", "GQ_n_sats_used"};
 
     rfcomm_conn_mgr g_rfcomm_mgr = null;
@@ -142,7 +143,8 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
     public static final String[] NTRIP_CONNECT_ARGS = {NTRIP_ARG_HOST, NTRIP_ARG_PORT, NTRIP_ARG_MOUNTPOINT, NTRIP_ARG_USER, NTRIP_ARG_PASS, NTRIP_ARG_DISABLE};
     String m_log_bt_rx_log_uri = "";
     boolean m_disable_ntrip = false;
-    boolean m_ble_qstarz_mode = false;
+    boolean m_ble_qstarz_mode = false; // kept for backward compat, now also true for BLE NUS NMEA devices
+    boolean m_ble_mode = false;
     OutputStream m_log_bt_rx_fos = null;
     OutputStream m_log_bt_rx_csv_fos = null;
     long log_bt_rx_bytes_written = 0;
@@ -441,7 +443,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
                 } else {
                     //ok
                 }
-                g_rfcomm_mgr = new rfcomm_conn_mgr(dev, secure, this, m_ble_qstarz_mode, this);
+                // Use BLE mode for QSTARZ or any BLE-type device
+                m_ble_mode = m_ble_qstarz_mode || dev.getType() == BluetoothDevice.DEVICE_TYPE_LE || dev.getType() == BluetoothDevice.DEVICE_TYPE_DUAL;
+                log(TAG, "m_ble_mode:" + m_ble_mode + " dev.getType():" + dev.getType());
+                g_rfcomm_mgr = new rfcomm_conn_mgr(dev, secure, this, m_ble_mode, this);
                 start_connecting_thread(g_rfcomm_mgr);
             }
             ret = 0;
@@ -739,7 +744,10 @@ public class bluetooth_gnss_service extends Service implements rfcomm_conn_callb
 
         if (object == null)
             return;
-        if (m_ble_qstarz_mode) {
+        // Dispatch by content: Qstarz objects have "fix_status" but no "type",
+        // NMEA objects have "type": "nmea". This replaces the old m_ble_qstarz_mode flag.
+        boolean is_qstarz_object = object.has("fix_status") && !object.has("type");
+        if (is_qstarz_object) {
             /*
              {
              "fix_status":3,

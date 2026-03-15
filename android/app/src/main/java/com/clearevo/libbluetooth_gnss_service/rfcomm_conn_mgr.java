@@ -1,8 +1,9 @@
 package com.clearevo.libbluetooth_gnss_service;
 
-import static com.clearevo.libbluetooth_gnss_service.NativeParser.parse_qstarz;
+import static com.clearevo.libbluetooth_gnss_service.NativeParser.feed_bytes;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.log;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.nordic_uart_service_uuid;
+import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.nus_chrc_tx_uuid;
 import static com.clearevo.libbluetooth_gnss_service.bluetooth_gnss_service.qstarz_chrc_tx_uuid;
 
 import android.bluetooth.BluetoothAdapter;
@@ -28,7 +29,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -339,7 +339,7 @@ public class rfcomm_conn_mgr implements Closeable {
                                 }
                                 try {
                                     //Log.d(TAG, "call native parser read_buf nread: "+nread);
-                                    String parsed_object_json = NativeParser.parse(read_buf, nread).strip();
+                                    String parsed_object_json = feed_bytes(read_buf, nread, 0).strip();
                                     if (parsed_object_json.isEmpty())
                                         continue;
                                     JSONArray jsonArray = new JSONArray(parsed_object_json);
@@ -569,11 +569,18 @@ public class rfcomm_conn_mgr implements Closeable {
                 BluetoothGattService service = gatt.getService(nordic_uart_service_uuid);
 
                 if (service != null) {
-                    log(TAG, "Nordic/qstarz UART Service discovered");
-                    // Get the TX characteristic
+                    log(TAG, "Nordic UART Service discovered");
+                    // Auto-detect: check for Qstarz characteristic first, then NUS TX
                     BluetoothGattCharacteristic txCharacteristic = service.getCharacteristic(qstarz_chrc_tx_uuid);
                     if (txCharacteristic != null) {
-                        log(TAG, "TX Characteristic found, enabling notifications...");
+                        log(TAG, "Qstarz TX Characteristic found (6E400004), enabling notifications...");
+                    } else {
+                        txCharacteristic = service.getCharacteristic(nus_chrc_tx_uuid);
+                        if (txCharacteristic != null) {
+                            log(TAG, "NUS TX Characteristic found (6E400003), enabling notifications for BLE NMEA...");
+                        }
+                    }
+                    if (txCharacteristic != null) {
                         // Enable notifications on the TX characteristic
                         enableTxNotifications(gatt, txCharacteristic);
                         //notify connected
@@ -641,61 +648,41 @@ public class rfcomm_conn_mgr implements Closeable {
             }
         }
 
-        ArrayList<byte[]> last_qstarz_packet_buffers = new ArrayList();
         @Override
         public void onCharacteristicChanged(@NonNull BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
 
-            if (qstarz_chrc_tx_uuid.equals(characteristic.getUuid())) {
-                // Read the data from the TX characteristic
-                byte[] data = characteristic.getValue();
-                if (data == null) {
-                    data = new byte[]{};
-                }
-                try {
-                    bluetooth_gnss_service.curInstance.log_bt_rx(data);
-                } catch (Exception e) {
-                    log(TAG, "chrc data log_bt_rx exception: "+Log.getStackTraceString(e));
-                }
-                //Log.d(TAG, "onCharacteristicChanged data len: " + data.length + " data_hex: "+toHexString(data));
-                last_qstarz_packet_buffers.add(data);
-                while (last_qstarz_packet_buffers.size() > 4) {
-                    last_qstarz_packet_buffers.remove(0);
-                }
-                if (last_qstarz_packet_buffers.size() == 4) {
-                    byte[] first_pkt = last_qstarz_packet_buffers.get(0);
-                    byte[] second_pkt = last_qstarz_packet_buffers.get(1);
-                    byte[] third_pkt = last_qstarz_packet_buffers.get(2);
-                    byte[] fourth_pkt = last_qstarz_packet_buffers.get(3);
-                    if (
-                            first_pkt.length == 20 && (first_pkt[0] == 1 || first_pkt[0] == 2 || first_pkt[0] == 3) /* fix quality is only 1, 2 or 3 */
-                            && (third_pkt.length >= 18 && (third_pkt[16] == 0) && (third_pkt[17] == 0))
-                    ) {
-                        try {
-                            ByteArrayOutputStream pkt = new ByteArrayOutputStream();
-                            pkt.write(first_pkt);
-                            pkt.write(second_pkt);
-                            pkt.write(third_pkt);
-                            if (third_pkt.length == 20 && (third_pkt[18] == 0) && (third_pkt[19] == 0)) {
-                                pkt.write(fourth_pkt);
-                                last_qstarz_packet_buffers.clear();
-                            } else {
-                                last_qstarz_packet_buffers.remove(0);
-                                last_qstarz_packet_buffers.remove(0);
-                                last_qstarz_packet_buffers.remove(0);
-                            }
-                            byte[] pkt_bytes = pkt.toByteArray();
-                            //Log.d(TAG, "got qstarz pkt len: "+pkt.size()+" pkt hex: "+toHexString(pkt_bytes));
-                            String ret_json = parse_qstarz(pkt_bytes);
-                            //Log.d(TAG, "got parse_qstarz_pkt ret: "+ret_json);
-                            JSONObject object = new JSONObject(ret_json);
-                            m_rfcomm_to_tcp_callbacks.on_read_object(object);
+            UUID chrcUuid = characteristic.getUuid();
+            byte[] data = characteristic.getValue();
+            if (data == null) {
+                data = new byte[]{};
+            }
+            try {
+                bluetooth_gnss_service.curInstance.log_bt_rx(data);
+            } catch (Exception e) {
+                log(TAG, "chrc data log_bt_rx exception: "+Log.getStackTraceString(e));
+            }
 
-                        } catch (Exception e) {
-                            Log.d(TAG, "WARNING: assemble qstarz packet exception: "+Log.getStackTraceString(e));
-                        }
-                    }
+            int protocolHint;
+            if (qstarz_chrc_tx_uuid.equals(chrcUuid)) {
+                protocolHint = 1; // QstarzBleChunk
+            } else if (nus_chrc_tx_uuid.equals(chrcUuid)) {
+                protocolHint = 0; // AutoDetectStream (NMEA)
+            } else {
+                return; // unknown characteristic, ignore
+            }
+
+            try {
+                String parsed_json = feed_bytes(data, data.length, protocolHint).strip();
+                if (parsed_json.isEmpty())
+                    return;
+                JSONArray jsonArray = new JSONArray(parsed_json);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    m_rfcomm_to_tcp_callbacks.on_read_object(jsonObject);
                 }
+            } catch (Exception e) {
+                Log.d(TAG, "WARNING: feed_bytes BLE parse exception: "+Log.getStackTraceString(e));
             }
         }
     };
