@@ -1,0 +1,9 @@
+{
+  "name": "rust_lib_bluetooth_gnss",
+  "version": "0.1.0",
+  "files": [
+    "rust_lib_bluetooth_gnss_bg.wasm",
+    "rust_lib_bluetooth_gnss.js"
+  ],
+  "browser": "rust_lib_bluetooth_gnss.js"
+}

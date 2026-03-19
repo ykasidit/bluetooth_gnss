@@ -9,6 +9,7 @@ mod protocol;
 mod ubx_parser;
 mod parser;
 
+#[cfg(target_os = "android")]
 extern crate jni;
 
 use std::collections::{HashMap, VecDeque};
@@ -17,9 +18,6 @@ use std::sync::{LazyLock, Mutex};
 use nmea::Nmea;
 use crate::protocol::ProtocolHint;
 use crate::parser::feed_and_parse;
-use jni::JNIEnv;
-use jni::objects::{JClass};
-use jni::sys::{jbyteArray, jint, jstring};
 
 pub struct State {
     pub buffer: VecDeque<u8>,
@@ -39,35 +37,46 @@ impl State {
     }
 
     pub fn reset(&mut self) {
+        self.buffer.clear();
         self.nmea = Nmea::default();
         self.params.clear();
         self.qstarz_buf.clear();
     }
 }
 
-static CONTEXT: LazyLock<Mutex<State>> = LazyLock::new(|| Mutex::new(State::new()));
+pub static CONTEXT: LazyLock<Mutex<State>> = LazyLock::new(|| Mutex::new(State::new()));
 
-#[no_mangle]
-pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_feed_1bytes(
-    env: JNIEnv,
-    _class: JClass,
-    byte_array: jbyteArray,
-    nread: jint,
-    protocol_hint: jint,
-) -> jstring {
-    let byte_vec: Vec<u8> = env.convert_byte_array(byte_array).unwrap();
-    let data = &byte_vec[0..nread as usize];
-    let hint = ProtocolHint::from_i32(protocol_hint).unwrap_or(ProtocolHint::AutoDetectStream);
-    let mut ctx = CONTEXT.lock().unwrap();
-    let json_str = feed_and_parse(&mut ctx, data, hint);
-    let output = env.new_string(json_str).unwrap();
-    output.into_inner()
-}
+// --- JNI entry points (Android only) ---
 
-#[no_mangle]
-pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_reset(
-    _env: JNIEnv,
-    _class: JClass,
-) {
-    CONTEXT.lock().unwrap().reset();
+#[cfg(target_os = "android")]
+mod jni_api {
+    use jni::JNIEnv;
+    use jni::objects::JClass;
+    use jni::sys::{jbyteArray, jint, jstring};
+    use crate::{CONTEXT, ProtocolHint, feed_and_parse};
+
+    #[no_mangle]
+    pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_feed_1bytes(
+        env: JNIEnv,
+        _class: JClass,
+        byte_array: jbyteArray,
+        nread: jint,
+        protocol_hint: jint,
+    ) -> jstring {
+        let byte_vec: Vec<u8> = env.convert_byte_array(byte_array).unwrap();
+        let data = &byte_vec[0..nread as usize];
+        let hint = ProtocolHint::from_i32(protocol_hint).unwrap_or(ProtocolHint::AutoDetectStream);
+        let mut ctx = CONTEXT.lock().unwrap();
+        let json_str = feed_and_parse(&mut ctx, data, hint);
+        let output = env.new_string(json_str).unwrap();
+        output.into_inner()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_reset(
+        _env: JNIEnv,
+        _class: JClass,
+    ) {
+        CONTEXT.lock().unwrap().reset();
+    }
 }

@@ -8,15 +8,16 @@ pub const SUFFIX_TIMESTAMP:&str = "ts";
 pub const TALKER_NONE:&str = "";
 
 pub fn get_current_time_millis() -> u64 {
-    match (SystemTime::now()
-           .duration_since(UNIX_EPOCH))
+    #[cfg(not(target_arch = "wasm32"))]
     {
-	Ok(ts) => {
-	    ts.as_millis() as u64
-	}
-	Err(_) => {
-	    0
-	}
+        match SystemTime::now().duration_since(UNIX_EPOCH) {
+            Ok(ts) => ts.as_millis() as u64,
+            Err(_) => 0,
+        }
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        0 // SystemTime::now() is not supported on wasm32
     }
 }
 
