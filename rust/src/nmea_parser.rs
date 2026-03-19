@@ -10,7 +10,7 @@ use nmea::{parse_nmea_sentence, parse_str, Nmea, ParseResult, Satellite};
 use crate::utils::inc_param;
 use crate::utils::put_param;
 use crate::utils::TALKER_NONE;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 const TYPE_KEY: &str ="type";
 const TYPE_NMEA: &str = "nmea";
@@ -24,7 +24,7 @@ pub const TALKER_GI: &str = "GI"; // NAVIC
 pub const TALKER_UBX: &str = "UBX";
 pub const TALKER_PUBX_NMEA_PREFIX: &str = "$PUBX";
 
-const PUBX_LOCATION_PARAMS: Lazy<HashMap<usize, String>> = Lazy::new( || {
+static PUBX_LOCATION_PARAMS: LazyLock<HashMap<usize, String>> = LazyLock::new( || {
         let mut map = HashMap::new();
         map.insert(2, "POSITION_time".to_string());
 	map.insert(3, "POSITION_lat".to_string());
@@ -269,6 +269,7 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::VecDeque;
     use crate::gnss_parser::queue_and_parse;
     use nmea::SentenceType;
     use serde_json::json;
@@ -277,6 +278,7 @@ mod tests {
     fn test_nmea_parse_map_state()
     {
 	let nav_st = vec![SentenceType::RMC];
+	let mut input_buffer: VecDeque<u8> = VecDeque::new();
 	let mut params: HashMap<String, Value> = HashMap::new();
 	let mut parser: Nmea = Nmea::create_for_navigation(&nav_st).unwrap();
 	let example_nmea_gga = "$GNGGA,045115.00,0000.000,N,00000.000,E,1,12,0.60,3.0,M,-13.0,M,,*6F\n";
@@ -336,7 +338,7 @@ mod tests {
 	for instr in inputs {
 	    println!("instr0: {instr}");
             let bb = instr.as_bytes();
-            let parsed_pkts = queue_and_parse(&mut params, &mut parser, bb).unwrap();
+            let parsed_pkts = queue_and_parse(&mut input_buffer, &mut params, &mut parser, bb).unwrap();
             println!("parsed_json: {}", serde_json::to_string_pretty(&parsed_pkts).unwrap());
 	}
 	
@@ -382,14 +384,15 @@ mod tests {
     #[test]
     fn test_nmea_pkt_parse()
     {
+	let mut input_buffer: VecDeque<u8> = VecDeque::new();
 	let mut params_state: HashMap<String, Value> = HashMap::new();
 	let mut parser_state: Nmea = Nmea::default();
-	
+
 	//GA-GSV
 	let nmea = "$GAGSV,2,1,07,02,28,068,28,07,04,307,21,13,16,327,29,15,68,339,,0*73\n".to_string();
 	let bb = nmea.as_bytes();
-	queue_and_parse(&mut params_state, &mut parser_state, bb).unwrap();
-	let parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, bb).unwrap();
+	queue_and_parse(&mut input_buffer, &mut params_state, &mut parser_state, bb).unwrap();
+	let parsed_pkts = queue_and_parse(&mut input_buffer, &mut params_state, &mut parser_state, bb).unwrap();
 	println!("parsed_json: {}", serde_json::to_string_pretty(&parsed_pkts).unwrap());
 	assert_eq!(parsed_pkts.len(), 1);
 	assert_eq!(
@@ -425,7 +428,7 @@ mod tests {
 	    "$GNRMC,095520.00,A,2733.35607,S,15302.15703,E,0.042,,240719,,,A,V*0A\n"
 	);
 	let bb = s.as_bytes();
-	let parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, bb).unwrap();
+	let parsed_pkts = queue_and_parse(&mut input_buffer, &mut params_state, &mut parser_state, bb).unwrap();
 	println!("parsed_json: {}", serde_json::to_string_pretty(&parsed_pkts).unwrap());
 	assert_eq!(parsed_pkts.len(), 1);
 	assert_eq!(
@@ -437,13 +440,14 @@ mod tests {
     #[test]
     fn test_talker_gp_badelf_gps_pro_plus()
     {
+	let mut input_buffer: VecDeque<u8> = VecDeque::new();
 	let mut params_state: HashMap<String, Value> = HashMap::new();
 	let mut parser_state: Nmea = Nmea::default();
-	
+
 	let nmea = "$GPRMC,074955.000,A,0641.0037,N,10139.4031,E,0.14,118.40,101223,,,D*60\n".to_string();
 	let bb = nmea.as_bytes();
-	queue_and_parse(&mut params_state, &mut parser_state, bb).unwrap();
-	let parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, bb).unwrap();
+	queue_and_parse(&mut input_buffer, &mut params_state, &mut parser_state, bb).unwrap();
+	let parsed_pkts = queue_and_parse(&mut input_buffer, &mut params_state, &mut parser_state, bb).unwrap();
 	println!("parsed_json: {}", serde_json::to_string_pretty(&parsed_pkts).unwrap());
 	println!("pm: {}", serde_json::to_string_pretty(&params_state).unwrap());
 	assert_eq!(params_state["lat"], 6.683395);
@@ -455,13 +459,13 @@ mod tests {
     #[test]
     fn test_talker_gn_case()
     {
+	let mut input_buffer: VecDeque<u8> = VecDeque::new();
 	let mut params_state: HashMap<String, Value> = HashMap::new();
 	let mut parser_state: Nmea = Nmea::default();
-	
 
-	let mut parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, "$GNGSA,A,3,26,31,10,32,14,16,25,20,18,22,41,,1.34,0.74,1.12*16\n".as_bytes()).unwrap();
-	parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, "$GNGSA,A,3,73,80,70,,,,,,,,,,1.34,0.74,1.12*10\n".as_bytes()).unwrap();
-	parsed_pkts = queue_and_parse(&mut params_state, &mut parser_state, "$GNRMC,020125.00,A,1845.82207,N,09859.94984,E,0.027,,101219,,,F,V*1A\n".as_bytes()).unwrap();
+	let mut parsed_pkts = queue_and_parse(&mut input_buffer, &mut params_state, &mut parser_state, "$GNGSA,A,3,26,31,10,32,14,16,25,20,18,22,41,,1.34,0.74,1.12*16\n".as_bytes()).unwrap();
+	parsed_pkts = queue_and_parse(&mut input_buffer, &mut params_state, &mut parser_state, "$GNGSA,A,3,73,80,70,,,,,,,,,,1.34,0.74,1.12*10\n".as_bytes()).unwrap();
+	parsed_pkts = queue_and_parse(&mut input_buffer, &mut params_state, &mut parser_state, "$GNRMC,020125.00,A,1845.82207,N,09859.94984,E,0.027,,101219,,,F,V*1A\n".as_bytes()).unwrap();
 	println!("parsed_json: {}", serde_json::to_string_pretty(&parsed_pkts).unwrap());
 	println!("pm: {}", serde_json::to_string_pretty(&params_state).unwrap());
 	assert_eq!(params_state["lat"], 18.763701166666667);

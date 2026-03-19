@@ -5,22 +5,21 @@ use std::collections::{HashMap, VecDeque};
 
 use crate::nmea_parser::parse_nmea_pkt;
 use crate::ubx_parser::parse_ubx_pkt;
-use crate::INPUT_BUFFER;
 const EOF_ERROR: &str = "eof";
 
 
 pub fn queue_and_parse(
+    input_buffer: &mut VecDeque<u8>,
     params_state: &mut HashMap<String, Value>,
     nmea_parser_state: &mut Nmea,
     read_buf: &[u8],
 ) -> Result<Vec<Value>> {
-    let mut queue = INPUT_BUFFER.lock().unwrap();
-    queue.extend(read_buf);
+    input_buffer.extend(read_buf);
     println!("read_buf len: {}", read_buf.len());
 
     let mut parsed_objects: Vec<Value> = vec![];
     loop {
-        let val = parse_queue_get_next_object(params_state, nmea_parser_state, &mut queue);
+        let val = parse_queue_get_next_object(params_state, nmea_parser_state, input_buffer);
         match val {
             Ok(obj) => {
                 parsed_objects.push(Value::from(obj));
@@ -395,9 +394,10 @@ mod tests {
         payload[28..32].copy_from_slice(&137500000i32.to_le_bytes());
 
         let frame = make_ubx_frame(0x01, 0x07, &payload);
+        let mut input_buffer: VecDeque<u8> = VecDeque::new();
         let mut params: HashMap<String, Value> = HashMap::new();
         let mut parser = Nmea::default();
-        let result = queue_and_parse(&mut params, &mut parser, &frame).unwrap();
+        let result = queue_and_parse(&mut input_buffer, &mut params, &mut parser, &frame).unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0]["type"], "ubx");
         assert_eq!(result[0]["ubx_type"], "NAV-PVT");

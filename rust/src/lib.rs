@@ -7,26 +7,45 @@ mod nmea_parser;
 mod utils;
 mod protocol;
 mod ubx_parser;
-mod unified_parser;
+mod parser;
 
 extern crate jni;
 
 use std::collections::{HashMap, VecDeque};
-use lazy_static::lazy_static;
 use serde_json::{json, Value};
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 use nmea::Nmea;
 use crate::protocol::ProtocolHint;
-use crate::unified_parser::{unified_feed_and_parse, clear_qstarz_ble_buffer};
+use crate::parser::feed_and_parse;
 use jni::JNIEnv;
 use jni::objects::{JClass};
 use jni::sys::{jbyteArray, jint, jstring};
 
-lazy_static! {
-    static ref INPUT_BUFFER: Mutex<VecDeque<u8>> = Mutex::new(VecDeque::with_capacity(1024));
-    static ref OUTPUT_STATE_PARAMS_MAP: Mutex<HashMap<String, Value>> = Mutex::new(HashMap::new());
-    static ref NMEA_PARSER: Mutex<Vec<Nmea>> = Mutex::new(vec![Nmea::default()]);
+pub struct State {
+    pub buffer: VecDeque<u8>,
+    pub params: HashMap<String, Value>,
+    pub nmea: Nmea,
+    pub qstarz_buf: Vec<Vec<u8>>,
 }
+
+impl State {
+    pub fn new() -> Self {
+        Self {
+            buffer: VecDeque::with_capacity(1024),
+            params: HashMap::new(),
+            nmea: Nmea::default(),
+            qstarz_buf: Vec::new(),
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.nmea = Nmea::default();
+        self.params.clear();
+        self.qstarz_buf.clear();
+    }
+}
+
+static CONTEXT: LazyLock<Mutex<State>> = LazyLock::new(|| Mutex::new(State::new()));
 
 #[no_mangle]
 pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_feed_1bytes(
@@ -39,7 +58,8 @@ pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_fee
     let byte_vec: Vec<u8> = env.convert_byte_array(byte_array).unwrap();
     let data = &byte_vec[0..nread as usize];
     let hint = ProtocolHint::from_i32(protocol_hint).unwrap_or(ProtocolHint::AutoDetectStream);
-    let json_str = unified_feed_and_parse(data, hint);
+    let mut ctx = CONTEXT.lock().unwrap();
+    let json_str = feed_and_parse(&mut ctx, data, hint);
     let output = env.new_string(json_str).unwrap();
     output.into_inner()
 }
@@ -49,9 +69,5 @@ pub extern "C" fn Java_com_clearevo_libbluetooth_1gnss_1service_NativeParser_res
     _env: JNIEnv,
     _class: JClass,
 ) {
-    let mut p = NMEA_PARSER.lock().unwrap();
-    p.clear();
-    p.push(Nmea::default());
-    OUTPUT_STATE_PARAMS_MAP.lock().unwrap().clear();
-    clear_qstarz_ble_buffer();
+    CONTEXT.lock().unwrap().reset();
 }
