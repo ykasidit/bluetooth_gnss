@@ -1,7 +1,7 @@
 Bluetooth GNSS / BatRay
 -----------------------
 
-> **Archived 2026-04.** This repository is no longer actively maintained. The published Google Play app will continue to work for existing users until Google's annual `targetSdk` floor eventually de-lists it. Source remains available under GPL v2 — feel free to fork and continue. See [`ARCHIVED_NOTES.md`](ARCHIVED_NOTES.md) for the last-known-good toolchain and build environment. Alternative apps for the same use case include Lefebure NTRIP Client, GNSS Master, and GPS Connector.
+> **Archived 2026-04.** This repository is no longer actively maintained. Stepping back from active maintenance to focus my time and energy on other priorities — this project has run its course and served its purpose. Thanks to everyone who used, tested, and contributed to it over the years. The published Google Play app will continue to work for existing users until Google's annual `targetSdk` floor eventually de-lists it. Source remains available under GPL v2 — feel free to fork and continue. See [`ARCHIVED_NOTES.md`](ARCHIVED_NOTES.md) for the last-known-good toolchain and build environment. Alternative apps for the same use case include Lefebure NTRIP Client, GNSS Master, and GPS Connector.
 
 This repo builds two Android apps from one codebase using Flutter flavors:
 
