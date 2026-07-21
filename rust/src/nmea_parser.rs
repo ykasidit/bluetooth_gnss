@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use nmea::sentences::FixType;
 use nmea::sentences::{GnssType};
-use serde_json::{Map, Value};
+use serde_json::{json, Map, Value};
 use nmea::{parse_nmea_sentence, parse_str, Nmea, ParseResult, Satellite};
 
 use crate::utils::inc_param;
@@ -208,6 +208,18 @@ pub fn parse_nmea_pkt(params: &mut HashMap<String, Value>, parser: &mut Nmea, pk
 	    for sg in sat_groups {
 		type_to_sat_map.entry(sg.gnss_type()).or_default().push(sg.clone());
 	    }
+
+	    // per-satellite list for sky plot / signal bar UIs (web wasm client)
+	    let used_prns = &parser.fix_satellites_prns;
+	    let sats_json: Vec<Value> = parser.satellites().iter().map(|s| json!({
+		"prn": s.prn(),
+		"elev": s.elevation(),
+		"az": s.azimuth(),
+		"snr": s.snr(),
+		"gnss": format!("{:?}", s.gnss_type()),
+		"used": used_prns.as_ref().map_or(false, |p| p.contains(&s.prn())),
+	    })).collect();
+	    put_param(params, TALKER_NONE.to_string(), "sats".to_string(), Value::from(sats_json));
 	    
 	    for (gt, sats) in &type_to_sat_map {
 		let talker = get_talker_id_for_gt(&gt);

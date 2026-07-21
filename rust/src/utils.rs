@@ -7,6 +7,13 @@ pub const SUFFIX_COUNT:&str = "count";
 pub const SUFFIX_TIMESTAMP:&str = "ts";
 pub const TALKER_NONE:&str = "";
 
+// SystemTime::now() panics on wasm32-unknown-unknown; use JS Date there
+#[cfg(target_arch = "wasm32")]
+pub fn get_current_time_millis() -> u64 {
+    js_sys::Date::now() as u64
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn get_current_time_millis() -> u64 {
     match (SystemTime::now()
            .duration_since(UNIX_EPOCH))
