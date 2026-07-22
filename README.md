@@ -1,12 +1,12 @@
 Bluetooth GNSS / BatRay
 -----------------------
 
-> **Archived 2026-04.** This repository is no longer actively maintained. Stepping back from active maintenance to focus my time and energy on other priorities — this project has run its course and served its purpose. Thanks to everyone who used, tested, and contributed to it over the years. The published Google Play app will continue to work for existing users until Google's annual `targetSdk` floor eventually de-lists it. Source remains available under GPL v2 — feel free to fork and continue. See [`ARCHIVED_NOTES.md`](ARCHIVED_NOTES.md) for the last-known-good toolchain and build environment. Alternative apps for the same use case include Lefebure NTRIP Client, GNSS Master, and GPS Connector.
-
 This repo builds two Android apps from one codebase using Flutter flavors:
 
 - **Bluetooth GNSS** — Connect your Android phone to external Bluetooth GPS, GLONASS, Galileo and BeiDou receivers and use the received location via the mock location provider. Available on Google Play as [Bluetooth GNSS](https://play.google.com/store/apps/details?id=com.clearevo.bluetooth_gnss&hl=en&gl=US).
-- **BatRay** — (in development; archived along with the rest of this repo)
+- **BatRay** — (in development)
+
+The GNSS parser in this repo (`rust/` crate, branch [`wasm`](https://github.com/ykasidit/bluetooth_gnss/tree/wasm)) also powers [GNSS Monitor online](https://www.clearevo.com/gnss/) — a browser-based live GPS/NMEA/UBX viewer, compiled to WebAssembly.
 
 Thank you to everyone who used, contributed to, tested, and reported issues on this project over the years. 🌞
 
